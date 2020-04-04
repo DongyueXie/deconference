@@ -3,9 +3,9 @@ output_dir: ../docs
 navbar:
   title: "deconference"
   left:
-  - text: Home
+  - text: Overview
     href: index.html
-  - text: About
+  - text: Data
     href: about.html
   - text: License
     href: license.html
@@ -13,5 +13,5 @@ output:
   workflowr::wflow_html:
     toc: yes
     toc_float: yes
-    theme: cosmo
+    theme: sandstone
     highlight: textmate

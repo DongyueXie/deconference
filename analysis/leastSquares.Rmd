@@ -1,0 +1,96 @@
+---
+title: "Understanding Least Squares"
+author: "DongyueXie"
+date: "2020-04-07"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+If $y\sim\text{Poisson}(X\beta)$ and $Z\sim\text{Poisson}(X)$, then OLS is biased and not consistent.
+
+```{r}
+b = 1:3
+p=length(b)
+nn = 100
+n_list = round(seq(30,300,length.out = nn))
+nreps=100
+set.seed(12345)
+
+mean_olsx = matrix(nrow=nn,ncol=p)
+mean_olsz = matrix(nrow=nn,ncol=p)
+mean_olsz_adj = matrix(nrow=nn,ncol=p)
+
+var_olsx = matrix(nrow=nn,ncol=p)
+var_olsz = matrix(nrow=nn,ncol=p)
+var_olsz_adj = matrix(nrow=nn,ncol=p)
+
+mse_olsx = matrix(nrow=nn,ncol=p)
+mse_olsz = matrix(nrow=nn,ncol=p)
+mse_olsz_adj = matrix(nrow=nn,ncol=p)
+
+for(j in 1:length(n_list)){
+  
+  n = n_list[j]
+  
+  b_olsx = matrix(nrow=nreps,ncol=p)
+  b_olsz = matrix(nrow=nreps,ncol=p)
+  b_olsz_adj = matrix(nrow=nreps,ncol=p)
+  
+  for(i in 1:nreps){
+    X = matrix(rpois(n*p,10),nrow=n)
+    Z = matrix(rpois(n*p,X),ncol=p)
+    y = rpois(n,X%*%b)
+    
+    b_olsx[i,] = solve(t(X)%*%X)%*%t(X)%*%y
+    b_olsz[i,] = solve(t(Z)%*%Z)%*%t(Z)%*%y
+    b_olsz_adj[i,] = solve(t(Z)%*%Z - diag(colSums(Z)))%*%t(Z)%*%y
+  }
+  
+  mean_olsx[j,] = apply(b_olsx,2,mean)
+  mean_olsz[j,] = apply(b_olsz,2,mean)
+  mean_olsz_adj[j,] = apply(b_olsz_adj,2,mean)
+  
+  var_olsx[j,] = apply(b_olsx,2,var)
+  var_olsz[j,] = apply(b_olsz,2,var)
+  var_olsz_adj[j,] = apply(b_olsz_adj,2,var)
+}
+
+```
+
+```{r,fig.width=9,fig.height=8}
+par(mfrow=c(3,2))
+for(i in 1:p){
+  plot(n_list,mean_olsx[,i],xlab='n',ylab='mean',
+       ylim=range(c(mean_olsx[,i],mean_olsz[,i])),main=paste('beta',i),type='l')
+  lines(n_list,mean_olsz[,i],col=2)
+  #lines(n_list,mean_olsz_adj[,i],col=4)
+  abline(h=b[i],lty=2)
+  
+  plot(n_list,var_olsx[,i],xlab='n',ylab='var',
+       ylim=range(c(0,var_olsx[,i],var_olsz[,i])),main=paste('beta',i),type='l')
+  lines(n_list,var_olsz[,i],col=2)
+  #lines(n_list,var_olsz_adj[,i],col=4)
+  abline(h=0,lty=2)
+  legend('topright',c('ols with x','ols with z'),lty=c(1,1),col=c(1,2))
+}
+```
+
+The plot shows that 1. ols with X is unbiased and consistent; 2. ols with Z, without adjustment, is biased and inconsistent.
+
+How about the adjusted one?
+
+```{r,fig.width=9,fig.height=8}
+par(mfrow=c(3,2))
+for(i in 1:p){
+  plot(n_list,mean_olsz_adj[,i],xlab='n',ylab='mean',main=paste('beta',i),type='l',ylim=c(b[i]-0.5,b[i]+0.5))
+  abline(h=b[i],lty=2)
+  
+  plot(n_list,var_olsz_adj[,i],xlab='n',ylab='var',main=paste('beta',i),type='l',ylim=c(0,0.5))
+  abline(h=0,lty=2)
+}
+```
+
+It dose not perform well when sample size is small. Is there any small sample ajustment? It's unbiased but the variance is much larger(5 times of ols with z).  

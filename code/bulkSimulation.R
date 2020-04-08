@@ -56,7 +56,7 @@ set.seed(12345)
 
 G_list = round(seq(50,nrow(ref),length.out = 100))
 
-ref_lib_size_list = c(0.1,0.3,0.5,1,3,5,10,50)
+ref_lib_size_list = c(0.5,1,3,5,10,50)
 
 for(r in ref_lib_size_list){
 
@@ -108,7 +108,7 @@ set.seed(12345)
 
 G_list = round(seq(50,nrow(ref)/2,length.out = 100))
 
-ref_lib_size_list = c(0.1,0.3,0.5,1,3,5,10,50)
+ref_lib_size_list = c(0.5,1,3,5,10,50)
 
 for(r in ref_lib_size_list){
 

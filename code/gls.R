@@ -119,8 +119,9 @@ simu_study = function(ref,s,Ng,b,
     thetab = Xb/sum(Xb)
 
     #reference data
-    Cr = rpois(K,ref_lib_size)
-    if(prod(Cr)==0){Cr[which(Cr==0)]=ref_lib_size}
+    #Cr = rpois(K,ref_lib_size)
+    #if(prod(Cr)==0){Cr[which(Cr==0)]=ref_lib_size}
+    Cr = rep(ref_lib_size,K)
     U = diag(Cr*Ng)
     Y = matrix(rpois(Ng*K,Theta%*%U),ncol=K)
     #bulk data

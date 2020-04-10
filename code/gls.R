@@ -4,46 +4,77 @@
 #'@param w weights for gene
 #'@param adjust whether adjust for uncertainty in Yr
 #'@param alpha significance level
+#'@param a alpha in the Fuller's small sample correction
+#'@param correction whether perform fuller's small sample correction.
 #'@return p_tilde_hat: before delta method; p_hat: estimate of proportions; p_se: standard error of estimator; ci: confidence intervals
 
-poi_gls = function(y,Y,w=NULL,adjust=TRUE,alpha=0.05){
+poi_gls = function(y,Y,w=NULL,
+                   adjust=TRUE,
+                   alpha=0.05,a=0,
+                   correction=FALSE){
 
   G = nrow(Y)
   K = ncol(Y)
 
-  #U = diag(colSums(Y))
-  U_inv = diag(1/colSums(Y))
+  U = diag(c(colSums(Y)))
+  U_inv = diag(c(1/colSums(Y)))
   Yu = apply(Y,2,function(x){x/sum(x)})
   Yuu = Yu%*%U_inv
+  A = t(Yu)%*%Yu
   if(adjust){
 
     ## diag(colSums(Yuu)) = U_inv
 
-    p_tilde_hat = solve(t(Yu)%*%Yu - U_inv)%*%t(Yu)%*%y
+    ## Fuller's correction for negative matrix
+
+    if(correction){
+      M = t(cbind(y,Yu))%*%cbind(y,Yu)
+      B = diag(c(1/sum(y),colSums(Y)))
+      #print((B))
+      #lambda = min(eigen(A%*%diag(1/colSums(Yuu)))$values)
+      #print(eigen(A%*%U)$values)
+      lambda = min(eigen(M%*%B)$values)
+      #print(lambda)
+      #print(paste('est',lambda))
+      #print(paste('value',det(A-lambda*U_inv)))
+      if(lambda>(1+1/G)){
+        A = A - (1-a/G)*diag(c(colSums(Yuu)))
+      }else{
+        A = A - (lambda-1/G-a/G)*diag(c(colSums(Yuu)))
+      }
+    }else{
+      A = A - diag(c(colSums(Yuu)))
+    }
+    p_tilde_hat = solve(A)%*%t(Yu)%*%y
   }else{
-    p_tilde_hat = solve(t(Yu)%*%Yu)%*%t(Yu)%*%y
+    p_tilde_hat = solve(A)%*%t(Yu)%*%y
   }
 
-  Q = 0
+  #print(solve(A))
+
+  ## truncate p_tilde_hat
+  p_tilde_hat = pmax(p_tilde_hat,0)
+
+  #Q = 0
   Sigma=0
 
   if(adjust){
     for(i in 1:G){
       ag = tcrossprod(Yu[i,])-diag(Yuu[i,])
-      Q = Q + ag
+      #Q = Q + ag
       nabla = (ag%*%p_tilde_hat-y[i]*Yu[i,])
       Sigma = Sigma + tcrossprod(nabla)
     }
   }else{
     for(i in 1:G){
       ag = tcrossprod(Yu[i,])
-      Q = Q + ag
+      #Q = Q + ag
       nabla = (ag%*%p_tilde_hat-y[i]*Yu[i,])
       Sigma = Sigma + tcrossprod(nabla)
     }
   }
 
-  Q = Q/G
+  Q = A/G
   Sigma = Sigma/G
 
   J = - (p_tilde_hat)%*%t(rep(1,K))
@@ -56,8 +87,8 @@ poi_gls = function(y,Y,w=NULL,adjust=TRUE,alpha=0.05){
 
   p_se = sqrt(diag(asyV))
 
-  ci_left = p_hat - qnorm(1-alpha/2)*p_se
-  ci_right = p_hat + qnorm(1-alpha/2)*p_se
+  ci_left = pmax(0,p_hat - qnorm(1-alpha/2)*p_se)
+  ci_right = pmin(1,p_hat + qnorm(1-alpha/2)*p_se)
 
   return(list(p_tilde_hat=p_tilde_hat,
               p_hat=p_hat,
@@ -66,6 +97,9 @@ poi_gls = function(y,Y,w=NULL,adjust=TRUE,alpha=0.05){
               ci_right=ci_right))
 
 }
+
+
+
 
 
 #'@title This simulation averages over parameter b.
@@ -86,7 +120,7 @@ poi_gls = function(y,Y,w=NULL,adjust=TRUE,alpha=0.05){
 simu_study = function(ref,s,Ng,b,
                       bulk_lib_size = 50,
                       ref_lib_size = 30,
-                      nreps=100,alpha=0.05){
+                      nreps=100,alpha=0.05,a=0,correction=FALSE){
 
   G = nrow(ref)
   K = ncol(ref)
@@ -128,7 +162,7 @@ simu_study = function(ref,s,Ng,b,
     y = rpois(Ng,rpois(1,bulk_lib_size)*Ng*thetab)
 
 
-    fit_adj = poi_gls(y,Y,adjust = TRUE,alpha=alpha)
+    fit_adj = poi_gls(y,Y,adjust = TRUE,alpha=alpha,a=a,correction=correction)
     est_adj[rep,] = fit_adj$p_hat
     se_adj[rep,] = fit_adj$p_se
 
@@ -188,16 +222,14 @@ simu_study = function(ref,s,Ng,b,
 ############## test ################
 ####################################
 
-# set.seed(12345)
-# G = 100
-# K = 3
-# b = 1:K
-# b = b/sum(b)
-# library(gtools)
-# X = t(rdirichlet(K,rep(1,G)))
-# U = diag(K)*50*G
-# Z = matrix(rpois(G*K,X%*%U),ncol=K)
-#
-# s=rep(1,K)
-# test = simu_study(Z,s,G,b,ref_lib_size = 20)
+set.seed(12345)
+G = 100
+K = 4
+b = 1:K
+b = b/sum(b)
+library(gtools)
+X = t(rdirichlet(K,rep(1,G)))
+
+s=rep(1,K)
+results = simu_study(X,s,G,b,ref_lib_size = 0.5,correction = F)
 

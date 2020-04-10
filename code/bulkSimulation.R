@@ -30,12 +30,12 @@ bulk_lib_size = 50
 
 
 
-#################################################################
-#################################################################
-### choose gene method 1: remove genes, using my original methods
-#################################################################
-#################################################################
-
+# #################################################################
+# #################################################################
+# ### choose gene method 1: remove genes, using my original methods
+# #################################################################
+# #################################################################
+#
 rm.idx1 = which(((rowSums(CD14!=0)<=10)|(rowSums(CD14)>=quantile(rowSums(CD14),0.95))))
 rm.idx2 = which(((rowSums(CD4!=0)<=10)|(rowSums(CD4)>=quantile(rowSums(CD4),0.95))))
 rm.idx3 = which(((rowSums(CD8!=0)<=10)|(rowSums(CD8)>=quantile(rowSums(CD8),0.95))))
@@ -76,20 +76,20 @@ for(r in ref_lib_size_list){
   if(r<1){r=paste('0',r*10,sep='')}
   save(results,file=paste('output/bulkref_pbmc_fewgene_refls',r,'_bulkls',bulk_lib_size,'.RData',sep = ''))
 }
-
-
-
-
-#################################################
-## choose gene method 0:
-## genes expressed at extremely high levels in the reference dataset will dominate the inference results.
-## Since highly expressed genes have large variance, our inferences become very sensitive to these outliers.
-## We therefore remove them to acquire more robust estimations.
-## The total removed genes were the union of the top 1 %.
-
-## see https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-1028-7#Sec9
-################################################
-
+#
+#
+#
+#
+# #################################################
+# ## choose gene method 0:
+# ## genes expressed at extremely high levels in the reference dataset will dominate the inference results.
+# ## Since highly expressed genes have large variance, our inferences become very sensitive to these outliers.
+# ## We therefore remove them to acquire more robust estimations.
+# ## The total removed genes were the union of the top 1 %.
+#
+# ## see https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-1028-7#Sec9
+# ################################################
+#
 ref = cbind(rowSums(CD14),rowSums(CD4),rowSums(CD8),rowSums(MB))
 rm.idx = unique(unlist(apply(ref,2,function(x) which(x>=quantile(x,0.99)))))
 
@@ -134,46 +134,61 @@ for(r in ref_lib_size_list){
 
 
 ##################################################################
-##############choose gene method 2: use only marker gene###########
+##############choose gene method 2: use only 'marker' gene###########
 
 ## attention: need to select marker genes with existing deconv method?
 
 ###################################################################
 
-# ref = cbind(rowSums(CD14),rowSums(CD4),rowSums(CD8),rowSums(MB))
+ref = cbind(rowSums(CD14),rowSums(CD4),rowSums(CD8),rowSums(MB))
+
+# marker gene: only expresses in one cell type.
+
+marker_gene_idx = which(rowSums(ref!=0)==1)
+
+s = c(sum(CD14[marker_gene_idx,])/ncol(CD14[marker_gene_idx,]),
+      sum(CD4[marker_gene_idx,])/ncol(CD4[marker_gene_idx,]),
+      sum(CD8[marker_gene_idx,])/ncol(CD8[marker_gene_idx,]),
+      sum(MB[marker_gene_idx,])/ncol(MB[marker_gene_idx,]))
+
+ref = ref[marker_gene_idx,]
+
+
+set.seed(12345)
+
+G_list = round(seq(50,nrow(ref),length.out = 20))
+
+ref_lib_size_list = c(0.5,1,3,5,10,50)
+
+for(r in ref_lib_size_list){
+
+  print(paste('Running ref libary size:',r))
+
+  results = list()
+
+  for(i in 1:length(G_list)){
+
+    if(i%%10==0){print(sprintf("done %d (out of %d)",i,length(G_list)))}
+
+    results[[i]] = simu_study(ref,s,G_list[i],(b/s)/sum(b/s),
+                              bulk_lib_size,r)
+
+  }
+
+  if(r<1){r=paste('0',r*10,sep='')}
+  save(results,file=paste('output/bulkref_pbmc_markergene_refls',r,'_bulkls',bulk_lib_size,'.RData',sep = ''))
+}
 #
-# # marker gene: only expresses in one cell type.
-#
-# marker_gene_idx = which(rowSums(ref!=0)==1)
-#
-# s = c(sum(CD14[marker_gene_idx,])/ncol(CD14[marker_gene_idx,]),
-#       sum(CD4[marker_gene_idx,])/ncol(CD4[marker_gene_idx,]),
-#       sum(CD8[marker_gene_idx,])/ncol(CD8[marker_gene_idx,]),
-#       sum(MB[marker_gene_idx,])/ncol(MB[marker_gene_idx,]))
 #
 #
-# G_list = round(seq(50,nrow(ref),length.out = 50))
-#
-#
-#
-# set.seed(12345)
-#
-# results = list()
-#
-# for(i in 1:length(G_list)){
-#
-#   print(i)
-#
-#   results[[i]] = simu_study(ref,s,G_list[i],(b/s)/sum(b/s),
-#                             bulk_lib_size,ref_lib_size)
-#
-# }
-#
-#
-#
-#
-#
-#
+
+
+###############################################################
+######################simulation  fake     ##############
+##############################################################
+
+
+
 # ###############################################################
 # ############### Segerstolpe et al. (2016) #####################
 # ###############         non-UMI           #####################

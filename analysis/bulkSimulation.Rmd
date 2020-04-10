@@ -1,0 +1,121 @@
+---
+title: "Deconvolution inference simulation - bulk reference data"
+author: "DongyueXie"
+date: "2020-04-05"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Summary
+
+1. When both reference data library size and number of genes are small, adjusted estimator has large variance and bias. The high coverage is due to the large standard error, which leads to $[0,1]$ confidence intervals. For example, let's take a look at reference data library size $0.5*G$ and $G=50$, the confidence interval for $p_1=0.1$,
+
+```{r}
+file_name = paste('output/bulkref_simu_G',1000,'_K',4,'_refls05_bulkls',50,'.RData',sep = '')
+load(file_name)
+ci_l = results[[1]]$est_adj - qnorm(1-0.05/2)*results[[1]]$se_adj
+ci_r = results[[1]]$est_adj + qnorm(1-0.05/2)*results[[1]]$se_adj
+rbind(round(ci_l[1:20,1],2),round(ci_r[1:20,2],2))
+```
+
+This happens because the matrix $((\tilde{Y}^{r})^T \tilde{Y}^{r}-diag((\tilde{Y}^{r} U^{-1})^T \mathbf{1_G}))^{-1}$ is nearly singular or negative definite. So applying some small smaple correction could solve this problem, to some extent. But still, the confidence interval is too wide. 
+
+```{r}
+
+file_name = paste('output/bulkref_simu_correction_G1000_K4_refls05_bulkls50.RData',sep = '')
+load(file_name)
+ci_l = results[[1]]$est_adj - qnorm(1-0.05/2)*results[[1]]$se_adj
+ci_r = results[[1]]$est_adj + qnorm(1-0.05/2)*results[[1]]$se_adj
+rbind(round(ci_l[1:20,1],2),round(ci_r[1:20,2],2))
+```
+
+Use different methods to select genes and compare performance of adjusted and unadjusted estimates. We also examne the effect of reference data library size. We fix bulk data library size at $50*G$ and vary reference data library size from $(0.5,1,3,5,10,50)*G$.
+
+## Simulation - based on synthetic data
+
+Gene relative expressions are drawn from Dirichlet distribution.
+
+```{r,fig.height=8,fig.width=10}
+source('code/plot_bulksimu.R')
+bulk_lib_size = 50
+ref_lib_size_list = c(0.5,1,3,5,10,50)
+for(r in ref_lib_size_list){
+  if(r<1){r=paste('0',r*10,sep='')}
+  file_name = paste('output/bulkref_simu_G',1000,'_K',4,'_refls',r,'_bulkls',bulk_lib_size,'.RData',sep = '')
+  load(file_name)
+  cat('\n\n\n\n')   
+  cat(file_name)
+  plot_bulksimu(results)
+}
+```
+
+### Fuller's Correction
+
+```{r,fig.height=8,fig.width=10}
+ref_lib_size_list = c(0.5,1,3)
+for(r in ref_lib_size_list){
+  if(r<1){r=paste('0',r*10,sep='')}
+  file_name = paste('output/bulkref_simu_correction_G',1000,'_K',4,'_refls',r,'_bulkls',bulk_lib_size,'.RData',sep = '')
+  load(file_name)
+  cat('\n\n\n\n')   
+  cat(file_name)
+  plot_bulksimu(results)
+}
+```
+
+
+
+## Simulation - based on real data, pbmc
+
+### few genes
+
+For each cell type, select genes that appear in less than 10 cells and whose expressions are among top 1 percent. Then remove the union of selected genes. The final number of genes is 2930.
+
+
+```{r,fig.height=8,fig.width=10}
+ref_lib_size_list = c(0.5,1,3,5,10,50)
+for(r in ref_lib_size_list){
+  if(r<1){r=paste('0',r*10,sep='')}
+  file_name = paste('output/bulkref_pbmc_fewgene_refls',r,'_bulkls',bulk_lib_size,'.RData',sep = '')
+  load(file_name)
+  cat('\n\n\n\n')   
+  cat(file_name)
+  plot_bulksimu(results)
+}
+```
+
+### all genes
+
+genes expressed at extremely high levels in the reference dataset will dominate the inference results.
+Since highly expressed genes have large variance, our inferences become very sensitive to these outliers.
+We therefore remove them to acquire more robust estimations.
+The total removed genes were the union of the top 1 %.
+
+```{r,fig.height=8,fig.width=10}
+ref_lib_size_list = c(0.5,1,3,5,10,50)
+for(r in ref_lib_size_list){
+  if(r<1){r=paste('0',r*10,sep='')}
+  file_name = paste('output/bulkref_pbmc_allgene_refls',r,'_bulkls',bulk_lib_size,'.RData',sep = '')
+  load(file_name)
+  cat('\n\n\n\n')   
+  cat(file_name)
+  plot_bulksimu(results)
+}
+```
+
+### "ideal" gene
+
+Select genes only expressed in one cell type
+
+```{r,fig.height=8,fig.width=10}
+ref_lib_size_list = c(0.5,1,3,5,10,50)
+for(r in ref_lib_size_list){
+  if(r<1){r=paste('0',r*10,sep='')}
+  file_name = paste('output/bulkref_pbmc_markergene_refls',r,'_bulkls',bulk_lib_size,'.RData',sep = '')
+  load(file_name)
+  cat('\n\n\n\n')   
+  cat(file_name)
+  plot_bulksimu(results)
+}
+```

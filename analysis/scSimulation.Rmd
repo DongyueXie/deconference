@@ -1,0 +1,45 @@
+---
+title: "Deconvolution inference simulation - single cell reference data"
+author: "DongyueXie"
+date: "2020-04-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+Generate data:
+
+1. Generate each column of $X$: $\mathcal{x}_{\cdot k}\sim\text{Dirichlet}(1,...,1)$.
+
+Generate bulk data: as before
+
+Generate reference data: 
+
+1. For each cell $j$ of type $k$, $J=1,2,...,N_k^r$, we generate cell library size from NB$(r_k,p_k)$ and relative gene expression $x_{jk}\in\mathcal{S}^G$ from Dirichlet$(\mathcal{x}_{\cdot k}*G)$. In this way, $\tau^2_{gk}$ are explicitly known.
+
+## Simulation - based on synthetic data
+
+Gene relative expressions are drawn from Dirichlet distribution.
+
+```{r,fig.height=8,fig.width=10}
+source('code/plot_bulksimu.R')
+bulk_lib_size = 50
+sc_lib_size_list = c(0.1,0.2,0.5)
+sc_number_list = c(10,30)
+
+
+for(n in sc_number_list){
+  for(r in sc_lib_size_list){
+  if(r<1){r=paste('0',r*10,sep='')}
+  file_name = 
+    paste('output/scref_simu_G',1000,'_K',4,'_scls',r,'_scN',n,'_bulkls',bulk_lib_size,'.RData',sep = '')
+  load(file_name)
+  cat('\n\n\n\n')   
+  cat(file_name)
+  plot_bulksimu(results)
+  }
+}
+```
+
+
+

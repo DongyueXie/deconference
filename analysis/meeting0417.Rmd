@@ -1,0 +1,76 @@
+---
+title: "meeting 17"
+author: "DongyueXie"
+date: "2020-04-23"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+address 3 issues: 1. bias in [simulation](scSimulation.html), when sc libarary size = 0.2/0.5, number of sc = 10. 2. unknown variance; 3. add weights
+
+## issue 1: bias
+
+```{r,fig.height=2,fig.width=10}
+source('code/deconference.R')
+source('code/plot_simu.R')
+set.seed(12345)
+G = 1000
+K = 4
+b = 1:K
+b = b/sum(b)
+library(gtools)
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+
+G_list = round(seq(50,nrow(ref),length.out = 50))
+sc_lib_size_list = c(0.2,0.5)
+
+for(r in sc_lib_size_list){
+
+    #print(paste('Running number of cell:',n, ' and sc libary size:',r))
+
+    results = list()
+
+    for(i in 1:length(G_list)){
+
+      #if(i%%10==0){print(sprintf("done %d (out of %d)",i,length(G_list)))}
+
+      results[[i]] = simu_study(ref,G_list[i],(b)/sum(b),
+                                ref_type='sc',
+                                tau2known=TRUE,addw=FALSE,
+                                bulk_lib_size=bulk_lib_size,
+                                sc_lib_size=r,
+                                nk=10)
+
+    }
+
+    print(paste('sc library size = ',r, 'number of single cell = 10'))
+    plot_simu(results)
+  }
+```
+
+## issue 2: unknown variance + add weights
+
+Assume gene expression variance across cells are unknown and weights are avaiable.
+
+```{r,fig.height=2,fig.width=10}
+bulk_lib_size = 50
+sc_lib_size_list = c(0.1,0.2,0.5)
+sc_number_list = c(10,30,300)
+
+
+for(n in sc_number_list){
+  for(r in sc_lib_size_list){
+  if(r<1){r=paste('0',r*10,sep='')}
+  file_name = 
+    paste('output/scref_simu_G',1000,'_K',4,'_scls',r,'_scN',n,'_bulkls',bulk_lib_size,'_addw_tauunknown','.RData',sep = '')
+  load(file_name)
+  cat('\n\n\n\n')   
+  cat(file_name)
+  plot_simu(results)
+  }
+}
+```

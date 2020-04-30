@@ -1,0 +1,217 @@
+---
+title: "Walk through MuSiC"
+author: "DongyueXie"
+date: "2020-04-30"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+\begin{array}{*{20}{l}} {\mathrm{Var}\left[ {Y_{jg}|{\boldsymbol{p}}_j} \right]} \hfill & = \hfill & {E\left[ {\mathrm{Var}\left[ {Y_{jg}{\mathrm{|}}{\boldsymbol{p}}_j,\,{\boldsymbol{\theta }}_{jg}} \right]} \right] + \mathrm{Var}\left[ {E\left[ {Y_{jg}|{\boldsymbol{p}}_j,\,{\boldsymbol{\theta }}_{jg}} \right]} \right]} \hfill \\ {} \hfill & = \hfill & {C_j^2\delta _{jg}^2 + \mathrm{Var}\left[ {C_j \cdot \mathop {\sum }\limits_{k = 1}^K p_{jk}\,S_k\,\theta _{jg}^k} \right]} \hfill \\ {} \hfill & = \hfill & {C_j^2\delta _{jg}^2 + C_j^2 \cdot \mathop {\sum }\limits_{k = 1}^K p_{jk}^2\,S_k^2\,\mathrm{Var}\left[ {\theta _{jg}^k} \right] = C_j^2\delta _{jg}^2 + C_j^2\mathop {\sum }\limits_{k = 1}^K p_{jk}^2S_k^2\,\sigma _{gk}^2} \hfill \\ {} \hfill & = \hfill & 1/w_{jg} \hfill \end{array}
+
+$j$ indexes individual and $g$ indexes gene.
+
+# Walk through
+
+```{r,warning=FALSE,message=FALSE}
+library(MuSiC)
+GSE50244.bulk.eset <- readRDS("~/deconference/data/MuSiC/GSE50244bulkeset.rds")
+EMTAB.eset <- readRDS("~/deconference/data/MuSiC/EMTABesethealthy.rds")
+library(xbioc)
+```
+
+6 major cell types: alpha, beta, delta, gamma, acinar and ductal, which make up over 90% of the whole islet.
+
+set data and input parameters
+
+```{r}
+bulk.eset = GSE50244.bulk.eset
+sc.eset = EMTAB.eset
+clusters = 'cellType'
+samples = 'sampleID'
+select.ct = c('alpha', 'beta', 'delta', 'gamma','acinar', 'ductal')
+verbose = F
+
+
+# filter out genes has no counts in bulk data
+bulk.gene = rownames(bulk.eset)[rowMeans(exprs(bulk.eset)) != 0]
+bulk.eset = bulk.eset[bulk.gene, , drop = FALSE]
+```
+
+##  Process single cell reference data
+
+extract single cell information, function: `music_basis`, This function is used for generating cell type specific cross-subject mean and variance for each gene. Cell type specific library size is also calcualted.
+
+```{r}
+sc.markers = bulk.gene
+x = sc.eset; non.zero = TRUE; markers = sc.markers; clusters = clusters; samples = samples; select.ct = select.ct; cell_size = NULL; ct.cov = NULL; verbose = verbose
+
+# select cell type in sc data
+s.ct = sampleNames(x)[as.character(pVar(x, clusters)) %in% select.ct]
+x <- x[, s.ct, drop = FALSE]
+
+## eliminate non expressed genes
+nz.gene = rownames(x)[( rowSums(exprs(x)) != 0 )]
+x <- x[nz.gene, , drop = FALSE]
+
+clusters <- as.character(pVar(x, clusters))
+samples <- as.character(pVar(x, samples))
+
+# 6 individuals, total 995 cells.
+
+M.theta <- sapply(unique(clusters), function(ct){
+    my.rowMeans(sapply(unique(samples), function(sid){
+      y = exprs(x)[,clusters %in% ct & samples %in% sid, drop = FALSE]
+      rowSums(y)/sum(y)
+    }), na.rm = TRUE)
+  })
+dim(M.theta)
+```
+
+M.theta is a gene by cell type matrix. Each column is gene relative expression in a cell type. How M.theta is calculated? For each cell type $k$, calculate gene relative expression in each individual by rowSums(y)/sum(y) (note: not mean of every cell, but aggregate all cells), then take the mean of gene relative expression in each individual as $\hat x_{k}$(a vector, of length the number of genes). In short, $\hat x_k = \frac{1}{N_{individual}}\sum_i \hat x_{ik}$, where $\hat x_{ik} = \frac{rowSums(Y_{ik})}{sum(Y_{ik})}$ and $Y_{ik}$ is gene by cell matrix of individual $i$ and cell type $k$. 
+
+
+
+Next step is to estimate variance across individuals. 
+
+```{r}
+Sigma <- sapply(unique(clusters), function(ct){
+      apply(sapply(unique(samples), function(sid){
+        y = exprs(x)[,clusters %in% ct & samples %in% sid, drop = FALSE]
+        rowSums(y)/sum(y)
+      }), 1, var, na.rm = TRUE)
+    })
+dim(Sigma)
+m.ct = match(select.ct, colnames(Sigma))
+Sigma = Sigma[, m.ct]
+```
+
+
+Sigma is a gene by cell matrix. Its entry $v_{gk}$ is an estimate of gene relative expression in cell type $k$ variance across individuals. How? For each cell type $k$,  calculate sample variance of $\hat x_{ik}$ for $i=1,2,...,6$.
+
+MuSiC has another option of setting ct.cov = TRUE, saying  "If TRUE, use the covariance across cell types". Let's see what it does.
+
+```{r}
+    nGenes = nrow(x);
+    n.ct = length(unique(clusters));
+    nSubs = length(unique(samples))
+    
+    Theta <- sapply(unique(clusters), function(ct){
+      sapply(unique(samples), function(sid){
+        y = exprs(x)[,clusters %in% ct & samples %in% sid, drop = FALSE]
+        return( rowSums(y)/sum(y) )
+      })
+    })
+    if(!is.null(select.ct)){
+      m.ct = match(select.ct, colnames(Theta))
+      Theta = Theta[, m.ct]
+    }
+    
+    Sigma.ct = sapply(1:nGenes, function(g){
+      sigma.temp = Theta[nGenes*(0:(nSubs - 1)) + g, ];
+      Cov.temp = cov(sigma.temp)
+      Cov.temp1 = cov(sigma.temp[rowSums(is.na(Theta[nGenes*(0:(nSubs - 1)) + 1, ])) == 0, ])
+      Cov.temp[which(colSums(is.na(sigma.temp))>0), ] = Cov.temp1[which(colSums(is.na(sigma.temp))>0), ]
+      Cov.temp[, which(colSums(is.na(sigma.temp))>0)] = Cov.temp1[, which(colSums(is.na(sigma.temp))>0)]
+      return(Cov.temp)
+    })
+    colnames(Sigma.ct) = rownames(x)
+```
+
+Sigma.ct is $(N_{individual}*N_{cell Type})\times N_{gene}$ matrix. Each column is a vectorized covaraince matrix, which is gene expression cov among cell types, obtained using $cov(X_{gik})$. $X_{gik}$ is a  $N_{individual}*N_{cell Type}$ matrix of gene $g$'s relative expresison.
+
+So the difference between Sigma and Sigma.ct is that Sigma ignores the covariance among cell types. 
+
+The final step is to calculate cell size: for each cell type $k$, take the average of $S_{ik}$ for $i=1,2,..,6$ where $S_{ik} = \frac{sum(Y_{ik})}{ncol(Y_{ik})}$.
+
+```{r}
+ S <- sapply(unique(clusters), function(ct){
+    my.rowMeans(sapply(unique(samples), function(sid){
+      y = exprs(x)[, clusters %in% ct & samples %in% sid, drop = FALSE]
+      sum(y)/ncol(y)
+    }), na.rm = TRUE)
+  })
+S
+M.S = colMeans(S, na.rm = TRUE)
+M.S
+```
+
+Obtain the design matrix for regression. Note that MuSiC estimates cell type proportion with strict assumptions. So the design matirx is relative expression times cell size.
+
+```{r}
+D <- t(t(M.theta)*M.S)
+sc.basis = list(Disgn.mtx = D, S = S, M.S = M.S, M.theta = M.theta, Sigma = Sigma)
+```
+
+
+## Perform regression
+
+Note: MuSiC selets common genes among bulk and reference data after processing reference data. 
+
+Let's take a look at how it handles ct.cov=TRUE.
+
+
+```{r}
+sc.basis = list(Disgn.mtx = D, S = S, M.S = M.S, M.theta = M.theta, Sigma.ct = Sigma.ct)
+cm.gene = intersect( rownames(sc.basis$Disgn.mtx), bulk.gene )
+m.sc = match(cm.gene, rownames(sc.basis$Disgn.mtx))
+m.bulk = match(cm.gene, bulk.gene)
+D1 = sc.basis$Disgn.mtx[m.sc, ] 
+M.S = colMeans(sc.basis$S, na.rm = T)
+
+## obtain bulk data gene relative expression
+Yjg = relative.ab(exprs(bulk.eset)[m.bulk, ]); N.bulk = ncol(bulk.eset)
+
+Sigma.ct = sc.basis$Sigma.ct[, m.sc];
+
+i=1
+## perform weighted ls ......
+
+if(sum(Yjg[, i] == 0) > 0){
+      D1.temp = D1[Yjg[, i]!=0, ];
+      Yjg.temp = Yjg[Yjg[, i]!=0, i];
+      Sigma.ct.temp = Sigma.ct[, Yjg[,i]!=0];
+      if(verbose) message(paste(colnames(Yjg)[i], 'has common genes', sum(Yjg[, i] != 0), '...') )
+    }else{
+      D1.temp = D1;
+      Yjg.temp = Yjg[, i];
+      Sigma.ct.temp = Sigma.ct;
+      if(verbose) message(paste(colnames(Yjg)[i], 'has common genes', sum(Yjg[, i] != 0), '...'))
+    }
+```
+
+Then Yjg.temp, D1.temp, M.S, Sigma.ct.temp are passed to function `music.iter.ct`. In this function there is a line. So I guess in order to avoid numerical issue, they multiply Y by 100. 
+
+```{r,eval=FALSE}
+if(normalize){
+    X = X/sd(as.vector(X));
+    S = S*sd(as.vector(X));
+    Y = Y/sd(Y)
+  }else{
+    Y = Y*100
+  }
+```
+
+
+The final function performing regression is `music.basic.ct`. The $Var(E(y_{jg}|p_j,\theta_{jg}))$ part in the weight of gene $g$ is calculated as $(Sp_j)^TVar(\theta_{jg})(Sp_j)$.
+
+
+# Summary
+
+Assume there are $G$ genes, $K$ cell types and $I$ individuals. Let $Y_{ik}$ denote the single cell reference matrix of individual $i$ and cell type $k$.
+
+MuSiC formulates the $k$th column of reference matrix / signature matrix, $\mathbf{x}_k$ using the following steps: 
+
+1. For each individual $i=1,2,...,I$,  calculate $\hat{\mathbf{x}}_{ik} = \frac{rowSums(Y_{ik})}{sum(Y_{ik})}$. 
+
+2. Estimate $\mathbf{x}_k$ as $\frac{1}{I}\sum_i \hat{\mathbf{x}}_{ik}$. 
+
+
+MuSiC estimates the variance $v_{gk} = Var(\hat{\mathbf{x}}_{gk})$ as sample variance of $\hat{\mathbf{x}}_{igk}$, $i=1,2,...,I$.
+
+Or, it estimates the covariance matrix $V_{g} = Var(\hat{\mathbf{x}}_{g\cdot})\in R_+^{K\times K}$ as sample covariance matrix of $\hat{\mathbf{x}}_{ig\cdot}$, $i=1,2,...,I$.
+
+
+

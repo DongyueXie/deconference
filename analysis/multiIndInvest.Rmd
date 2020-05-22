@@ -1,0 +1,483 @@
+---
+title: "Investigate multiple individuals estimation"
+author: "DongyueXie"
+date: "2020-05-13"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+In [previous analysis](multiIndSimulation.html), it seems that the adjustment did not lead to better coverage. 
+
+Let's set $\sigma^2$ all equal and see how well $\sigma^2$ is estiamted.
+
+If set sigma2 = 1/G, and generate individual gene relative expresison from gamma distribution, then a lot of relative expressions are very close to 0. So even the bulk data vector y is very sparse.
+
+
+## fix tau2 = 1/G^2 and sigma2 = 1/G^2
+
+### both are known
+
+```{r}
+source('code/deconference.R')
+source('code/simu_func_multi.R')
+```
+
+```{r}
+
+library(gtools)
+set.seed(12345)
+
+G = 500
+K = 4
+b = 1:K
+b = b/sum(b)
+
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+n_indi = 10
+nk=50
+sc_lib_size = 0.2
+
+Ng = G
+sigma2 = 1/Ng^2
+tau2 = 1/Ng^2
+
+results1 = simu_study_multiInd(ref,Ng,(b)/sum(b),
+                                     n_indi = n_indi,
+                                     sigma2known=T,
+                                     tau2known = T,
+                                     x_estimator = 'separate',
+                                     tau2=tau2,
+                                     sigma2=sigma2,
+                                     addw=TRUE,
+                                     bulk_lib_size=bulk_lib_size,
+                                     sc_lib_size=sc_lib_size,
+                                     meta_var = 'adjust',
+                                     est_sigma2 = F,
+                                     eps=1e-8,
+                                     nk=nk,nreps=50)
+```
+
+
+```{r}
+
+results1$covergae_adj
+results1$covergae_unadj
+
+results1$mean_est_adj
+results1$mean_est_unadj
+
+results1$se_est_adj
+apply(results1$se_adj,2,mean)
+
+results1$se_est_unadj
+apply(results1$se_unadj,2,mean)
+```
+
+```{r}
+mean(results1$data_sparsity)
+```
+
+### tau2 is unknown
+
+```{r}
+set.seed(12345)
+
+G = 500
+K = 4
+b = 1:K
+b = b/sum(b)
+
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+n_indi = 10
+nk=50
+sc_lib_size = 0.2
+
+Ng = G
+sigma2 = 1/Ng^2
+tau2 = 1/Ng^2
+
+results1 = simu_study_multiInd(ref,Ng,(b)/sum(b),
+                                     n_indi = n_indi,
+                                     sigma2known=T,
+                                     tau2known = F,
+                                     x_estimator = 'separate',
+                                     tau2=tau2,
+                                     sigma2=sigma2,
+                                     addw=TRUE,
+                                     bulk_lib_size=bulk_lib_size,
+                                     sc_lib_size=sc_lib_size,
+                                     meta_var = 'adjust',
+                                     est_sigma2 = F,
+                                     eps=1e-8,
+                                     nk=nk,nreps=50)
+```
+
+
+```{r}
+
+results1$covergae_adj
+results1$covergae_unadj
+
+results1$mean_est_adj
+results1$mean_est_unadj
+
+results1$se_est_adj
+apply(results1$se_adj,2,mean)
+
+results1$se_est_unadj
+apply(results1$se_unadj,2,mean)
+```
+
+### sigma2 and tau2 are unknown  and use meta analysis
+
+```{r}
+set.seed(12345)
+
+G = 500
+K = 4
+b = 1:K
+b = b/sum(b)
+
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+n_indi = 10
+nk=50
+sc_lib_size = 0.2
+
+Ng = G
+sigma2 = 1/Ng^2
+tau2 = 1/Ng^2
+
+results1 = simu_study_multiInd(ref,Ng,(b)/sum(b),
+                                     n_indi = n_indi,
+                                     sigma2known=F,
+                                     tau2known = F,
+                                     x_estimator = 'separate',
+                                     tau2=tau2,
+                                     sigma2=sigma2,
+                                     addw=TRUE,
+                                     bulk_lib_size=bulk_lib_size,
+                                     sc_lib_size=sc_lib_size,
+                                     meta_var = 'adjust',
+                                     est_sigma2 = T,
+                                     eps=1e-8,
+                                     nk=nk,nreps=50)
+```
+
+
+```{r}
+
+results1$covergae_adj
+results1$covergae_unadj
+
+results1$mean_est_adj
+results1$mean_est_unadj
+
+results1$se_est_adj
+apply(results1$se_adj,2,mean)
+
+results1$se_est_unadj
+apply(results1$se_unadj,2,mean)
+```
+
+
+how well are the estimate of sigma2?
+
+```{r}
+sigma2
+mean(results1$sigma2_hat[[1]])
+mean(results1$sigma2_hat[[2]])
+```
+
+### sigma2 and tau2 are unknown and directly use sample cov among individuals
+
+```{r}
+set.seed(12345)
+
+G = 500
+K = 4
+b = 1:K
+b = b/sum(b)
+
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+n_indi = 10
+nk=50
+sc_lib_size = 0.2
+
+Ng = G
+sigma2 = 1/Ng^2
+tau2 = 1/Ng^2
+
+results1 = simu_study_multiInd(ref,Ng,(b)/sum(b),
+                                     n_indi = n_indi,
+                                     sigma2known=F,
+                                     tau2known = F,
+                                     x_estimator = 'separate',
+                                     tau2=tau2,
+                                     sigma2=sigma2,
+                                     addw=TRUE,
+                                     bulk_lib_size=bulk_lib_size,
+                                     sc_lib_size=sc_lib_size,
+                                     meta_var = 'adjust',
+                                     est_sigma2 = F,
+                                     eps=1e-8,
+                                     nk=nk,nreps=50)
+```
+
+
+```{r}
+
+results1$covergae_adj
+results1$covergae_unadj
+
+results1$mean_est_adj
+results1$mean_est_unadj
+
+results1$se_est_adj
+apply(results1$se_adj,2,mean)
+
+results1$se_est_unadj
+apply(results1$se_unadj,2,mean)
+```
+
+
+## fix tau2 = 1/G and sigma2 = 1/G^2
+
+### both are known
+
+Now increase variance among cells within individual
+
+```{r}
+
+library(gtools)
+set.seed(12345)
+
+G = 500
+K = 4
+b = 1:K
+b = b/sum(b)
+
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+n_indi = 10
+nk=50
+sc_lib_size = 0.2
+
+Ng = G
+sigma2 = 1/Ng^2
+tau2 = 1/Ng
+
+results1 = simu_study_multiInd(ref,Ng,(b)/sum(b),
+                                     n_indi = n_indi,
+                                     sigma2known=T,
+                                     tau2known = T,
+                                     x_estimator = 'separate',
+                                     tau2=tau2,
+                                     sigma2=sigma2,
+                                     addw=TRUE,
+                                     bulk_lib_size=bulk_lib_size,
+                                     sc_lib_size=sc_lib_size,
+                                     meta_var = 'adjust',
+                                     est_sigma2 = T,
+                                     eps=1e-8,
+                                     nk=nk,nreps=50)
+```
+
+
+```{r}
+
+results1$covergae_adj
+results1$covergae_unadj
+
+results1$mean_est_adj
+results1$mean_est_unadj
+
+results1$se_est_adj
+apply(results1$se_adj,2,mean)
+
+results1$se_est_unadj
+apply(results1$se_unadj,2,mean)
+```
+
+```{r}
+mean(results1$data_sparsity)
+```
+
+
+Data is very sparse. 98 percent of Y are 0. The problem is that :
+
+When a gene only appears in one cell type in one individual, then it's estimated relative expression would be mostly 0 and we specifying variance to known so obviously varaince are too large for adjustment.
+
+
+### both are unknown and use meta analysis
+
+```{r}
+
+library(gtools)
+set.seed(12345)
+
+G = 500
+K = 4
+b = 1:K
+b = b/sum(b)
+
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+n_indi = 10
+nk=50
+sc_lib_size = 0.2
+
+Ng = G
+sigma2 = 1/Ng^2
+tau2 = 1/Ng
+
+results1 = simu_study_multiInd(ref,Ng,(b)/sum(b),
+                                     n_indi = n_indi,
+                                     sigma2known=F,
+                                     tau2known = F,
+                                     x_estimator = 'separate',
+                                     tau2=tau2,
+                                     sigma2=sigma2,
+                                     addw=TRUE,
+                                     bulk_lib_size=bulk_lib_size,
+                                     sc_lib_size=sc_lib_size,
+                                     meta_var = 'adjust',
+                                     est_sigma2 = T,
+                                     eps=1e-8,
+                                     nk=nk,nreps=50)
+```
+
+
+```{r}
+
+results1$covergae_adj
+results1$covergae_unadj
+
+results1$mean_est_adj
+results1$mean_est_unadj
+
+results1$se_est_adj
+apply(results1$se_adj,2,mean)
+
+results1$se_est_unadj
+apply(results1$se_unadj,2,mean)
+```
+
+how well are the estimate of sigma2?
+
+```{r}
+sigma2
+mean(results1$sigma2_hat[[1]])
+mean(results1$sigma2_hat[[2]])
+```
+
+
+### sigma2 and tau2 are unknown and directly use sample cov among individuals
+
+```{r}
+set.seed(12345)
+
+G = 500
+K = 4
+b = 1:K
+b = b/sum(b)
+
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+n_indi = 10
+nk=50
+sc_lib_size = 0.2
+
+Ng = G
+sigma2 = 1/Ng^2
+tau2 = 1/Ng
+
+results1 = simu_study_multiInd(ref,Ng,(b)/sum(b),
+                                     n_indi = n_indi,
+                                     sigma2known=F,
+                                     tau2known = F,
+                                     x_estimator = 'separate',
+                                     tau2=tau2,
+                                     sigma2=sigma2,
+                                     addw=TRUE,
+                                     bulk_lib_size=bulk_lib_size,
+                                     sc_lib_size=sc_lib_size,
+                                     meta_var = 'adjust',
+                                     est_sigma2 = F,
+                                     eps=1e-8,
+                                     nk=nk,nreps=50)
+```
+
+
+```{r}
+
+results1$covergae_adj
+results1$covergae_unadj
+
+results1$mean_est_adj
+results1$mean_est_unadj
+
+results1$se_est_adj
+apply(results1$se_adj,2,mean)
+
+results1$se_est_unadj
+apply(results1$se_unadj,2,mean)
+```
+
+Chnage to aggregate estimator?
+
+```{r}
+set.seed(12345)
+
+G = 500
+K = 4
+b = 1:K
+b = b/sum(b)
+
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+n_indi = 10
+nk=50
+sc_lib_size = 0.2
+
+Ng = G
+sigma2 = 1/Ng^2
+tau2 = 1/Ng
+
+results1 = simu_study_multiInd(ref,Ng,(b)/sum(b),
+                                     n_indi = n_indi,
+                                     sigma2known=F,
+                                     tau2known = F,
+                                     x_estimator = 'aggregate',
+                                     tau2=tau2,
+                                     sigma2=sigma2,
+                                     addw=TRUE,
+                                     bulk_lib_size=bulk_lib_size,
+                                     sc_lib_size=sc_lib_size,
+                                     meta_var = 'adjust',
+                                     est_sigma2 = F,
+                                     eps=1e-8,
+                                     nk=nk,nreps=50)
+```
+
+
+```{r}
+
+results1$covergae_adj
+results1$covergae_unadj
+
+results1$mean_est_adj
+results1$mean_est_unadj
+
+results1$se_est_adj
+apply(results1$se_adj,2,mean)
+
+results1$se_est_unadj
+apply(results1$se_unadj,2,mean)
+```

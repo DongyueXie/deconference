@@ -1,0 +1,62 @@
+---
+title: "Test Two Bulk sample cell type proportions"
+author: "DongyueXie"
+date: "2020-05-28"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Bulk reference data
+
+## NULL setting
+
+```{r,fig.height=2,fig.width=10}
+source('code/plot_simu.R')
+load('output/twoBulk_null_bulkref_simu_G1000_K4_refls30.RData')
+plot_simu(results_null)
+```
+
+## Non-NULL
+
+```{r,fig.height=2,fig.width=10}
+source('code/plot_simu.R')
+load('output/twoBulk_bulkref_simu_G1000_K4_refls30.RData')
+plot_simu(results)
+```
+
+
+# sc-reference data
+
+## NULL setting
+
+```{r,fig.height=2,fig.width=10}
+load('output/twoBulk_null_scref_simu_G1000_K4.RData')
+plot_simu(results_null)
+```
+
+## Non-NULL
+
+```{r,fig.height=2,fig.width=10}
+load('output/twoBulk_scref_simu_G1000_K4.RData')
+plot_simu(results)
+```
+
+
+# multi-sc reference data
+
+## NULL setting
+
+```{r,fig.height=2,fig.width=10}
+load('output/twoBulk_null_multiscref_simu_G1000_K4.RData')
+plot_simu(results_null)
+```
+
+## Non-NULL
+
+```{r,fig.height=2,fig.width=10}
+load('output/twoBulk_multiscref_simu_G1000_K4.RData')
+plot_simu(results)
+```
+
+

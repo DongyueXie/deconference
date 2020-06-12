@@ -1,0 +1,219 @@
+---
+title: "real_data_simu"
+author: "DongyueXie"
+date: "2020-06-11"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+############## test ################
+source('code/deconference.R')
+source('code/simu_func1.R')
+source('code/simu_func_multi.R')
+source('code/bootstrap.R')
+
+ploter = function(results){
+  
+  par(mfrow=c(2,2))
+  
+  plot(results$mse_adj,type='p',ylim = range(c(results$mse_adj,results$mse_unadj)),col=2,ylab='mse',xlab='coefs',main='mse')
+  lines(results$mse_unadj,type='p',pch=2,col=4)
+  
+  plot(results$covergae_adj,ylim = range(c(results$covergae_unadj,1)),col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of p')
+  lines(results$covergae_unadj,type='b',pch=2,col=4)
+  abline(h=0.95,lty=2)
+  
+  plot(results$covergae_diff_adj,ylim = range(c(results$covergae_diff_unadj,1)),col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of difference')
+  lines(results$covergae_diff_unadj,type='b',pch=2,col=4)
+  abline(h=0.95,lty=2)
+  
+  par(mfrow=c(1,1))
+  
+}
+
+
+```
+
+```{r}
+LM6 = read.table('data/cibersort/signature_rnaseq_geo60424_LM6.txt',skip=1,row.names = 1)
+LM6_type = c("B","CD8","CD4","NK","Monocytes","Neutrophils")
+colnames(LM6) = LM6_type
+#### case 1 : bulk reference data ####
+
+G = nrow(LM6)
+K = ncol(LM6)
+b = c(0.05,0.05,0.1,0.1,0.2,0.5)
+b2 = c(0.05,0.1,0.15,0.2,0.2,0.3)
+
+LM6 = apply(LM6,2,function(z){z/sum(z)})
+dim(LM6)
+
+set.seed(12345)
+
+results = simu_study(LM6,G,b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='bulk',
+                     printevery = 1e5,
+                     b2=b2,nreps = 200)
+ploter(results)
+
+```
+
+
+Let's figure out why. First make sure it works on simulated perfect case. It works.
+
+```{r}
+set.seed(12345)
+library(gtools)
+ref = t(rdirichlet(K,rep(1,G)))
+results = simu_study(ref,G,b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='bulk',
+                     printevery = 1e5,
+                     b2=b2,nreps = 200)
+ploter(results)
+```
+
+It seems that CD8 gene expression is highly correlated with the one of CD4 and NK. Let's replace CD8 gene expression with some random numbers and see the results.
+
+```{r}
+set.seed(12345)
+LM6_2 = LM6
+LM6_2[,2] = c(rdirichlet(1,rep(1,G)))
+#LM6_2[,6] = c(rdirichlet(1,rep(1,G)))
+cor(LM6_2)
+
+results = simu_study(LM6_2,G,b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='bulk',
+                     printevery = 1e5,
+                     b2=b2,nreps = 200)
+ploter(results)
+```
+
+Still undercoverage. 
+
+
+Does the correction help? Let's run simulation on only one bulk sample. 
+
+```{r}
+set.seed(12345)
+results = simu_study(LM6,G,b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='bulk',
+                     printevery = 1e5,
+                     b2=b2,nreps = 200,add_y2 = FALSE,correction = TRUE)
+
+plot(results$covergae_adj,ylim = range(c(results$covergae_unadj,1)),col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of p')
+lines(results$covergae_unadj,type='b',pch=2,col=4)
+abline(h=0.95,lty=2)
+```
+
+Still undercoverage. 
+
+
+How about using single cell as reference?
+
+```{r}
+set.seed(12345)
+
+results = simu_study(LM6,G,b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='sc',
+                     printevery = 1e5,
+                     b2=b2,nreps = 200)
+ploter(results)
+```
+
+
+Let's look at the mean-varaince relationship of each column
+
+```{r}
+apply(LM6,2,mean)/apply(LM6,2,var)
+apply(ref,2,mean)/apply(ref,2,var)
+```
+
+```{r}
+set.seed(12345)
+ref = t(rdirichlet(K,rep(0.08,G)))
+apply(ref,2,mean)/apply(ref,2,var)
+results = simu_study(ref,G,b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='bulk',
+                     printevery = 1e5,
+                     b2=b2,nreps = 100)
+ploter(results)
+```
+
+
+```{r}
+set.seed(12345)
+ref = t(rdirichlet(K,rep(0.02,3000)))
+apply(ref,2,mean)/apply(ref,2,var)
+results = simu_study(ref,3000,b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='bulk',
+                     printevery = 1e5,
+                     b2=b2,nreps = 100)
+ploter(results)
+```
+
+
+```{r}
+
+set.seed(12345)
+ref = t(rdirichlet(K,rep(0.01,5000)))
+apply(ref,2,mean)/apply(ref,2,var)
+results = simu_study(ref,5000,b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='bulk',
+                     printevery = 1e5,
+                     b2=b2,nreps = 100)
+ploter(results)
+```
+
+Need lots of genes. 
+
+
+
+```{r}
+results = simu_study_boot(LM6,G,b,bulk_lib_size=100,
+                          ref_lib_size = 100,nboot = 100,
+                     ref_type='bulk',b2=b2,nreps = 100)
+results$coverage_adj
+results$coverage_unadj
+```
+
+
+
+## Another dataset
+
+```{r}
+mela = read.table("data/cibersort/Single_Cell_RNA-Seq_Melanoma_SuppFig_3b-d/scRNA-Seq_reference_melanoma_Tirosh_Fig2b-d_inferred_refsample.txt",row.names = 1,sep="\t",header = T)
+mela = mela[,1:6]
+mela = apply(mela,2,function(z){z/sum(z)})
+dim(mela)
+
+set.seed(12345)
+
+results = simu_study(mela,nrow(mela),b,bulk_lib_size = 100,
+                     ref_lib_size = 100,
+                     ref_type='bulk',
+                     printevery = 1e5,
+                     b2=b2,nreps = 200)
+ploter(results)
+
+apply(mela,2,mean)/apply(mela,2,var)
+```
+
+```{r}
+results = simu_study_boot(mela,nrow(mela),b,bulk_lib_size=100,
+                          ref_lib_size = 100,nboot=100,
+                     ref_type='bulk',b2=b2,nreps = 100)
+results$coverage_adj
+results$coverage_unadj
+```

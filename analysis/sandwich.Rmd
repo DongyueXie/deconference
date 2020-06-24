@@ -25,7 +25,7 @@ b = c(0.05,0.05,0.1,0.1,0.2,0.5)
 
 
 set.seed(12345)
-nreps=100
+nreps=1000
 beta_hats = matrix(nrow=nreps,ncol=K)
 ## store results for various (adjusted) sandwich variance estimation methods
 sw_ses = matrix(nrow=nreps,ncol=K * 8)
@@ -108,7 +108,7 @@ colnames(beta_hats_se_mse) <- paste("cell type", 1:6)
 
 
 ```{r}
-knitr::kable(beta_hat_se,caption="compare mean of estiamted variance")
+knitr::kable(round(beta_hat_se,4),caption="compare mean of estiamted variance")
 ```
 
 
@@ -117,5 +117,5 @@ knitr::kable(coverage,caption="compare coverages of beta")
 ```
 
 ```{r}
-knitr::kable(beta_hats_se_mse,caption="compare mean square error of log(estimated variance)")
+knitr::kable(round(beta_hats_se_mse,2),caption="compare mean square error of log(estimated variance)")
 ```

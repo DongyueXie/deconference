@@ -1,0 +1,102 @@
+---
+title: "real_data_simu_weight"
+author: "DongyueXie"
+date: "2020-06-18"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+
+ploter = function(results){
+  
+  par(mfrow=c(2,2))
+  
+  plot(results$mse_adj,type='p',ylim = range(c(results$mse_adj,results$mse_unadj)),col=2,ylab='mse',xlab='coefs',main='mse')
+  lines(results$mse_unadj,type='p',pch=2,col=4)
+
+  
+  plot(results$covergae_adj,ylim = range(c(results$covergae_adj,results$covergae_unadj,results$covergae_unadj_cv,1)),
+       col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of p')
+  lines(results$covergae_unadj,type='b',pch=2,col=4)
+  lines(results$covergae_unadj_cv,type='b',pch=2,col=3)
+  abline(h=0.95,lty=2)
+  
+  plot(results$covergae_diff_adj,ylim = range(c(results$covergae_diff_adj,results$covergae_diff_unadj,results$covergae_diff_unadj_cv,1)),
+       col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of difference')
+  lines(results$covergae_diff_unadj,type='b',pch=2,col=4)
+  lines(results$covergae_diff_unadj_cv,type='b',pch=2,col=3)
+  abline(h=0.95,lty=2)
+  
+  p_order = order(abs(results$p-results$p2))
+  
+  plot(results$power_adj[p_order],ylim = range(c(results$power_adj,results$power_unadj,results$power_unadj_cv)),
+       col=2,ylab="power",xlab='',main='power')
+  lines(results$power_unadj[p_order],type='p',pch=2,col=4)
+  lines(results$power_unadj_cv[p_order],type='p',pch=0,col=3)
+  
+  par(mfrow=c(1,1))
+  
+}
+
+
+```
+
+
+
+```{r}
+load('output/results_nsclc.RData')
+```
+
+# bulk
+
+## equal weight, all genes
+
+```{r,fig.height=6,fig.width=8}
+ploter(results_nsclc[[1]])
+```
+
+## default weight, all genes
+
+```{r,fig.height=6,fig.width=8}
+ploter(results_nsclc[[2]])
+```
+
+## default weight, marker genes
+
+```{r,fig.height=6,fig.width=8}
+ploter(results_nsclc[[5]])
+```
+
+
+# sc
+
+## default weight, all genes
+
+```{r,fig.height=6,fig.width=8}
+ploter(results_nsclc[[3]])
+```
+
+## default weight, marker genes
+
+```{r,fig.height=6,fig.width=8}
+ploter(results_nsclc[[6]])
+```
+
+
+# multi sc
+
+## default weight, all genes
+
+```{r,fig.height=6,fig.width=8}
+ploter(results_nsclc[[4]])
+```
+
+## default weight, marker genes
+
+```{r,fig.height=6,fig.width=8}
+ploter(results_nsclc[[7]])
+```

@@ -1,0 +1,121 @@
+---
+title: "sandwich estimator"
+author: ""
+date: "2020-06-24"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+
+```{r}
+LM6 = read.table('data/cibersort/signature_rnaseq_geo60424_LM6.txt',header = TRUE,sep='\t',row.names = 1)
+LM6_type = c("B","CD8","CD4","NK","Monocytes","Neutrophils")
+LM6 = apply(LM6,2,function(z){z/sum(z)})
+ref = apply(LM6,2,function(z){z/sum(z)})
+
+
+
+G = nrow(ref) # number of genes
+K = ncol(ref) # number of cell types
+
+b = c(0.05,0.05,0.1,0.1,0.2,0.5)
+
+
+set.seed(12345)
+nreps=100
+beta_hats = matrix(nrow=nreps,ncol=K)
+## store results for various (adjusted) sandwich variance estimation methods
+sw_ses = matrix(nrow=nreps,ncol=K * 8)
+sw1_ses = matrix(nrow=nreps,ncol=K)
+true_ses = matrix(nrow=nreps,ncol=K)
+
+library(sandwich)
+
+
+for(l in 1:nreps){
+  mb = ref%*%b
+  thetab = mb/sum(mb)
+  y = rpois(G,100*G*thetab)
+  X = ref
+  
+  temp1 <- solve(t(X) %*% X)
+  
+  beta_hat <- temp1 %*% t(X) %*% y
+  
+  temp2 <- sum((y - X %*% beta_hat)^2)
+  
+  sw.var <- temp1 %*% t(X) %*% diag(as.vector(y - X %*% b * 100 * G)^2) %*% X %*% temp1
+  
+  sw.var1 <- temp1 %*% t(X) %*% diag(as.vector(y - X %*% beta_hat)^2) %*% X %*% temp1
+  
+  true.var <- temp1 %*% t(X) %*% diag(as.vector(X %*% (b * 100 * G))) %*% X %*% temp1
+  
+  fm <- lm(y ~ 0 + X)
+  
+  adj.var <- vcovHC(fm, "HC")
+  adj0.var <- vcovHC(fm, "HC0")
+  adj1.var <- vcovHC(fm, "HC3")
+  
+  adj2.var <- vcovHC(fm, "HC1")
+  adj3.var <- vcovHC(fm, "HC2")
+  adj4.var <- vcovHC(fm, "HC4")
+  adj5.var <- vcovHC(fm, "HC4m")
+  adj6.var <- vcovHC(fm, "HC5")
+  
+  beta.hat <- beta_hat/100/G
+  sw.sd <- sqrt(c(diag(adj.var),diag(adj0.var), diag(adj1.var), diag(adj2.var), diag(adj3.var),
+                diag(adj4.var), diag(adj5.var), diag(adj6.var)))/100/G
+  sw.sd1 <- sqrt(diag(sw.var))/100/G
+  true.sd <- sqrt(diag(true.var))/100/G
+  
+  
+  beta_hats[l, ] <- beta.hat
+  sw_ses[l, ] <- sw.sd
+  sw1_ses[l, ] <- sw.sd1
+  true_ses[l, ] <- true.sd
+  
+}
+
+beta_hat_se <- matrix(colMeans(sw_ses), nrow = 8, byrow = T)
+beta_hat_se <- rbind(beta_hat_se, colMeans(sw1_ses), true_ses[1, ])
+rownames(beta_hat_se) <- c(paste0("HC", c("(Original sandwich)",0, 3, 1, 2, 4, "4m", 5)), 
+                          "Sandwich with true b", "True")
+colnames(beta_hat_se) <- paste("cell type", 1:6)
+
+
+
+true_betas = do.call('cbind',rep(list(rep(1,nreps)%*%t(b)),10))
+beta_hats_rep = do.call('cbind',rep(list(beta_hats),10))
+beta_hats_se = cbind(sw_ses,sw1_ses,true_ses)
+coverage = (true_betas>=beta_hats_rep-1.96*beta_hats_se)&(true_betas<=beta_hats_rep+1.96*beta_hats_se)
+coverage <- matrix(colMeans(coverage), nrow = 10, byrow = T)
+rownames(coverage) <- c(paste0("HC", c("(Original sandwich)",0, 3, 1, 2, 4, "4m", 5)), 
+                        "Sandwich with true b", "True")
+colnames(coverage) <- paste("cell type", 1:6)
+
+
+true_ses_rep = do.call('cbind',rep(list(true_ses),10))
+beta_hats_se_mse = (log(beta_hats_se)-log(true_ses_rep))^2
+beta_hats_se_mse <- matrix(colMeans(beta_hats_se_mse), nrow = 10, byrow = T)
+rownames(beta_hats_se_mse) <- c(paste0("HC", c("(Original sandwich)",0, 3, 1, 2, 4, "4m", 5)), 
+                                "Sandwich with true b", "True")
+colnames(beta_hats_se_mse) <- paste("cell type", 1:6)
+```
+
+
+
+```{r}
+knitr::kable(beta_hat_se,caption="compare mean of estiamted variance")
+```
+
+
+```{r}
+knitr::kable(coverage,caption="compare coverages of beta")
+```
+
+```{r}
+knitr::kable(beta_hats_se_mse,caption="compare mean square error of log(estimated variance)")
+```

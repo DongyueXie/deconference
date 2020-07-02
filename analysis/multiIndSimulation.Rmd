@@ -1,0 +1,74 @@
+---
+title: "Multiple Individual Simulation"
+author: "DongyueXie"
+date: "2020-04-30"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Suppose we have $I$ individuals, $K$ cell type, $G$ genes, a population gene relative expression matrix $X_{G\times K} = (x_{gk})$.
+
+Data generation.
+
+1. For each individual $i$, (a) draw $\mathbf{x}_{ik}$; (b) draw $\mathbf{x}_{ijk}$
+
+```{r,eval=F}
+load("~/misc/data/scde/scCD14.RData")
+load("~/misc/data/scde/scCD4.RData")
+load("~/misc/data/scde/scCD8.RData")
+load("~/misc/data/scde/scMB.RData")
+
+CD14 = as.matrix(CD14)
+CD4 = as.matrix(CD4)
+CD8 = as.matrix(CD8)
+MB = as.matrix(MB)
+
+ref = cbind(rowSums(CD14),rowSums(CD4),rowSums(CD8),rowSums(MB))
+rm.idx = which(rowSums(ref)==0)
+
+CD14 = CD14[-rm.idx,]
+CD4 = CD4[-rm.idx,]
+CD8 = CD8[-rm.idx,]
+MB = MB[-rm.idx,]
+
+ref = cbind(rowSums(CD14),rowSums(CD4),rowSums(CD8),rowSums(MB))
+
+set.seed(12345)
+G = 1000
+K=4
+b = c(1,1,2,16)
+b = b/sum(b)
+library(gtools)
+ref = t(rdirichlet(K,rep(1,G)))
+bulk_lib_size = 50
+
+out =simu_study_multiInd(ref,300,b)
+
+
+```
+
+
+```{r,fig.height=2,fig.width=10}
+source('code/plot_simu.R')
+load("output/scref_multiInd10_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown.RData")
+plot_simu(results)
+```
+
+```{r,fig.height=2,fig.width=10}
+load("output/scref_multiInd10_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown_Nosigma2.RData")
+plot_simu(results)
+```
+
+
+```{r,fig.height=2,fig.width=10}
+load("output/scref_multiInd100_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown.RData")
+plot_simu(results)
+```
+
+```{r,fig.height=2,fig.width=10}
+load("output/scref_multiInd100_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown_Nosigma2.RData")
+plot_simu(results)
+```

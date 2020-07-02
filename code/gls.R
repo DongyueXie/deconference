@@ -1,3 +1,5 @@
+
+
 #'@title generalized least square estimator
 #'@param y a vector of bulk sample
 #'@param Y A matrix, gene by cell type
@@ -223,7 +225,7 @@ simu_study = function(ref,s,Ng,b,
 ####################################
 
 set.seed(12345)
-G = 100
+G = 300
 K = 4
 b = 1:K
 b = b/sum(b)

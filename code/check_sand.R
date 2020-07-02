@@ -1,0 +1,206 @@
+##### check assumption #####
+
+
+####### load data ##########
+
+LM6 = read.table('data/cibersort/signature_rnaseq_geo60424_LM6.txt',header = TRUE,sep='\t',row.names = 1)
+LM6_type = c("B","CD8","CD4","NK","Monocytes","Neutrophils")
+LM6 = apply(LM6,2,function(z){z/sum(z)})
+ref = apply(LM6,2,function(z){z/sum(z)})
+
+
+#'@title Jacobian matrix of sum-to-1 scale function
+#'@param b beta_tilde_hat
+#'@param K length of beta_tilde_hat
+#'@return Jacobian matrix
+J_sum2one = function(b,K){
+  J = - (b)%*%t(rep(1,K))
+  diag(J) = diag(J) + sum(b)
+  J = J/sum(b)^2
+  J
+}
+
+
+delta_method = function(beta_tilde_hat,covb,nb=1,K=6){
+  J = matrix(0,nrow=(nb*K),ncol=(nb*K))
+  for(i in 1:nb){
+    J[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = J_sum2one(beta_tilde_hat[,i],K)
+  }
+
+  asyV = (J)%*%covb%*%t(J)
+  asyV
+}
+
+
+
+G = nrow(ref)
+K = ncol(ref)
+
+#### bulk reference data ####
+
+## set up
+
+# whether add noise to X, the reference matrix
+add_noise=T
+
+# whehter use optimal weights, 1/(Xb)
+w_optimal = F
+
+# whehter add weights as 1/(rowSums(X_hat))
+w_suboptimal = F
+
+b = c(0.05,0.05,0.1,0.1,0.2,0.5)
+
+######### run simulation ########
+
+set.seed(12345)
+nreps=100
+beta_tilde_hats = matrix(nrow=nreps,ncol=K)
+beta_tilde_ses = matrix(nrow=nreps,ncol=K*5)
+beta_hats = matrix(nrow=nreps,ncol=K)
+beta_ses = matrix(nrow=nreps,ncol=K*5)
+
+#beta_tilde_hats_lm = matrix(nrow=nreps,ncol=K)
+#beta_tilde_ses_lm = matrix(nrow=nreps,ncol=K)
+
+for(l in 1:nreps){
+
+
+  Cr = rpois(K,100*G)+1
+  #Cr = rep(ref_lib_size,K)
+  U = diag(Cr)
+  if(add_noise){
+    Y = matrix(rpois(G*K,ref%*%U),ncol=K)
+  }else{
+    Y = ref%*%U
+  }
+
+  #bulk data
+  mb = ref%*%b
+  thetab = mb/sum(mb)
+  y = rpois(G,100*G*thetab)
+
+
+  if(add_noise){
+    X = apply(Y,2,function(z){z/sum(z)})
+    U_inv = diag(c(1/colSums(Y)))
+    Vg = X%*%U_inv
+  }else{
+    X = ref
+    Vg = matrix(0,nrow=G,ncol=K)
+  }
+
+  if(w_optimal){
+    w = c(1/thetab)
+    w = w/sum(w)*G
+  }else if(w_suboptimal){
+    w = 1/rowSums(X)
+    w = w/sum(w)*G
+  }else{
+    w = rep(1,G)
+  }
+
+  #lmod = lm(y~0+.,data.frame(y=y,X=X),weights = w)
+  #beta_tilde_hats_lm[l,] = coefficients(lmod)
+  #beta_tilde_ses_lm[l,] = sqrt(diag(vcov(lmod)))
+
+  Xw = X*sqrt(w)
+  yw = cbind(y*sqrt(w))
+  Vgw = Vg*w
+  V = diag(c(colSums(Vgw)))
+  A = t(Xw)%*%Xw
+  A = A - V
+  A_inv = solve(A)
+  beta_tilde_hat = pmax(A_inv%*%t(Xw)%*%yw,0)
+
+  ### sandwich
+
+  nb=1
+  Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
+  Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
+  Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
+
+  for(i in 1:nb){
+    Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = A_inv
+    for(j in i:nb){
+      Sigma_ij = crossprod(Xw*c(Xw%*%beta_tilde_hat[,i,drop=FALSE])-(Vgw)%*%diag(c(beta_tilde_hat[,i]))-Xw*c(yw[,i]),
+                           Xw*c(Xw%*%beta_tilde_hat[,j,drop=FALSE])-(Vgw)%*%diag(c(beta_tilde_hat[,j]))-Xw*c(yw[,j]))
+      Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
+      if(j==i){
+        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
+      }
+    }
+  }
+  Sigma = Sigma+t(Sigma)-Sigma_ii
+  covb_sand = Q_inv%*%Sigma%*%Q_inv
+
+  beta_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
+  beta_se_sand = sqrt(diag(delta_method(beta_tilde_hat,covb_sand)))
+
+
+  ### HC0
+
+  covb_hc0 = A_inv%*%t(Xw)%*%diag(c(yw - Xw%*%beta_tilde_hat)^2)%*%Xw%*%A_inv
+  beta_se_hc0 = sqrt(diag(delta_method(beta_tilde_hat,covb_hc0)))
+
+  ### HC0 with true b
+
+  covb_hc0_trueb = A_inv%*%t(Xw)%*%diag(c(yw - Xw%*%b*100*G)^2)%*%Xw%*%A_inv
+  beta_se_hc0_trueb = sqrt(diag(delta_method(cbind(b*100*G),covb_hc0_trueb)))
+
+  ### HC3
+
+  h = diag(Xw%*%A_inv%*%t(Xw))
+
+  covb_hc3 = A_inv%*%t(Xw)%*%diag(c(yw - Xw%*%beta_tilde_hat)^2/(1-h)^2)%*%Xw%*%A_inv
+  beta_se_hc3 = sqrt(diag(delta_method(beta_tilde_hat,covb_hc3)))
+
+  ### Jackknife
+  beta_tilde_jack = matrix(nrow=G,ncol=K)
+  for(j in 1:G){
+
+    V = diag(c(colSums(Vgw[-j,])))
+    A = t(Xw[-j,])%*%Xw[-j,]
+    A = A - V
+    A_inv = solve(A)
+    beta_tilde_jack[j,] = pmax(A_inv%*%t(Xw[-j,])%*%yw[-j],0)
+
+  }
+  bb = beta_tilde_jack - rep(1,G)%*%t(apply(beta_tilde_jack,2,mean))
+  covb_jack = t(bb)%*%bb*(G-1)/G
+  beta_se_jack = sqrt(diag(delta_method(beta_tilde_hat,covb_jack)))
+
+
+
+  beta_tilde_hats[l,] = c(beta_tilde_hat)
+  beta_tilde_ses[l,] = c(sqrt(diag(covb_sand)),sqrt(diag(covb_hc0)),sqrt(diag(covb_hc0_trueb)),sqrt(diag(covb_hc3)),sqrt(diag(covb_jack)))
+
+  beta_hats[l,] = c(beta_hat)
+  beta_ses[l,] = c(beta_se_sand,beta_se_hc0,beta_se_hc0_trueb,beta_se_hc3,beta_se_jack)
+
+}
+
+#true_var = solve(t(ref)%*%ref)%*%t(ref)%*%diag(c(yw - Xw%*%beta_tilde_hat)^2)%*%Xw%*%A_inv
+
+
+beta_hat_se <- matrix(colMeans(beta_ses), nrow = 5, byrow = T)
+beta_hat_se <- rbind(beta_hat_se, apply(beta_hats,2,sd))
+rownames(beta_hat_se) <- c("Sandwich","HC0","HC0+true b","HC3","Jackknife", "True")
+colnames(beta_hat_se) <- paste("cell type", 1:6)
+knitr::kable(round(beta_hat_se,4),caption="compare mean of estiamted variance")
+
+
+
+true_betas = do.call('cbind',rep(list(rep(1,nreps)%*%t(b)),5))
+beta_hats_rep = do.call('cbind',rep(list(beta_hats),5))
+
+coverage = (true_betas>=beta_hats_rep-1.96*beta_ses)&(true_betas<=beta_hats_rep+1.96*beta_ses)
+coverage <- matrix(colMeans(coverage), nrow = 5, byrow = T)
+rownames(coverage) <- c("Sandwich","HC0","HC0+true b","HC3","Jackknife")
+colnames(coverage) <- paste("cell type", 1:6)
+knitr::kable(coverage,caption="compare coverages of beta")
+
+
+
+
+

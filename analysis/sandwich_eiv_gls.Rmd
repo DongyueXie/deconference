@@ -14,39 +14,59 @@ knitr::opts_chunk$set(warning = F)
 ```
 
 
-In a previous [simulation study](sandwich_error.html), we showed that HC3 could give estimates closer to the true variances, and the Jackknife gives very similar estimates to HC3, though their equivalence is not straightforward. Here, we design a simulation study to examine: 1. Does HC3 and Jackknife still be similar if we increase error in variable; 2. How about 1 and add weights? If adding weights, then the Jackknife estimate of variance is not consistent?; 3. How about gls estimator? Add estimated weights; 4. Add random effect term see if it could correct for bias. 
+In a previous [simulation study](sandwich_error.html), we showed that HC3 could give estimates closer to the true variances, and the Jackknife gives very similar estimates to HC3, though their equivalence is not straightforward. Here, we design a simulation study to examine: 
 
-We generate data from \[y_i\sim Poisson(x_i^T\beta), x_i\sim Uniform(a,b), X_i = x_i+v_i, v_i\sim N(0,\Sigma)\] 
+1. Does HC3 and Jackknife still be similar if we add error in variable(EIV); Conclusion: No, but close to each other when error in vairable is small.
 
-In the model, $x_i$ is the true regressor and $X_i$ is the one with error in it. We can tune $a,b,\Sigma$ such that the variations in $X$ are different and see how methods perform.
+2. How about EIV and add weights? If adding weights, then the Jackknife estimate of variance is not consistent?; 
+
+3. How about gls estimator? Add estimated weights; Conclusion: it's hard to derive corrected socre function such that it's expectation is 0 since the weights depends on noised covariates.
+
+
+## Simulation 1:
+
+We generate data from \[y_i\sim N(x_i^T\beta,\sigma_i^2),  X_i = x_i+v_i\] 
+
+where 
+
+\[x_{.k}/n\sim Dirichlet(\alpha),\sigma_i^2 = |x_i^T\beta|,v_i\sim N(0,\Sigma),\Sigma=diag(s_1^2,...,s_K^2)\]
+
+In the model, $x_i$ is the true regressor and $X_i$ is the one with error in it. We tune $\alpha,\Sigma$ such that the variations in $X$ are different and see how methods perform.
+
+Setting $alpha$ larger makes $x$ and hence $var(y_i)$ less heterogeneous. 
 
 ```{r}
 source('code/sandwich_var.R')
-simu_study_sandwich = function(n,p,b,a,Sigma=diag(p),x=NULL,add_weights=FALSE,optimal=FALSE,correction = TRUE,nreps=100){
+simu_study_sandwich = function(n,p,b,alpha,Sigma=diag(p),x=NULL,add_weights=FALSE,sub_optimal=FALSE,optimal=FALSE,correction = TRUE,nreps=100,res.var=FALSE){
+  
+  
+  
+  if(is.null(x)){
+    x = t(gtools::rdirichlet(p,rep(alpha,n)))*n
+  }else{
+    x = apply(x,2,function(z){z/sum(z)})
+    n = nrow(x)
+    p = ncol(x)
+    x = x * n
+  }
   
   beta_hats = matrix(nrow=nreps,ncol=p)
   beta_ses = matrix(nrow=nreps,ncol=p*4)
   
-  if(is.null(x)){
-    x = t(gtools::rdirichlet(p,rep(a,n)))*n*10
-  }else{
-    x = apply(x,2,function(z){z/sum(z)})
-    x = x * n * 10
-  }
-  
-  
   for(i in 1:nreps){
   
   
-  y = rpois(n,x%*%b)
+  y = x%*%b + rnorm(n,0,abs(x%*%b))
   X = x + MASS::mvrnorm(n,rep(0,p),Sigma)
   if(add_weights){
     if(optimal){
-      w = c(1/(x%*%b))
+      w = c(1/(abs(x%*%b)+c(t(b)%*%Sigma%*%b)))
+    }else if(sub_optimal){
+      w = c(1/(abs(rowSums(X))+sum(Sigma)))
     }else{
-      w = c(1/(rowSums(X)))
+      w = runif(n)
     }
-    
+    w = w/sum(w)
   }else{
     w = NULL
   }
@@ -55,11 +75,11 @@ simu_study_sandwich = function(n,p,b,a,Sigma=diag(p),x=NULL,add_weights=FALSE,op
   
   
   #hc0
-  beta_se_hc0 = sqrt(diag(sandwich_var(y,X,Sigma,w,type='hc',correction=correction)$asyV))
+  beta_se_hc0 = sqrt(diag(sandwich_var(y,X,Sigma,w,type='hc',correction=correction,res.var=res.var)$asyV))
   #hc2
-  beta_se_hc2 = sqrt(diag(sandwich_var(y,X,Sigma,w,type='hc2',correction=correction)$asyV))
+  beta_se_hc2 = sqrt(diag(sandwich_var(y,X,Sigma,w,type='hc2',correction=correction,res.var=res.var)$asyV))
   #hc3
-  beta_se_hc3 = sqrt(diag(sandwich_var(y,X,Sigma,w,type='hc3',correction=correction)$asyV))
+  beta_se_hc3 = sqrt(diag(sandwich_var(y,X,Sigma,w,type='hc3',correction=correction,res.var=res.var)$asyV))
   #jack
   beta_se_jack = sqrt(diag(jackknife_var(y,X,Sigma,w)))
   
@@ -82,7 +102,8 @@ simu_study_summary = function(out){
   beta_hat_se <- rbind(beta_hat_se, apply(beta_hats,2,sd))
   rownames(beta_hat_se) <- c("Sandwich","HC2","HC3","Jackknife","True")
   colnames(beta_hat_se) = 1:length(b)
-  print(knitr::kable(round(beta_hat_se,4),caption="compare mean of estiamted variance"))
+  print(knitr::kable(round(beta_hat_se,4),caption="compare mean of estiamated variance"))
+  cat('\n\n\n\n')
 
 
 
@@ -99,58 +120,73 @@ simu_study_summary = function(out){
 
 ```
 
-Let's start with no error in variable.
+### Let's start with no error in variable.
 
-```{r}
+```{r,results='asis'}
 set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 0*diag(3),nreps = 300,correction = F)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=1,Sigma = 0*diag(3),nreps = 100,correction = F)
 simu_study_summary(out)
 ```
 
-Add noise to x
-
-```{r}
+```{r,results='asis'}
 set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 100*diag(3),nreps = 300,correction = F)
-simu_study_summary(out)
-```
-
-
-```{r}
-set.seed(12345)
-out = simu_study_sandwich(100,3,1:3/6,a=0.5,Sigma = 200*diag(3),nreps = 300,correction = F)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.5,Sigma = 0*diag(3),nreps = 100,correction = F)
 simu_study_summary(out)
 ```
 
 
-```{r}
+```{r,results='asis'}
 set.seed(12345)
-out = simu_study_sandwich(100,3,1:3/6,a=0.5,Sigma = 300*diag(3),nreps = 300,correction = F)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.1,Sigma = 0*diag(3),nreps = 100,correction = F)
+simu_study_summary(out)
+```
+
+```{r,results='asis'}
+set.seed(12345)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.1,Sigma = 0*diag(3),nreps = 100,correction = F,add_weights = T,sub_optimal = T)
 simu_study_summary(out)
 ```
 
 
-Add weights
+### Add noise to x
 
+```{r,results='asis'}
+set.seed(12345)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.5,Sigma = 1*diag(3),nreps = 100,correction = F)
+simu_study_summary(out)
+```
+
+```{r,results='asis'}
+set.seed(12345)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.5,Sigma = 3*diag(3),nreps = 100,correction = T,add_weights = T,sub_optimal = T)
+simu_study_summary(out)
+```
+
+```{r,results='asis'}
+set.seed(12345)
+out = simu_study_sandwich(n=500,p=3,b=1:3,alpha=0.5,Sigma = 3*diag(3),nreps = 100,correction = T,add_weights = T,sub_optimal = T)
+simu_study_summary(out)
+```
+
+## Simulation 2
 
 ```{r}
+LM6 = read.table('data/cibersort/signature_rnaseq_geo60424_LM6.txt',header = TRUE,sep='\t',row.names = 1)
+LM6_type = c("B","CD8","CD4","NK","Monocytes","Neutrophils")
+LM6 = apply(LM6,2,function(z){z/sum(z)})
+ref = apply(LM6,2,function(z){z/sum(z)})*nrow(LM6)
+```
+
+
+```{r,results='asis'}
 set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 0*diag(3),nreps = 300,add_weights = TRUE,optimal = TRUE,correction = FALSE)
+out = simu_study_sandwich(b=c(1,1,1,2,2,2),x=ref,Sigma = 1*diag(6),nreps = 100,correction = F)
 simu_study_summary(out)
 ```
 
 
-```{r}
+```{r,results='asis'}
 set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 100*diag(3),nreps = 300,add_weights = TRUE,optimal = TRUE,correction = FALSE)
+out = simu_study_sandwich(b=c(1,1,1,2,2,2),x=ref,Sigma = 1*diag(6),nreps = 100,correction = F,add_weights = T,sub_optimal = T)
 simu_study_summary(out)
 ```
-
-
-```{r}
-set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 100*diag(3),nreps = 300,add_weights = TRUE,optimal = TRUE,correction = TRUE)
-simu_study_summary(out)
-```
-
-

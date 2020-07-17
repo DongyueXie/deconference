@@ -1,5 +1,5 @@
 ############## test ################
-source('code/deconference.R')
+source('code/deconference_main.R')
 source('code/simu_func1.R')
 
 
@@ -19,31 +19,133 @@ ref = apply(LM6,2,function(z){z/sum(z)})
 G = nrow(ref)
 K = ncol(ref)
 b = c(0.05,0.05,0.05,0.05,0.1,0.7)
-b2 = c(0.05,0.1,0.15,0.2,0.3,0.2)
+b2 = c(0.05,0.06,0.08,0.1,0.2,0.51)
 
 
 set.seed(12345)
 
-#results = list()
+results = list()
 
 # for(i in 1:length(G_list)){
 
   # if(i%%2==0){print(sprintf("done %d (out of %d)",i,length(G_list)))}
 
-  results = simu_study(ref,G,b,
+  results[[1]] = simu_study(ref,G,b,
                             ref_type='bulk',
-                            printevery = 50,same_indi = T,
+                            printevery = 10,
                             b2=b2)
 
-  results = simu_study(ref,G,b,
+  results[[2]] = simu_study(ref,G,b,
                        ref_type='sc',
-                       printevery = 50,same_indi = T,
-                       b2=b2)
+                       printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/100,
+                       b2=b2,weight = 'equal',hc.type = 'hc0')
 
-  results = simu_study(ref,G,b,
-                       ref_type='multi_sc',
-                       printevery = 50,
-                       b2=b2)
+  results[[3]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/100,
+                            b2=b2,weight = 'equal',hc.type = 'hc3')
+
+  results[[4]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/100,
+                            b2=b2,weight = 'default',hc.type = 'hc0')
+
+  results[[5]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/100,
+                            b2=b2,weight = 'default',hc.type = 'hc3')
+
+
+  save(results,file = 'output/LM6_simu.RData')
+
+  results[[6]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1,
+                            b2=b2,weight = 'equal',hc.type = 'hc0')
+
+  results[[7]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1,
+                            b2=b2,weight = 'equal',hc.type = 'hc3')
+
+  results[[8]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1,
+                            b2=b2,weight = 'default',hc.type = 'hc0')
+
+  results[[9]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1,
+                            b2=b2,weight = 'default',hc.type = 'hc3')
+
+  results[[10]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/G,
+                            b2=b2,weight = 'equal',hc.type = 'hc0')
+
+  save(results,file = 'output/LM6_simu.RData')
+
+  results[[11]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/G,
+                            b2=b2,weight = 'equal',hc.type = 'hc3')
+
+  results[[12]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/G,
+                            b2=b2,weight = 'default',hc.type = 'hc0')
+
+  results[[13]] = simu_study(ref,G,b,
+                            ref_type='sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/G,
+                            b2=b2,weight = 'default',hc.type = 'hc3')
+
+
+  save(results,file = 'output/LM6_simu.RData')
+
+  results[[14]] = simu_study(ref,G,b,
+                            ref_type='multi_sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/G,
+                            b2=b2,weight = 'equal',hc.type = 'hc3')
+
+  results[[15]] = simu_study(ref,G,b,
+                            ref_type='multi_sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 10,mean_to_var_tau = 1/G,
+                            b2=b2,weight = 'default',hc.type = 'hc3')
+
+  results[[16]] = simu_study(ref,G,b,
+                            ref_type='multi_sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 1,mean_to_var_tau = 1/G,
+                            b2=b2,weight = 'equal',hc.type = 'hc3')
+
+  results[[17]] = simu_study(ref,G,b,
+                            ref_type='multi_sc',
+                            printevery = 10,same_indi = F,mean_to_var_sigma = 1,mean_to_var_tau = 1/G,
+                            b2=b2,weight = 'default',hc.type = 'hc3')
+
+  save(results,file = 'output/LM6_simu.RData')
+
+  results[[18]] = simu_study(ref,G,b,
+                             ref_type='multi_sc',
+                             printevery = 10,same_indi = F,mean_to_var_sigma = 1/100,mean_to_var_tau = 1/G,
+                             b2=b2,weight = 'equal',hc.type = 'hc3')
+
+  results[[19]] = simu_study(ref,G,b,
+                             ref_type='multi_sc',
+                             printevery = 10,same_indi = F,mean_to_var_sigma = 1/100,mean_to_var_tau = 1/G,
+                             b2=b2,weight = 'default',hc.type = 'hc3')
+
+  results[[20]] = simu_study(ref,G,b,
+                             ref_type='multi_sc',
+                             printevery = 10,same_indi = F,mean_to_var_sigma = 1/G,mean_to_var_tau = 1/G,
+                             b2=b2,weight = 'equal',hc.type = 'hc3')
+
+  results[[21]] = simu_study(ref,G,b,
+                             ref_type='multi_sc',
+                             printevery = 10,same_indi = F,mean_to_var_sigma = 1/G,mean_to_var_tau = 1/G,
+                             b2=b2,weight = 'default',hc.type = 'hc3')
+
+  save(results,file = 'output/LM6_simu.RData')
 
 # }
 
@@ -60,8 +162,9 @@ cells = read.table('data/cibersort/Fig2ab-NSCLC_PBMCs/Fig2ab-NSCLC_PBMCs_scRNAse
 
 cell = c()
 for(i in 1:length(cells)){
-  cell[i] = levels(cells[1,i])
+  cell[i] = (cells[1,i])
 }
+
 cell_type = unique(cell)
 
 

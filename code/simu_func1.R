@@ -7,36 +7,47 @@
 #'@param ref ref data matrix, Gene by cell type, relative expression
 #'@param Ng number of genes to use in simulation, gene will be resampled each round
 #'@param b cell type proportions
-#'@param ref_type 'sc' for single cell ref; 'bulk' for bulk ref.
+#'@param ref_type 'sc' for single cell ref; 'bulk' for bulk ref, multi_sc
+#'@param hc.type type of sandwich estimator
+#'@param tau2 a G by K matrix, entry(g,k) is the variance of gene g in cell type k, across cells
 #'@param tau2known whether \tau^2, the variance of gene expr across cell, is known
+#'@param sigma2 a G by K matrix, entry(g,k) is the variance of gene g in cell type k,across individuals
+#'@param weight default, optimal, equal, external
+#'@param marker_gene marker gene index
 #'@param bulk_lib_size bulk sample library size
 #'@param sc_lib_size single cell ref library size
 #'@param ref_lib_size bulk ref data library size
 #'@param nk number of single cells of each cell type
+#'@param x_estimator estimate the reference matrix from single cell data, separate or aggregate
 #'@param nreps number of repetition.
-#'@param alpha significancel level
+#'@param alpha significance level
 #'@param a fuller's correction parameter a
 #'@param correction whether perform fullers correction.
 #'@param s cell size
 #'@param add_y2 whether add another bulk sample and perform hypothesis testing.
+#'@param b2 the second bulk sample's cell type proportion
 #'@return a list with estimates and standard errors.
 #'@return 1. true proportion; 2. mean of estimates; 3. standard error of estimates; 4. coverage.
 #'@return input parameters
 
 
 simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
-                      same_indi = FALSE,
-                      tau2known=FALSE,
+                      hc.type = 'hc3',
                       marker_gene = NULL,
                       weight = 'default',
                       bulk_lib_size = 50,
                       sc_lib_size = 0.1,
                       ref_lib_size = 50,
                       nk = 100,
+                      ref_scale = Ng,
+                      same_indi = FALSE,
+                      mean_to_var_sigma = 10,
+                      mean_to_var_tau = 10,
                       tau2 = matrix(runif(nrow(ref)*length(b),0.5/(nrow(ref))^2,1/(nrow(ref))^2),nrow=nrow(ref)),
+                      tau2known=FALSE,
                       x_estimator = 'aggregate',
                       nreps=100,alpha=0.05,a=0,
-                      correction=FALSE,s,printevery=10,
+                      correction=TRUE,s,printevery=10,
                       add_y2 = TRUE, b2=NULL,gene_thresh=10,
                       n_indi = 6,sigma2known=FALSE,
                       sigma2 = matrix(runif(nrow(ref)*length(b),0.5/(nrow(ref))^3,1/(nrow(ref))^3),nrow=nrow(ref)),
@@ -124,7 +135,7 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
     gene_names = rownames(ref_rep)
 
-    Theta = apply(ref_rep,2,function(z){z/sum(z)})
+    Theta = apply(ref_rep,2,function(z){z/sum(z)})*ref_scale
 
     if(same_indi){
 
@@ -143,7 +154,12 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
       # bulk data gene relative expression.
       ## generate theta_i for bulk individual
-      X_b = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+      if(!is.null(mean_to_var_sigma)){
+        X_b = matrix(rgamma(Ng*K,Theta*mean_to_var_sigma,rate=mean_to_var_sigma),ncol=K)
+      }else{
+        X_b = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+      }
+
       mb = X_b%*%diag(s*(Ng/G))%*%b
       thetab = mb/sum(mb)
 
@@ -152,7 +168,11 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
       if(add_y2){
 
-        X_b2 = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+        if(!is.null(mean_to_var_sigma)){
+          X_b2 = matrix(rgamma(Ng*K,Theta*mean_to_var_sigma,rate=mean_to_var_sigma),ncol=K)
+        }else{
+          X_b2 = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+        }
         mb2 = X_b2%*%diag(s*(Ng/G))%*%b2
         thetab2 = mb2/sum(mb2)
 
@@ -162,14 +182,22 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
     }
 
+    y = rpois(Ng,bulk_lib_size*Ng*thetab)
+
+    if(add_y2){
+      y2 = rpois(Ng,bulk_lib_size*Ng*thetab2)
+      y = cbind(y,y2)
+    }
+
+
     #browser()
 
-    if((weight=="optimal") & !add_y2 & same_indi){
-      w = c(1/thetab)
-    }else if(weight == 'equal'){
+    if(weight == 'equal'){
       w = rep(1,Ng)
     }else if(weight == 'default'){
       w = NULL
+    }else if(weight == 'external'){
+      w = rpois(Ng,bulk_lib_size*Ng*thetab)
     }
 
 
@@ -184,13 +212,27 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
         #print(i)
         indi_cell_idx = which(indi_idx==i)
         indi_celltype_idx = rep(1:K,each=nk)
-        X_i = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+
+        if(!is.null(mean_to_var_sigma)){
+          X_i = matrix(rgamma(Ng*K,Theta*mean_to_var_sigma,rate=mean_to_var_sigma),ncol=K)
+        }else{
+          X_i = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+        }
+
         Y_i = matrix(nrow=Ng,ncol=K*nk)
         for(k in 1:K){
           cc = which(indi_celltype_idx==k)
           ag = X_i[,k]%*%t(rep(1,nk))
-          atau2 = tau2[,k]%*%t(rep(1,nk))
-          Y_i[,cc] = matrix(rgamma(Ng*nk,ag^2/atau2,rate=ag/atau2),ncol=nk)
+
+
+          if(!is.null(mean_to_var_tau)){
+            Y_i[,cc] = matrix(rgamma(Ng*nk,ag*mean_to_var_tau,rate=mean_to_var_tau),ncol=nk)
+          }else{
+            atau2 = tau2[,k]%*%t(rep(1,nk))
+            Y_i[,cc] = matrix(rgamma(Ng*nk,ag^2/atau2,rate=ag/atau2),ncol=nk)
+          }
+
+
         }
         cell_type = c(cell_type,indi_celltype_idx)
         Y[,indi_cell_idx] = Y_i
@@ -199,15 +241,7 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
       #Y = matrix(rnorm(Ng*n_indi*K*nk,Y,sqrt(sc_noise_var)),ncol=n_indi*K*nk)
       #y = rnorm(Ng,Xb,sqrt(bulk_noise_var))
 
-      Y = matrix(rpois(Ng*nk*n_indi*K,t(t(Y)*Cr)),ncol=nk*n_indi*K)
-
-
-      y = rpois(Ng,bulk_lib_size*Ng*thetab)
-
-      if(add_y2){
-        y2 = rpois(Ng,bulk_lib_size*Ng*thetab2)
-        y = cbind(y,y2)
-      }
+      Y = matrix(rpois(Ng*nk*n_indi*K,t(t(Y)*Cr/median(colSums(Y)))),ncol=nk*n_indi*K)
 
       rownames(Y) = gene_names
 
@@ -245,7 +279,8 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
       }
 
 
-      fit_adj = deconference(data.obj,est_sigma2=est_sigma2,x_estimator=x_estimator,
+      fit_adj = deconference(data.obj,marker_gene=marker_gene,hc.type=hc.type,
+                             est_sigma2=est_sigma2,x_estimator=x_estimator,
                              meta_var=meta_var,
                              a=a,correction=correction,eps=eps)
       sigma2_hat[[reps]] = fit_adj$input$Sigma
@@ -265,6 +300,18 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
       #t1=Sys.time()
 
+      if(!same_indi){
+
+        if(!is.null(mean_to_var_sigma)){
+          X_i = matrix(rgamma(Ng*K,Theta*mean_to_var_sigma,rate=mean_to_var_sigma),ncol=K)
+        }else{
+          X_i = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+        }
+
+      }else{
+          X_i = Theta
+        }
+
 
       cell_type = rep(1:K,each=nk)
       Cr = rnbinom(nk*K,sc_lib_size*Ng,0.5)+1
@@ -274,21 +321,23 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
         cell_idx = which(cell_type==k)
         #Y[,cell_idx] = t(rdirichlet(nk,Theta[,k]*Ng))
         # Y[,cell_idx] = matrix(rgamma(Ng*nk,Theta[,k]%*%t(rep(1,nk))*snr,rate=1),ncol=nk)/snr
-        ag = Theta[,k]%*%t(rep(1,nk))
+        ag = X_i[,k]%*%t(rep(1,nk))
         atau2 = tau2[,k]%*%t(rep(1,nk))
-        Y[,cell_idx] = matrix(rgamma(Ng*nk,ag^2/atau2,
-                            rate=ag/atau2),ncol=nk)
+
+        if(!is.null(mean_to_var_tau)){
+          Y[,cell_idx] = matrix(rgamma(Ng*nk,ag*mean_to_var_tau,rate=mean_to_var_tau),ncol=nk)
+        }else{
+          atau2 = tau2[,k]%*%t(rep(1,nk))
+          Y[,cell_idx] = matrix(rgamma(Ng*nk,ag^2/atau2,
+                                       rate=ag/atau2),ncol=nk)
+        }
+
+
         # tau2[,k] = Theta[,k]*(1-Theta[,k]) / (Ng+1)
       }
       #Y = matrix(rpois(Ng*nk*K,Y%*%diag(Cr)),ncol=nk*K)
-      Y = matrix(rpois(Ng*nk*K,t(t(Y)*Cr)),ncol=nk*K)
+      Y = matrix(rpois(Ng*nk*K,t(t(Y)*Cr/median(colSums(Y)))),ncol=nk*K)
       rownames(Y) = gene_names
-
-      y = rpois(Ng,bulk_lib_size*Ng*thetab)
-      if(add_y2){
-        y2 = rpois(Ng,bulk_lib_size*Ng*thetab2)
-        y = cbind(y,y2)
-      }
 
       #t2=Sys.time()
 
@@ -303,7 +352,7 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
                                   cell_type_idx=cell_type,
                                   tau2 = tau2,sigma2 = sigma2,
                                   w=w,gene_thresh=gene_thresh)
-        fit_adj = deconference(data.obj,a=a,correction=correction,x_estimator=x_estimator)
+
       }else{
         data.obj = set_data_decon(y,Y,
                                   ref_type = ref_type,
@@ -311,9 +360,11 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
                                   cell_type_idx=cell_type,
                                   tau2 = NULL,sigma2 = sigma2,
                                   w=w,gene_thresh=gene_thresh)
-        fit_adj = deconference(data.obj,a=a,correction=correction,x_estimator=x_estimator)
+
       }
 
+      fit_adj = deconference(data.obj,marker_gene=marker_gene,hc.type=hc.type,
+                             x_estimator=x_estimator,a=a,correction=correction,eps=eps)
       fit_unadj = unadjusted_lm(fit_adj$input$y,fit_adj$input$X,w=fit_adj$input$w)
 
 
@@ -324,17 +375,26 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
       #t1=Sys.time()
 
+
+      if(!same_indi){
+
+        if(!is.null(mean_to_var_sigma)){
+          X_i = matrix(rgamma(Ng*K,Theta*mean_to_var_sigma,rate=mean_to_var_sigma),ncol=K)
+        }else{
+          X_i = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+        }
+
+      }else{
+        X_i = Theta
+      }
+
+
       Cr = rpois(K,ref_lib_size*Ng)+1
       #Cr = rep(ref_lib_size,K)
       U = diag(Cr)
-      Y = matrix(rpois(Ng*K,Theta%*%U),ncol=K)
+      #Theta = apply(ref_rep,2,function(z){z/sum(z)})
+      Y = matrix(rpois(Ng*K,X_i%*%U/median(colSums(X_i))),ncol=K)
       rownames(Y) = gene_names
-      #bulk data
-      y = rpois(Ng,bulk_lib_size*Ng*thetab)
-      if(add_y2){
-        y2 = rpois(Ng,bulk_lib_size*Ng*thetab2)
-        y = cbind(y,y2)
-      }
 
       #t2=Sys.time()
 
@@ -345,7 +405,8 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
                                 #marker_gene=marker_gene,
                                 w=w)
 
-      fit_adj = deconference(data.obj,a=a,correction=correction)
+      fit_adj = deconference(data.obj,marker_gene=marker_gene,hc.type=hc.type,
+                             a=a,correction=correction,eps=eps)
       fit_unadj = unadjusted_lm(fit_adj$input$y,fit_adj$input$X,w=fit_adj$input$w)
 
       #t3 = Sys.time()
@@ -521,13 +582,14 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
 
 
+
 }
 
 
 ############## test ################
 # set.seed(12345)
 #
-# G = 100
+# G = 1000
 # K = 4
 # b = 1:K
 # b = b/sum(b)

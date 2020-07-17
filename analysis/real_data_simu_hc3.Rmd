@@ -1,0 +1,78 @@
+---
+title: "real_data_simu_hc3"
+author: "DongyueXie"
+date: "2020-07-17"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+load('output/LM6_simu.RData')
+source('code/ploter.R')
+```
+
+$b = (0.05,0.05,0.05,0.05,0.1,0.7)$
+
+$b2 = (0.05,0.06,0.08,0.1,0.2,0.51)$
+
+## Bulk reference
+
+```{r,fig.width=8,fig.height=6}
+
+results_name = c("bulk-default-hc3",
+                 'sc-equal-hc0-sigma10-tau001','sc-equal-hc3-sigma10-tau001','sc-default-hc0-sigma10-tau001','sc-default-hc3-sigma10-tau001',
+                 'sc-equal-hc0-sigma10-tau1','sc-equal-hc3-sigma10-tau1','sc-default-hc0-sigma10-tau1','sc-default-hc3-sigma10-tau1',
+                 'sc-equal-hc0-sigma10-tau1oG','sc-equal-hc3-sigma10-tau1oG','sc-default-hc0-sigma10-tau1oG','sc-default-hc3-sigma10-tau1oG',
+                 'multisc-equal-hc3-sigma10-tau1oG','multisc-default-hc3-sigma10-tau1oG',
+                 'multisc-equal-hc3-sigma1-tau1oG','multisc-default-hc3-sigma1-tau1oG',
+                 'multisc-equal-hc3-sigma001-tau1oG','multisc-default-hc3-sigma001-tau1oG')
+
+source('code/deconference_main.R')
+source('code/simu_func1.R')
+
+
+LM6 = read.table('data/cibersort/signature_rnaseq_geo60424_LM6.txt',header = TRUE,sep='\t',row.names = 1)
+LM6_type = c("B","CD8","CD4","NK","Monocytes","Neutrophils")
+
+ref = apply(LM6,2,function(z){z/sum(z)})
+
+#### case 1 : bulk reference data ####
+
+G = nrow(ref)
+K = ncol(ref)
+b = c(0.05,0.05,0.05,0.05,0.1,0.7)
+b2 = c(0.05,0.06,0.08,0.1,0.2,0.51)
+
+
+set.seed(12345)
+
+ploter(simu_study(ref,G,b,ref_type='bulk',printevery = 1e3,same_indi = F,mean_to_var_sigma = 10,
+                       b2=b2,weight = 'equal',hc.type = 'hc0'))
+  
+ploter(results[[1]])
+```
+
+## sc reference
+
+```{r,fig.width=8,fig.height=6}
+for(i in 2:13){
+  cat(results_name[i])
+  ploter(results[[i]])
+  cat('\n\n\n\n')
+}
+
+```
+
+
+## multi-sc reference
+
+```{r,fig.width=8,fig.height=6}
+for(i in 14:19){
+  cat(results_name[i])
+  ploter(results[[i]])
+  cat('\n\n\n\n')
+}
+```

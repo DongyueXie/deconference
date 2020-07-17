@@ -412,7 +412,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-07-03
+<strong>Last updated:</strong> 2020-07-17
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -503,16 +503,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1ba67ca2e62b9c29876ba0a32238d8f0d95804eftargetblank1ba67caa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/1ba67ca2e62b9c29876ba0a32238d8f0d95804ef" target="_blank">1ba67ca</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree95f6780626153498207bb9942800fdd100ac93ddtargetblank95f6780a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/95f6780626153498207bb9942800fdd100ac93dd" target="_blank">95f6780</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1ba67ca2e62b9c29876ba0a32238d8f0d95804eftargetblank1ba67caa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree95f6780626153498207bb9942800fdd100ac93ddtargetblank95f6780a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/1ba67ca2e62b9c29876ba0a32238d8f0d95804ef" target="_blank">1ba67ca</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/95f6780626153498207bb9942800fdd100ac93dd" target="_blank">95f6780</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -523,8 +523,22 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
+    Untracked:  code/deconference_estfunc.R
+    Untracked:  code/deconference_main.R
+    Untracked:  code/deconference_meta.R
+    Untracked:  code/deconference_setdata.R
+    Untracked:  code/ploter.R
     Untracked:  code/sandwich_var.R
+    Untracked:  code/unadjusted_lm.R
     Untracked:  data/cibersort/
+    Untracked:  output/LM6_simu.RData
+
+Unstaged changes:
+    Modified:   analysis/real_data_simu_weight.Rmd
+    Deleted:    code/deconference.R
+    Deleted:    code/deconference2.R
+    Modified:   code/real_data_simulation.R
+    Modified:   code/simu_func1.R
 
 </code></pre>
 <p>
@@ -568,6 +582,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/95f6780626153498207bb9942800fdd100ac93dd/analysis/sandwich_eiv_gls.Rmd" target="_blank">95f6780</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-07-17
+</td>
+<td>
+wflow_publish(“analysis/sandwich_eiv_gls.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/f0ba7488648ed78c7a73f357b71687173fb41102/docs/sandwich_eiv_gls.html" target="_blank">f0ba748</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-07-03
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/1ba67ca2e62b9c29876ba0a32238d8f0d95804ef/analysis/sandwich_eiv_gls.Rmd" target="_blank">1ba67ca</a>
 </td>
 <td>
@@ -589,35 +637,51 @@ wflow_publish(“analysis/sandwich_eiv_gls.Rmd”)
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>In a previous <a href="sandwich_error.html">simulation study</a>, we showed that HC3 could give estimates closer to the true variances, and the Jackknife gives very similar estimates to HC3, though their equivalence is not straightforward. Here, we design a simulation study to examine: 1. Does HC3 and Jackknife still be similar if we increase error in variable; 2. How about 1 and add weights? If adding weights, then the Jackknife estimate of variance is not consistent?; 3. How about gls estimator? Add estimated weights; 4. Add random effect term see if it could correct for bias.</p>
-<p>We generate data from <span class="math display">\[y_i\sim Poisson(x_i^T\beta), x_i\sim Uniform(a,b), X_i = x_i+v_i, v_i\sim N(0,\Sigma)\]</span></p>
-<p>In the model, <span class="math inline">\(x_i\)</span> is the true regressor and <span class="math inline">\(X_i\)</span> is the one with error in it. We can tune <span class="math inline">\(a,b,\Sigma\)</span> such that the variations in <span class="math inline">\(X\)</span> are different and see how methods perform.</p>
+<p>In a previous <a href="sandwich_error.html">simulation study</a>, we showed that HC3 could give estimates closer to the true variances, and the Jackknife gives very similar estimates to HC3, though their equivalence is not straightforward. Here, we design a simulation study to examine:</p>
+<ol style="list-style-type: decimal">
+<li><p>Does HC3 and Jackknife still be similar if we add error in variable(EIV); Conclusion: No, but close to each other when error in vairable is small.</p></li>
+<li><p>How about EIV and add weights? If adding weights, then the Jackknife estimate of variance is not consistent?;</p></li>
+<li><p>How about gls estimator? Add estimated weights; Conclusion: it’s hard to derive corrected socre function such that it’s expectation is 0 since the weights depends on noised covariates.</p></li>
+</ol>
+</div>
+<div id="simulation-1" class="section level2">
+<h2>Simulation 1:</h2>
+<p>We generate data from <span class="math display">\[y_i\sim N(x_i^T\beta,\sigma_i^2),  X_i = x_i+v_i\]</span></p>
+<p>where</p>
+<p><span class="math display">\[x_{.k}/n\sim Dirichlet(\alpha),\sigma_i^2 = |x_i^T\beta|,v_i\sim N(0,\Sigma),\Sigma=diag(s_1^2,...,s_K^2)\]</span></p>
+<p>In the model, <span class="math inline">\(x_i\)</span> is the true regressor and <span class="math inline">\(X_i\)</span> is the one with error in it. We tune <span class="math inline">\(\alpha,\Sigma\)</span> such that the variations in <span class="math inline">\(X\)</span> are different and see how methods perform.</p>
+<p>Setting <span class="math inline">\(alpha\)</span> larger makes <span class="math inline">\(x\)</span> and hence <span class="math inline">\(var(y_i)\)</span> less heterogeneous.</p>
 <pre class="r"><code>source(&#39;code/sandwich_var.R&#39;)
-simu_study_sandwich = function(n,p,b,a,Sigma=diag(p),x=NULL,add_weights=FALSE,optimal=FALSE,correction = TRUE,nreps=100){
+simu_study_sandwich = function(n,p,b,alpha,Sigma=diag(p),x=NULL,add_weights=FALSE,sub_optimal=FALSE,optimal=FALSE,correction = TRUE,nreps=100,res.var=FALSE){
+  
+  
+  
+  if(is.null(x)){
+    x = t(gtools::rdirichlet(p,rep(alpha,n)))*n
+  }else{
+    x = apply(x,2,function(z){z/sum(z)})
+    n = nrow(x)
+    p = ncol(x)
+    x = x * n
+  }
   
   beta_hats = matrix(nrow=nreps,ncol=p)
   beta_ses = matrix(nrow=nreps,ncol=p*4)
   
-  if(is.null(x)){
-    x = t(gtools::rdirichlet(p,rep(a,n)))*n*10
-  }else{
-    x = apply(x,2,function(z){z/sum(z)})
-    x = x * n * 10
-  }
-  
-  
   for(i in 1:nreps){
   
   
-  y = rpois(n,x%*%b)
+  y = x%*%b + rnorm(n,0,abs(x%*%b))
   X = x + MASS::mvrnorm(n,rep(0,p),Sigma)
   if(add_weights){
     if(optimal){
-      w = c(1/(x%*%b))
+      w = c(1/(abs(x%*%b)+c(t(b)%*%Sigma%*%b)))
+    }else if(sub_optimal){
+      w = c(1/(abs(rowSums(X))+sum(Sigma)))
     }else{
-      w = c(1/(rowSums(X)))
+      w = runif(n)
     }
-    
+    w = w/sum(w)
   }else{
     w = NULL
   }
@@ -626,11 +690,11 @@ simu_study_sandwich = function(n,p,b,a,Sigma=diag(p),x=NULL,add_weights=FALSE,op
   
   
   #hc0
-  beta_se_hc0 = sqrt(diag(sandwich_var(y,X,Sigma,w,type=&#39;hc&#39;,correction=correction)$asyV))
+  beta_se_hc0 = sqrt(diag(sandwich_var(y,X,Sigma,w,type=&#39;hc&#39;,correction=correction,res.var=res.var)$asyV))
   #hc2
-  beta_se_hc2 = sqrt(diag(sandwich_var(y,X,Sigma,w,type=&#39;hc2&#39;,correction=correction)$asyV))
+  beta_se_hc2 = sqrt(diag(sandwich_var(y,X,Sigma,w,type=&#39;hc2&#39;,correction=correction,res.var=res.var)$asyV))
   #hc3
-  beta_se_hc3 = sqrt(diag(sandwich_var(y,X,Sigma,w,type=&#39;hc3&#39;,correction=correction)$asyV))
+  beta_se_hc3 = sqrt(diag(sandwich_var(y,X,Sigma,w,type=&#39;hc3&#39;,correction=correction,res.var=res.var)$asyV))
   #jack
   beta_se_jack = sqrt(diag(jackknife_var(y,X,Sigma,w)))
   
@@ -653,7 +717,8 @@ simu_study_summary = function(out){
   beta_hat_se &lt;- rbind(beta_hat_se, apply(beta_hats,2,sd))
   rownames(beta_hat_se) &lt;- c(&quot;Sandwich&quot;,&quot;HC2&quot;,&quot;HC3&quot;,&quot;Jackknife&quot;,&quot;True&quot;)
   colnames(beta_hat_se) = 1:length(b)
-  print(knitr::kable(round(beta_hat_se,4),caption=&quot;compare mean of estiamted variance&quot;))
+  print(knitr::kable(round(beta_hat_se,4),caption=&quot;compare mean of estiamated variance&quot;))
+  cat(&#39;\n\n\n\n&#39;)
 
 
 
@@ -667,177 +732,832 @@ simu_study_summary = function(out){
   print(knitr::kable(round(coverage,3),caption=&quot;compare coverages of beta&quot;))
 
 }</code></pre>
-<p>Let’s start with no error in variable.</p>
+<div id="lets-start-with-no-error-in-variable." class="section level3">
+<h3>Let’s start with no error in variable.</h3>
 <pre class="r"><code>set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 0*diag(3),nreps = 300,correction = F)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=1,Sigma = 0*diag(3),nreps = 100,correction = F)
 simu_study_summary(out)</code></pre>
-<pre><code>
-
-Table: compare mean of estiamted variance
-
-                  1        2        3
-----------  -------  -------  -------
-Sandwich     0.0243   0.0300   0.0317
-HC2          0.0260   0.0325   0.0340
-HC3          0.0279   0.0353   0.0365
-Jackknife    0.0278   0.0351   0.0363
-True         0.0269   0.0358   0.0333
-
-
-Table: compare coverages of beta
-
-                 1       2       3
-----------  ------  ------  ------
-Sandwich     0.907   0.857   0.923
-HC2          0.933   0.890   0.930
-HC3          0.953   0.913   0.947
-Jackknife    0.953   0.910   0.947</code></pre>
-<p>Add noise to x</p>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.7053</td>
+<td align="right">0.8109</td>
+<td align="right">0.8697</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.7344</td>
+<td align="right">0.9155</td>
+<td align="right">0.9142</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.7674</td>
+<td align="right">1.0467</td>
+<td align="right">0.9650</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.7635</td>
+<td align="right">1.0412</td>
+<td align="right">0.9601</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">0.7878</td>
+<td align="right">1.1787</td>
+<td align="right">0.9622</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.91</td>
+<td align="right">0.87</td>
+<td align="right">0.89</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.92</td>
+<td align="right">0.93</td>
+<td align="right">0.92</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.95</td>
+<td align="right">0.94</td>
+<td align="right">0.96</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.95</td>
+<td align="right">0.94</td>
+<td align="right">0.96</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 100*diag(3),nreps = 300,correction = F)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.5,Sigma = 0*diag(3),nreps = 100,correction = F)
 simu_study_summary(out)</code></pre>
-<pre><code>
-
-Table: compare mean of estiamted variance
-
-                  1        2        3
-----------  -------  -------  -------
-Sandwich     0.0577   0.0701   0.0761
-HC2          0.0622   0.0756   0.0814
-HC3          0.0677   0.0823   0.0877
-Jackknife    0.0663   0.0803   0.0830
-True         0.0589   0.0803   0.0827
-
-
-Table: compare coverages of beta
-
-                 1       2       3
-----------  ------  ------  ------
-Sandwich     0.960   0.913   0.933
-HC2          0.973   0.923   0.950
-HC3          0.983   0.943   0.960
-Jackknife    0.980   0.940   0.950</code></pre>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.6546</td>
+<td align="right">0.9415</td>
+<td align="right">1.0146</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.7071</td>
+<td align="right">1.0406</td>
+<td align="right">1.1047</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.7660</td>
+<td align="right">1.1553</td>
+<td align="right">1.2062</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.7621</td>
+<td align="right">1.1494</td>
+<td align="right">1.2001</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">0.5982</td>
+<td align="right">1.0505</td>
+<td align="right">1.2009</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.95</td>
+<td align="right">0.94</td>
+<td align="right">0.87</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.96</td>
+<td align="right">0.95</td>
+<td align="right">0.90</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.97</td>
+<td align="right">0.97</td>
+<td align="right">0.90</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.97</td>
+<td align="right">0.97</td>
+<td align="right">0.90</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>set.seed(12345)
-out = simu_study_sandwich(100,3,1:3/6,a=0.5,Sigma = 200*diag(3),nreps = 300,correction = F)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.1,Sigma = 0*diag(3),nreps = 100,correction = F)
 simu_study_summary(out)</code></pre>
-<pre><code>
-
-Table: compare mean of estiamted variance
-
-                  1        2        3
-----------  -------  -------  -------
-Sandwich     0.1124   0.1546   0.1815
-HC2          0.1243   0.1682   0.1913
-HC3          0.1412   0.1912   0.2105
-Jackknife    0.1319   0.1767   0.1892
-True         0.1064   0.1737   0.1924
-
-
-Table: compare coverages of beta
-
-                 1       2       3
-----------  ------  ------  ------
-Sandwich     0.977   0.967   0.957
-HC2          0.987   0.987   0.963
-HC3          0.993   0.993   0.977
-Jackknife    0.990   0.983   0.973</code></pre>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.3372</td>
+<td align="right">0.6967</td>
+<td align="right">1.0122</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.3934</td>
+<td align="right">0.8007</td>
+<td align="right">1.1993</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.4661</td>
+<td align="right">0.9260</td>
+<td align="right">1.4445</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.4636</td>
+<td align="right">0.9213</td>
+<td align="right">1.4368</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">0.4747</td>
+<td align="right">1.0250</td>
+<td align="right">1.4371</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.81</td>
+<td align="right">0.77</td>
+<td align="right">0.76</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.88</td>
+<td align="right">0.87</td>
+<td align="right">0.79</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.93</td>
+<td align="right">0.93</td>
+<td align="right">0.83</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.93</td>
+<td align="right">0.93</td>
+<td align="right">0.83</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>set.seed(12345)
-out = simu_study_sandwich(100,3,1:3/6,a=0.5,Sigma = 300*diag(3),nreps = 300,correction = F)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.1,Sigma = 0*diag(3),nreps = 100,correction = F,add_weights = T,sub_optimal = T)
 simu_study_summary(out)</code></pre>
-<pre><code>
-
-Table: compare mean of estiamted variance
-
-                   1         2         3
-----------  --------  --------  --------
-Sandwich      3.6466    8.2828    9.7569
-HC2              NaN       NaN       NaN
-HC3           9.3675   17.7568   18.8107
-Jackknife    11.1898   35.2436   48.3550
-True          0.7535    1.8401    2.2854
-
-
-Table: compare coverages of beta
-
-                 1       2       3
-----------  ------  ------  ------
-Sandwich     0.987   0.997   0.970
-HC2             NA      NA      NA
-HC3          0.997   1.000   0.983
-Jackknife    0.993   1.000   0.980</code></pre>
-<p>Add weights</p>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.2928</td>
+<td align="right">0.5637</td>
+<td align="right">0.8260</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.3120</td>
+<td align="right">0.6018</td>
+<td align="right">0.8842</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.3333</td>
+<td align="right">0.6435</td>
+<td align="right">0.9483</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.3316</td>
+<td align="right">0.6402</td>
+<td align="right">0.9435</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">0.3227</td>
+<td align="right">0.6996</td>
+<td align="right">0.9683</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.93</td>
+<td align="right">0.90</td>
+<td align="right">0.85</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.94</td>
+<td align="right">0.93</td>
+<td align="right">0.88</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.95</td>
+<td align="right">0.94</td>
+<td align="right">0.90</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.95</td>
+<td align="right">0.94</td>
+<td align="right">0.90</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="add-noise-to-x" class="section level3">
+<h3>Add noise to x</h3>
 <pre class="r"><code>set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 0*diag(3),nreps = 300,add_weights = TRUE,optimal = TRUE,correction = FALSE)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.5,Sigma = 1*diag(3),nreps = 100,correction = F)
 simu_study_summary(out)</code></pre>
-<pre><code>
-
-Table: compare mean of estiamted variance
-
-                  1        2        3
-----------  -------  -------  -------
-Sandwich     0.0219   0.0271   0.0291
-HC2          0.0228   0.0278   0.0298
-HC3          0.0239   0.0285   0.0305
-Jackknife    0.0237   0.0284   0.0303
-True         0.0229   0.0283   0.0286
-
-
-Table: compare coverages of beta
-
-                 1       2       3
-----------  ------  ------  ------
-Sandwich     0.917   0.923   0.943
-HC2          0.917   0.933   0.947
-HC3          0.927   0.933   0.957
-Jackknife    0.927   0.933   0.957</code></pre>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.7947</td>
+<td align="right">1.1218</td>
+<td align="right">1.1729</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.8652</td>
+<td align="right">1.2403</td>
+<td align="right">1.2858</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.9473</td>
+<td align="right">1.3805</td>
+<td align="right">1.4160</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.9346</td>
+<td align="right">1.3619</td>
+<td align="right">1.3961</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">0.7348</td>
+<td align="right">1.2153</td>
+<td align="right">1.4462</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.92</td>
+<td align="right">0.96</td>
+<td align="right">0.88</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.94</td>
+<td align="right">0.99</td>
+<td align="right">0.93</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.97</td>
+<td align="right">0.99</td>
+<td align="right">0.95</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.96</td>
+<td align="right">0.99</td>
+<td align="right">0.95</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 100*diag(3),nreps = 300,add_weights = TRUE,optimal = TRUE,correction = FALSE)
+out = simu_study_sandwich(n=100,p=3,b=1:3,alpha=0.5,Sigma = 3*diag(3),nreps = 100,correction = T,add_weights = T,sub_optimal = T)
 simu_study_summary(out)</code></pre>
-<pre><code>
-
-Table: compare mean of estiamted variance
-
-                   1          2          3
-----------  --------  ---------  ---------
-Sandwich     91.7433   157.5150   123.6432
-HC2              NaN        NaN        NaN
-HC3          51.7323    66.6404   131.7863
-Jackknife    54.4175    65.6136   140.6668
-True          3.9014     6.4645     5.6825
-
-
-Table: compare coverages of beta
-
-                 1       2       3
-----------  ------  ------  ------
-Sandwich     0.967   0.993   0.943
-HC2             NA      NA      NA
-HC3          0.987   1.000   0.983
-Jackknife    0.997   1.000   0.997</code></pre>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">1.3979</td>
+<td align="right">1.9204</td>
+<td align="right">1.7705</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">1.6001</td>
+<td align="right">2.2302</td>
+<td align="right">2.0502</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">1.8904</td>
+<td align="right">2.6805</td>
+<td align="right">2.4459</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">6.9886</td>
+<td align="right">11.8791</td>
+<td align="right">7.8369</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">1.1530</td>
+<td align="right">1.5926</td>
+<td align="right">1.7943</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">1</td>
+<td align="right">0.99</td>
+<td align="right">0.97</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">1</td>
+<td align="right">1.00</td>
+<td align="right">1.00</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">1</td>
+<td align="right">1.00</td>
+<td align="right">1.00</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">1</td>
+<td align="right">1.00</td>
+<td align="right">0.99</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>set.seed(12345)
-out = simu_study_sandwich(n=100,p=3,b=1:3/6,a=0.5,Sigma = 100*diag(3),nreps = 300,add_weights = TRUE,optimal = TRUE,correction = TRUE)
+out = simu_study_sandwich(n=500,p=3,b=1:3,alpha=0.5,Sigma = 3*diag(3),nreps = 100,correction = T,add_weights = T,sub_optimal = T)
 simu_study_summary(out)</code></pre>
-<pre><code>
-
-Table: compare mean of estiamted variance
-
-                   1         2          3
-----------  --------  --------  ---------
-Sandwich      0.3976    0.6524     0.6564
-HC2              NaN       NaN        NaN
-HC3           6.9557   12.7792    10.4411
-Jackknife    54.4175   65.6136   140.6668
-True          0.2215    0.3134     0.3014
-
-
-Table: compare coverages of beta
-
-                 1       2       3
-----------  ------  ------  ------
-Sandwich     0.923   0.910   0.833
-HC2             NA      NA      NA
-HC3          0.983   0.973   0.953
-Jackknife    1.000   0.987   0.990</code></pre>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.5653</td>
+<td align="right">0.6223</td>
+<td align="right">0.6955</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.5758</td>
+<td align="right">0.6371</td>
+<td align="right">0.7110</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.5867</td>
+<td align="right">0.6527</td>
+<td align="right">0.7271</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.6054</td>
+<td align="right">0.6709</td>
+<td align="right">0.7474</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">0.5924</td>
+<td align="right">0.6403</td>
+<td align="right">0.7022</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.81</td>
+<td align="right">0.93</td>
+<td align="right">0.96</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.82</td>
+<td align="right">0.93</td>
+<td align="right">0.96</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.83</td>
+<td align="right">0.94</td>
+<td align="right">0.96</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.86</td>
+<td align="right">0.94</td>
+<td align="right">0.97</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="simulation-2" class="section level2">
+<h2>Simulation 2</h2>
+<pre class="r"><code>LM6 = read.table(&#39;data/cibersort/signature_rnaseq_geo60424_LM6.txt&#39;,header = TRUE,sep=&#39;\t&#39;,row.names = 1)
+LM6_type = c(&quot;B&quot;,&quot;CD8&quot;,&quot;CD4&quot;,&quot;NK&quot;,&quot;Monocytes&quot;,&quot;Neutrophils&quot;)
+LM6 = apply(LM6,2,function(z){z/sum(z)})
+ref = apply(LM6,2,function(z){z/sum(z)})*nrow(LM6)</code></pre>
+<pre class="r"><code>set.seed(12345)
+out = simu_study_sandwich(b=c(1,1,1,2,2,2),x=ref,Sigma = 1*diag(6),nreps = 100,correction = F)
+simu_study_summary(out)</code></pre>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.3782</td>
+<td align="right">1.7383</td>
+<td align="right">1.3740</td>
+<td align="right">0.7817</td>
+<td align="right">0.6928</td>
+<td align="right">0.8292</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.4604</td>
+<td align="right">1.9930</td>
+<td align="right">1.5766</td>
+<td align="right">0.9200</td>
+<td align="right">0.9116</td>
+<td align="right">0.9569</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.5724</td>
+<td align="right">2.3175</td>
+<td align="right">1.8310</td>
+<td align="right">1.0970</td>
+<td align="right">1.2317</td>
+<td align="right">1.1204</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.5718</td>
+<td align="right">2.3096</td>
+<td align="right">1.8251</td>
+<td align="right">1.0954</td>
+<td align="right">1.2304</td>
+<td align="right">1.1194</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">0.5070</td>
+<td align="right">2.1299</td>
+<td align="right">1.8629</td>
+<td align="right">1.1763</td>
+<td align="right">1.2783</td>
+<td align="right">1.1838</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.80</td>
+<td align="right">0.96</td>
+<td align="right">0.88</td>
+<td align="right">0.85</td>
+<td align="right">0.73</td>
+<td align="right">0.83</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.88</td>
+<td align="right">0.99</td>
+<td align="right">0.95</td>
+<td align="right">0.89</td>
+<td align="right">0.85</td>
+<td align="right">0.88</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.91</td>
+<td align="right">1.00</td>
+<td align="right">0.99</td>
+<td align="right">0.92</td>
+<td align="right">0.92</td>
+<td align="right">0.91</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.91</td>
+<td align="right">1.00</td>
+<td align="right">0.99</td>
+<td align="right">0.92</td>
+<td align="right">0.92</td>
+<td align="right">0.91</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>set.seed(12345)
+out = simu_study_sandwich(b=c(1,1,1,2,2,2),x=ref,Sigma = 1*diag(6),nreps = 100,correction = F,add_weights = T,sub_optimal = T)
+simu_study_summary(out)</code></pre>
+<table>
+<caption>compare mean of estiamated variance</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.2781</td>
+<td align="right">1.1498</td>
+<td align="right">0.9194</td>
+<td align="right">0.6333</td>
+<td align="right">0.5591</td>
+<td align="right">0.5658</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.2953</td>
+<td align="right">1.2637</td>
+<td align="right">0.9998</td>
+<td align="right">0.6840</td>
+<td align="right">0.6100</td>
+<td align="right">0.5958</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.3150</td>
+<td align="right">1.4425</td>
+<td align="right">1.1262</td>
+<td align="right">0.7486</td>
+<td align="right">0.6692</td>
+<td align="right">0.6291</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.3146</td>
+<td align="right">1.4330</td>
+<td align="right">1.1190</td>
+<td align="right">0.7468</td>
+<td align="right">0.6685</td>
+<td align="right">0.6285</td>
+</tr>
+<tr class="odd">
+<td>True</td>
+<td align="right">0.2906</td>
+<td align="right">1.2200</td>
+<td align="right">1.0383</td>
+<td align="right">0.7514</td>
+<td align="right">0.6620</td>
+<td align="right">0.6362</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>compare coverages of beta</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sandwich</td>
+<td align="right">0.86</td>
+<td align="right">0.97</td>
+<td align="right">0.99</td>
+<td align="right">0.88</td>
+<td align="right">0.93</td>
+<td align="right">0.91</td>
+</tr>
+<tr class="even">
+<td>HC2</td>
+<td align="right">0.89</td>
+<td align="right">1.00</td>
+<td align="right">0.99</td>
+<td align="right">0.91</td>
+<td align="right">0.95</td>
+<td align="right">0.94</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td align="right">0.90</td>
+<td align="right">1.00</td>
+<td align="right">1.00</td>
+<td align="right">0.94</td>
+<td align="right">0.96</td>
+<td align="right">0.94</td>
+</tr>
+<tr class="even">
+<td>Jackknife</td>
+<td align="right">0.90</td>
+<td align="right">1.00</td>
+<td align="right">1.00</td>
+<td align="right">0.94</td>
+<td align="right">0.96</td>
+<td align="right">0.94</td>
+</tr>
+</tbody>
+</table>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -872,7 +1592,7 @@ loaded via a namespace (and not attached):
 [13] stringi_1.4.6   rlang_0.4.6     fs_1.4.1        promises_1.1.0 
 [17] whisker_0.4     rmarkdown_2.3   tools_4.0.1     stringr_1.4.0  
 [21] glue_1.4.1      httpuv_1.5.4    xfun_0.14       yaml_2.2.1     
-[25] compiler_4.0.1  htmltools_0.4.0 knitr_1.28     </code></pre>
+[25] compiler_4.0.1  htmltools_0.5.0 knitr_1.28     </code></pre>
 </div>
 </div>
 

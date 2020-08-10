@@ -8,9 +8,10 @@
 #'@param alpha significance level
 #'@param a alpha in the Fuller's small sample correction
 #'@param correction whether perform fuller's small sample correction.
+#'@param S cell size
 
 
-estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='hc3',a=ncol(X)+4,correction=TRUE){
+estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='hc3',a=ncol(X)+4,correction=TRUE,S=NULL){
 
   #browser()
 
@@ -40,6 +41,13 @@ estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='
   G = nrow(X)
   K = ncol(X)
 
+  if(is.null(S)){
+    S = rep(1,K)
+  }
+
+  ## take cell size into account, and scale it to O(G)
+  X = X%*%diag(S)*G
+
   # nb is the number of bulk sample
   nb = ncol(y)
   if(is.null(nb)){
@@ -56,19 +64,20 @@ estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='
       w  = 1/(rowSums(X)/K+rowSums(Sigma)/K^2+rowSums(Vg)/K^2)
     }
   }
-  w = w/sum(w)
+  w = w/sum(w)*G
 
-  input = list(X=X,Vg=Vg,y=y,w=w,Sigma=Sigma)
+  input = list(X=X,Vg=Vg,y=y,w=w,Sigma=Sigma,S=S)
 
   Xw = X*sqrt(w)
   yw = cbind(y*sqrt(w))
   A = t(Xw)%*%Xw
 
   if(is.matrix(Vg)){
-    Vw = Vg*w
+    Vw = Vg*w*G^2
     if(ncol(Vg)==K^2){
-      V = matrix(c(colSums(Vw)),ncol = K)
+      V = matrix(c(colSums(Vw*c(S%*%t(S)))),ncol = K)
     }else if(ncol(Vg)==K){
+      Vw = Vw%*%diag(S^2)
       V = diag(c(colSums(Vw)))
     }else{
       stop('check dimension of Vg')

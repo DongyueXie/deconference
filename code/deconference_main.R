@@ -34,6 +34,7 @@ deconference = function(data.obj,
                         x_estimator = 'separate',
                         est_sigma2 = FALSE,
                         meta_var = 'plug_in',
+                        meta_mode = 'one',
                         a=0, correction=FALSE,eps=0){
 
   ref_type = data.obj$ref_type
@@ -46,6 +47,7 @@ deconference = function(data.obj,
   if(ref_type=='bulk'){
 
     design.mat = bulkRef_proc(Y)
+    design.mat$S = NULL
 
   }else{
 
@@ -61,7 +63,7 @@ deconference = function(data.obj,
 
       # multiple individual single cell reference samples, estimate sigma^2
       design.mat = scRef_multi_proc(Y,cell_type_idx,indi_idx,estimator=x_estimator,tau2=tau2,
-                                    sigma2=sigma2,est_sigma2 = est_sigma2,eps=eps,meta_var=meta_var)
+                                    sigma2=sigma2,est_sigma2 = est_sigma2,eps=eps,meta_var=meta_var,meta_mode=meta_mode)
     }else{
       stop("unspported reference type")
     }
@@ -71,6 +73,6 @@ deconference = function(data.obj,
   #browser()
 
   out = estimation_func(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
-                        w=w,hc.type=hc.type,a=a,correction=correction)
+                        w=w,hc.type=hc.type,a=a,correction=correction,S=design.mat$S)
   return(out)
 }

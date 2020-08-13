@@ -1,0 +1,200 @@
+---
+title: "real data benchmark"
+author: "DongyueXie"
+date: "2020-08-10"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = F,message = F)
+```
+
+## Introduction
+
+Human pancreas real data: Xin et al 2016, Segerstolpe et al. (2016), Muraro et al (2016), Baron et al(2016). 
+
+Xin et al: 1492 cells, 4 cell types, 18(12 healthy + 6 T2D) individuals, Illumina HiSeq 2500.
+
+Segerstolpe et al: 2209 cells, 14+1 cell types, 10(6 healthy + 4 T2D) individuals, Smart-seq2.
+
+Muraro et al: 2126 cells, 14 cell types, 4 donors, CEL-seq2.
+
+Baron et al: 8569 cells, 14 cell types, 4 cadaveric donors, inDrop.
+
+```{r,echo=F}
+summary_real = function(out,true_b){
+  
+  # compare fitted vs true
+  b_hat = t(out$beta_hat)
+  rownames(b_hat) = rownames(true_b)
+  colnames(b_hat) = colnames(true_b)
+  print(knitr::kable(
+  list(t0 = round(b_hat,2), t1 = round(true_b,2)),
+  caption = 'estimated vs true beta',
+  booktabs = TRUE, valign = 't'))
+  
+  
+  ci_length = t(round(out$beta_se,2))
+  colnames(ci_length) = colnames(true_b)
+  rownames(ci_length) = rownames(true_b)
+  print(knitr::kable(ci_length,caption = 'beta hat se'))
+  
+  # summary statistics
+  rmse = sqrt(mean((t(out$beta_hat)-true_b)^2))
+  mad = mean(abs(t(out$beta_hat)-true_b))
+  r2 = cor(c(t(out$beta_hat)),c(true_b))
+  ss = rbind(c(rmse,mad,r2))
+  colnames(ss) = c('rmse','mad','r2')
+  rownames(ss) = NULL
+  
+  print(knitr::kable(ss,caption='error measure'))
+  
+  # coverage, length of CI
+  ci = build_ci(out)
+  coverage = c(true_b>=t(ci$ci_l))&(true_b<=t(ci$ci_r))
+  
+  print(knitr::kable(coverage,caption='coverage'))
+
+  # two group test
+  
+  groups = c(1,3,1,1,2,3,2,2,3,3)
+  g1 = which(groups==1)
+  g2 = which(groups==2)
+  test2 = two_group_test(out,groups)
+  
+  test_out = rbind(round(colMeans(true_b[g1,]) - colMeans(true_b[g2,]),3),
+                   round(test2$diff_group,3),
+                   round(sqrt(diag(test2$V_tilde)),3),
+                   round(test2$p_value,3))
+  rownames(test_out) = c('true diff','estimated diff','se','p value')
+  print(knitr::kable(test_out,caption= ' two group test'))
+  
+}
+```
+
+
+## Xin et al 2016
+
+Total 18 individuals. I took the first 8 healthy individuals as reference data and aggregate cells for the rest 10 individuals(4 healthy and 6 T2D) as reference data. 
+
+two group test: Non T2D 9,11,12 vs T2D 1,3,4
+
+weight: default; 
+
+```{r, results='asis'}
+library(MuSiC)
+library(xbioc)
+source('code/deconference_main.R')
+XinT2Deset <- readRDS("data/MuSiC/XinT2Deset.rds")
+
+XinT2D.construct.full = bulk_construct(XinT2Deset, clusters = 'cellType', samples = 'SubjectName')
+XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+knitr::kable(list(t0=table(XinT2Deset$SubjectName, XinT2Deset$cellType),t1=round(as.matrix(XinT2D.construct.full$prop.real),2)),
+             caption = 'cell counts and proportinos in each individual',
+             booktabs = TRUE, valign = 't')
+dim(exprs(XinT2Deset))
+hist(colMeans(exprs(XinT2Deset)),breaks=100,main='cell library size / #gene',xlab = 'size')
+true_b = as.matrix(XinT2D.construct.full$prop.real[-c(1:8),])
+```
+
+### Universal 
+
+**HC3**
+
+```{r}
+load('output/Xin_universal_hc3.RData')
+dim(out_universal$input$X)
+out_universal$input$Sigma[1,1] * nrow(out_universal$input$X)^2
+```
+
+```{r, results='asis'}
+summary_real(out_universal,true_b)
+```
+
+**HC2**
+
+```{r, results='asis'}
+load('output/Xin_universal_hc2.RData')
+summary_real(out_universal_hc2,true_b)
+```
+
+**HC0**
+
+```{r, results='asis'}
+load('output/Xin_universal_hc0.RData')
+summary_real(out_universal_hc0,true_b)
+```
+
+
+### none-meta analysis
+
+**HC3**
+
+```{r, results='asis'}
+load('output/Xin_sampleM_hc3.RData')
+summary_real(out_sampleM_hc3,true_b)
+```
+
+
+### unadjusted
+
+```{r, results='asis'}
+summary_real2 = function(b_hat,beta_se,true_b){
+  
+  # compare fitted vs true
+  b_hat = t(b_hat)
+  rownames(b_hat) = rownames(true_b)
+  colnames(b_hat) = colnames(true_b)
+  print(knitr::kable(
+  list(t0 = round(b_hat,2), t1 = round(true_b,2)),
+  caption = 'estimated vs true beta',
+  booktabs = TRUE, valign = 't'))
+  
+  
+  ci_length = t(round(beta_se,2))
+  colnames(ci_length) = colnames(true_b)
+  rownames(ci_length) = rownames(true_b)
+  print(knitr::kable(ci_length,caption = 'beta hat se'))
+  
+  # summary statistics
+  rmse = sqrt(mean((b_hat-true_b)^2))
+  mad = mean(abs(b_hat-true_b))
+  r2 = cor(c(b_hat),c(true_b))
+  ss = rbind(c(rmse,mad,r2))
+  colnames(ss) = c('rmse','mad','r2')
+  rownames(ss) = NULL
+  
+  print(knitr::kable(ss,caption='error measure'))
+  
+  # coverage, length of CI
+  coverage = c(true_b>=(b_hat-2*t(beta_se)))&(true_b<=(b_hat+2*t(beta_se)))
+  
+  print(knitr::kable(coverage,caption='coverage'))
+
+  
+}
+
+load('output/Xin_sampleM_unadj.RData')
+summary_real2(out_unadj$beta_hat,out_unadj$sand.out$beta_se,true_b)
+summary_real2(out_unadj$beta_hat,out_unadj$sand.out.hc3$beta_se,true_b)
+```
+
+
+
+
+```{r,eval=F}
+## Segerstolpe et al
+
+segerstolpe <- readRDS("data/MuSiC/segerstolpe.rds")
+table(segerstolpe$age[which(segerstolpe$cell_type1%in%c('alpha','beta','delta','gamma'))],
+      segerstolpe$cell_type1[which(segerstolpe$cell_type1%in%c('alpha','beta','delta','gamma'))])
+table(segerstolpe$disease[which(segerstolpe$cell_type1%in%c('alpha','beta','delta','gamma'))],
+      segerstolpe$cell_type1[which(segerstolpe$cell_type1%in%c('alpha','beta','delta','gamma'))])
+table(segerstolpe$age,
+      segerstolpe$disease)
+
+dim(segerstolpe@assays@.xData$data$counts)
+hist(colMeans((segerstolpe@assays@.xData$data$counts)),breaks = 100,main='cell library size / #gene',xlab = 'size')
+```

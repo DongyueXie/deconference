@@ -73,6 +73,52 @@ unadjusted_lm = function(y,X,w=NULL){
 
 
 
+  # perform hc3
+
+  Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
+  #Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
+  Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
+
+  for(i in 1:nb){
+    #Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = A_inv
+
+    Hi = t(t(X%*%A_inv%*%t(X))*w)
+    hi = diag(Hi)
+    ri = y[,i] - Hi%*%y[,i]
+
+    for(j in i:nb){
+
+      if(j==i){
+
+        Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(hi,1-1/G),0))*w*X)
+
+        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
+      }else{
+        Hj = t(t(X%*%A_inv%*%t(X))*w)
+        hj = diag(Hj)
+        rj = y[,j] - Hi%*%y[,j]
+
+        Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(hi,1-1/G),0))*w*X,
+                             c(rj)/(1-pmax(pmin(hj,1-1/G),0))*w*X)
+      }
+
+
+      Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
+
+    }
+  }
+  Sigma = Sigma+t(Sigma)-Sigma_ii
+  covb = Q_inv%*%Sigma%*%Q_inv
+
+  asyV = (J)%*%covb%*%t(J)
+
+
+  beta_se = sqrt(diag(asyV))
+  beta_se = matrix(beta_se,ncol=nb)
+
+  sand.out.hc3 = list(cov_beta_tilde_hat = covb,
+                  beta_se = beta_se,
+                  cov_beta_hat = asyV)
 
 
 
@@ -81,6 +127,7 @@ unadjusted_lm = function(y,X,w=NULL){
   return(list(beta_tilde_hat=beta_tilde_hat,
               beta_hat=beta_hat,
               sand.out=sand.out,
-              ols.out=ols.out))
+              ols.out=ols.out,
+              sand.out.hc3=sand.out.hc3))
 }
 

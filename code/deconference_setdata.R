@@ -98,7 +98,7 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL){
   if(is.factor(cell_type_idx)){
     cell_types = levels(cell_type_idx)
   }else{
-    cell_types = unique(cell_type_idx)
+    cell_types = levels(as.factor(cell_type_idx))
   }
 
   K = length(cell_types)
@@ -129,7 +129,8 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL){
 
         X[,k] = rowSums(Yk)/sum(Yk)
         if(is.null(tau2)){
-          Vg[,k] = 1/(sum(Yk))^2*rowSums((Yk-X[,k,drop=FALSE]%*%t(rep(1,Nk))%*%diag(colSums(Yk)))^2)
+          Vg[,k] = 1/(sum(Yk))^2*rowSums((Yk-t(c(colSums(Yk))*t(X[,k,drop=FALSE]%*%t(rep(1,Nk)))))^2)
+          #Vg[,k] = 1/(sum(Yk))^2*rowSums((Yk-X[,k,drop=FALSE]%*%t(rep(1,Nk))%*%diag(colSums(Yk)))^2)
         }else{
           Vg[,k] = X[,k]/sum(Yk)+tau2[,k]*sum(colSums(Yk)^2)/(sum(Yk))^2
         }
@@ -179,10 +180,10 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL){
 #'@param eps a gene might have no expression in any cells of an individual so it's relative expression's standard error will be (0+eps)
 #'@param est_sigma2 Indicate whether estiamte sigma^2, the variance of gene relative expresison across individuals. If yes, a PM method will be used; If not, will directly use sample variance-covariance matrix.
 #'@param meta_var variance of hat{mu}, either 'plug_in' or 'adjust'
-#'@param meta_mode 'one': one sigma^2 for all X;'by_celltype': one sigma^2 for each cell type; 'all': one sigma^2 for each gene and cell type.
+#'@param meta_mode 'universal': one sigma^2 for all X;'by_celltype': one sigma^2 for each cell type; 'local': one sigma^2 for each gene and cell type.
 #'@return design matrix X and its variance matrix Vg
 scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
-                            est_sigma2=TRUE,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "one"){
+                            est_sigma2=TRUE,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal"){
 
   ##multiple individual single cell reference
 
@@ -192,7 +193,13 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
   if(is.factor(indi_idx)){
     indis = levels(indi_idx)
   }else{
-    indis = unique(indi_idx)
+    indis = levels(as.factor(indi_idx))
+  }
+
+  if(is.factor(cell_type_idx)){
+    cell_types = levels(cell_type_idx)
+  }else{
+    cell_types = levels(as.factor(cell_type_idx))
   }
 
   NI = length(indis)
@@ -215,9 +222,10 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
     #browser()
     #print(dim(indi_design.mat$X))
     X_array[,,i] = indi_design.mat$X
-    Vg0 = indi_design.mat$Vg
-    Vg0[Vg0==0] = eps
-    Vg_array[,,i] = Vg0
+    Vg_array[,,i] = indi_design.mat$Vg
+    if(eps!=0){
+      (Vg_array[,,i])[(Vg_array[,,i])==0] = eps
+    }
     S_mat[i,] = indi_design.mat$S
   }
 
@@ -241,24 +249,35 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
 
     if(est_sigma2){
 
-      if(meta_mode=='one'){
+      Sigma = matrix(nrow = G,ncol = K)
 
-        Sigma = matrix(PMmeta(as.vector(X_array),as.vector(Vg_array)),nrow = G,ncol = K)
+      #browser()
+
+      if(meta_mode=='universal'){
+
+        #browser()
+
+        Sigma = matrix(PMmeta_array(X_array,Vg_array),nrow = G,ncol = K)
 
       }else if(meta_mode=='by_celltype'){
 
-        Sigma = matrix(nrow = G,ncol = K)
         for(k in 1:K){
-          Sigma[,k] = PMmeta(as.vector(X_array[,k,]),as.vector(Vg_array[,k,]))
+          Sigma[,k] = PMmeta_matrix(X_array[,k,],Vg_array[,k,])
         }
 
-      }else if(meta_mode=='all'){
-        Sigma = matrix(nrow = G,ncol = K)
+      }else if(meta_mode=='by_gene'){
+
+        for(g in 1:G){
+          Sigma[g,] = PMmeta_matrix(X_array[g,,],Vg_array[g,,])
+        }
+
+      }else if(meta_mode=='local'){
+
         for(g in 1:G){
           for(k in 1:K){
             x = X_array[g,k,]
             v = Vg_array[g,k,]
-            Sigma[g,k] = PMmeta(x,v)
+            Sigma[g,k] = PMmeta_vector(x,v)
           }
         }
       }else{
@@ -278,13 +297,18 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
       }
 
     }else{
-      X = apply(X_array,c(1,2),mean)
+      X = apply(X_array,c(1,2),mean,na.rm=TRUE)
       #browser()
-      Vg = t(apply(X_array,c(1),function(z){(cov(t(z)))}))/NI
+      Vg = t(apply(X_array,c(1),function(z){(cov(t(z),use = 'pairwise.complete.obs'))}))/NI
       Sigma=NULL
     }
 
   }
+
+  #browser()
+
+  colnames(X) = cell_types
+  #colnames(Vg) = cell_types
 
 
   # estimate cell size

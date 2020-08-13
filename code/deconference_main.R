@@ -1,6 +1,7 @@
 source('code/deconference_setdata.R')
 source('code/deconference_meta.R')
 source('code/deconference_estfunc.R')
+source('code/deconference_summary.R')
 source('code/unadjusted_lm.R')
 
 #'@title deconvolution inference
@@ -16,7 +17,7 @@ source('code/unadjusted_lm.R')
 #'@param sigma2 variance of gene expression across individuals, gene by cell type matrix.
 #'@param w gene weights, length(w) = number of genes. will be adjusted to sum to G.
 #'@param x_estimator separate or aggregate
-#'@param est_sigma2 whether estimate sigma^2, the variance of X across individuals
+#'@param est_pop_var whether estimate sigma^2, the variance of X across individuals
 #'@param meta_var 'plug_in', or 'adjust'
 #'@param adjust whether adjust for uncertainty in reference matrix
 #'@param alpha significance level
@@ -28,14 +29,15 @@ source('code/unadjusted_lm.R')
 #'@return a list from estimation_func
 
 
+
 deconference = function(data.obj,
                         marker_gene = NULL,
                         hc.type = 'hc3',
                         x_estimator = 'separate',
-                        est_sigma2 = FALSE,
-                        meta_var = 'plug_in',
-                        meta_mode = 'one',
-                        a=0, correction=FALSE,eps=0){
+                        est_pop_var = FALSE,
+                        meta_var = 'adjust',
+                        meta_mode = 'universal',
+                        correction=FALSE,eps=0){
 
   ref_type = data.obj$ref_type
   w = data.obj$w
@@ -60,10 +62,11 @@ deconference = function(data.obj,
     }else if(ref_type=='multi_sc'){
       indi_idx = data.obj$indi_idx
       sigma2 = data.obj$sigma2
-
       # multiple individual single cell reference samples, estimate sigma^2
       design.mat = scRef_multi_proc(Y,cell_type_idx,indi_idx,estimator=x_estimator,tau2=tau2,
-                                    sigma2=sigma2,est_sigma2 = est_sigma2,eps=eps,meta_var=meta_var,meta_mode=meta_mode)
+                                    sigma2=sigma2,est_sigma2 = est_pop_var,eps=eps,meta_var=meta_var,meta_mode=meta_mode)
+
+      #browser()
     }else{
       stop("unspported reference type")
     }
@@ -73,6 +76,8 @@ deconference = function(data.obj,
   #browser()
 
   out = estimation_func(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
-                        w=w,hc.type=hc.type,a=a,correction=correction,S=design.mat$S)
+                        w=w,hc.type=hc.type,correction=correction,S=design.mat$S)
   return(out)
 }
+
+

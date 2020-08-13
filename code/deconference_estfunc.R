@@ -1,7 +1,7 @@
 #'@param y a vector of bulk sample
 #'@param X reference matrix, estimated relative expression, gene by cell
 #'@param Vg variance matrix of X
-#'@param Sigma variance of true X among individuals
+#'@param X_var_pop variance of true X among individuals
 #'@param marker_gene
 #'@param w gene weights
 #'@param hc.type hc3, hc2, or hc0
@@ -11,7 +11,7 @@
 #'@param S cell size
 
 
-estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='hc3',a=ncol(X)+4,correction=TRUE,S=NULL){
+estimation_func = function(y,X,Vg,X_var_pop=NULL,marker_gene = NULL,w=NULL,hc.type='hc3',a=ncol(X)+4,correction=TRUE,S=NULL){
 
   #browser()
 
@@ -32,8 +32,8 @@ estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='
     }
     y = y[gene_idx,]
 
-    if(!is.null(Sigma)){
-      Sigma = Sigma[gene_idx,]
+    if(!is.null(X_var_pop)){
+      X_var_pop = X_var_pop[gene_idx,]
     }
 
   }
@@ -41,12 +41,7 @@ estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='
   G = nrow(X)
   K = ncol(X)
 
-  if(is.null(S)){
-    S = rep(1,K)
-  }
 
-  ## take cell size into account, and scale it to O(G)
-  X = X%*%diag(S)*G
 
   # nb is the number of bulk sample
   nb = ncol(y)
@@ -58,31 +53,47 @@ estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='
   # generate weights
 
   if(is.null(w)){
-    if(is.null(Sigma)){
+    if(is.null(X_var_pop)){
       w  = 1/(rowSums(X)/K+rowSums(Vg)/K^2)
     }else{
-      w  = 1/(rowSums(X)/K+rowSums(Sigma)/K^2+rowSums(Vg)/K^2)
+      w  = 1/(rowSums(X)/K+rowSums(X_var_pop)/K^2+rowSums(Vg)/K^2)
     }
   }
   w = w/sum(w)*G
 
-  input = list(X=X,Vg=Vg,y=y,w=w,Sigma=Sigma,S=S)
 
+
+  ## take cell size into account, and scale it to O(G)
+  if(is.null(S)){
+    S = rep(1,K)
+  }
+
+  # X, Vg not scaled by G
+  input = list(X=X,Vg=Vg,y=y,w=w,Sigma=X_var_pop,S=S)
+
+  # scale X by G, mainly for numerical stability
+  X = X*G
+  Vg = Vg*G^2
+
+  # add library size to X
+  X = X%*%diag(S)
   Xw = X*sqrt(w)
   yw = cbind(y*sqrt(w))
   A = t(Xw)%*%Xw
 
-  if(is.matrix(Vg)){
-    Vw = Vg*w*G^2
-    if(ncol(Vg)==K^2){
-      V = matrix(c(colSums(Vw*c(S%*%t(S)))),ncol = K)
-    }else if(ncol(Vg)==K){
-      Vw = Vw%*%diag(S^2)
-      V = diag(c(colSums(Vw)))
-    }else{
-      stop('check dimension of Vg')
-    }
+  d_Vg = ncol(Vg)
+
+  Vw = Vg*w
+  if(d_Vg==K^2){
+    V = matrix(c(colSums(Vw*c(S%*%t(S)))),ncol = K)
+  }else if(d_Vg==K){
+    Vw = Vw%*%diag(S^2)
+    V = diag(c(colSums(Vw)))
+  }else{
+    stop('check dimension of Vg')
   }
+
+
 
   # else if(is.array(Vg)){
   #   Vw = Vg*rep(w,each=K*K)
@@ -152,59 +163,61 @@ estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='
 
   for(i in 1:nb){
     Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = A_inv[,,i]
+
+    if(d_Vg==K^2){
+      Vbi = t(apply(Vw,1,function(z){v = matrix(z,ncol=K);v%*%beta_tilde_hat[,i]}))*pmin(lambda,1)[i]
+    }
+    if(d_Vg==K){
+      Vbi = (Vw)%*%diag(c(beta_tilde_hat[,i]))*pmin(lambda,1)[i]
+    }
+
+    Hi = t(t(X%*%A_inv[,,i]%*%t(X))*w)
+    hi = diag(Hi)
+    ri = y[,i] - Hi%*%y[,i]
+
+
     for(j in i:nb){
 
-      if(is.matrix(Vg)){
-        if(ncol(Vg)==K^2){
-          Vbi = t(apply(Vw,1,function(z){v = matrix(z,ncol=K);v%*%beta_tilde_hat[,i]}))*pmin(lambda,1)[i]
-          Vbj = t(apply(Vw,1,function(z){v = matrix(z,ncol=K);v%*%beta_tilde_hat[,j]}))*pmin(lambda,1)[j]
+      if(j==i){
+
+        Vbj = Vbi
+
+        if(hc.type == 'hc0'){
+          Sigma_ij = crossprod(c(ri)*w*X+Vbi)
+        }else if(hc.type == 'hc2'){
+          Sigma_ij = crossprod(c(ri)/sqrt(1-pmax(pmin(hi,1-1/G),0))*w*X+Vbi)
+        }else if(hc.type == 'hc3'){
+          Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(hi,1-1/G),0))*w*X+Vbi)
         }
-        if(ncol(Vg)==K){
-          Vbi = (Vw)%*%diag(c(beta_tilde_hat[,i]))*pmin(lambda,1)[i]
+
+        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
+
+      }else{
+
+        if(d_Vg==K^2){
+          Vbj = t(apply(Vw,1,function(z){v = matrix(z,ncol=K);v%*%beta_tilde_hat[,j]}))*pmin(lambda,1)[j]
+        }else if(d_Vg==K){
           Vbj = (Vw)%*%diag(c(beta_tilde_hat[,j]))*pmin(lambda,1)[j]
         }
-      }
-      # else if(is.array(Vg)){
-      #   Vbi = t(apply(Vw,3,function(z){z%*%beta_tilde_hat[,i]}))
-      #   Vbj = t(apply(Vw,3,function(z){z%*%beta_tilde_hat[,j]}))
-      # }
 
-
-      if(hc.type == 'hc3'){
-        Sigma_ij = crossprod(Xw*(c(Xw%*%beta_tilde_hat[,i,drop=FALSE]-yw[,i])/(1-pmin(diag(X%*%A_inv[,,i]%*%t(X)%*%diag(w)),1-1/G)))-Vbi,
-                             Xw*(c(Xw%*%beta_tilde_hat[,j,drop=FALSE]-yw[,j])/(1-pmin(diag(X%*%A_inv[,,j]%*%t(X)%*%diag(w)),1-1/G)))-Vbj)
-      }else if(hc.type == 'hc2'){
-        Sigma_ij = crossprod(Xw*(c(Xw%*%beta_tilde_hat[,i,drop=FALSE]-yw[,i])/sqrt(1-pmin(diag(X%*%A_inv[,,i]%*%t(X)%*%diag(w)),1-1/G)))-Vbi,
-                             Xw*(c(Xw%*%beta_tilde_hat[,j,drop=FALSE]-yw[,j])/sqrt(1-pmin(diag(X%*%A_inv[,,j]%*%t(X)%*%diag(w)),1-1/G)))-Vbj)
-      }else if(hc.type == 'hc0'){
-        Sigma_ij = crossprod(Xw*c(Xw%*%beta_tilde_hat[,i,drop=FALSE])-Xw*c(yw[,i])-Vbi,
-                             Xw*c(Xw%*%beta_tilde_hat[,j,drop=FALSE])-Xw*c(yw[,j])-Vbj)
+        Hj = t(t(X%*%A_inv[,,j]%*%t(X))*w)
+        hj = diag(Hj)
+        rj = y[,j] - Hi%*%y[,j]
+        if(hc.type == 'hc0'){
+          Sigma_ij = crossprod(c(ri)*w*X+Vbi,c(rj)*w*X+Vbj)
+        }else if(hc.type == 'hc2'){
+          Sigma_ij = crossprod(c(ri)/sqrt(1-pmax(pmin(hi,1-1/G),0))*w*X+Vbi,c(rj)/sqrt(1-pmax(pmin(hj,1-1/G),0))*w*X+Vbj)
+        }else if(hc.type == 'hc3'){
+          Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(hi,1-1/G),0))*w*X+Vbi,c(rj)/(1-pmax(pmin(hj,1-1/G),0))*w*X+Vbj)
+        }
       }
 
       Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
-      if(j==i){
-        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
-      }
+
     }
   }
   Sigma = Sigma+t(Sigma)-Sigma_ii
   covb = Q_inv%*%Sigma%*%Q_inv
-
-
-
-  # # only one bulk data
-  # if(is.null(nb) | nb==1){
-  #   #asymptotic variance
-  #   Sigma = crossprod(Xw*c(Xw%*%beta_tilde_hat)-(Vw)%*%diag(beta_tilde_hat)-Xw*c(yw))
-  #   #Sigma = Sigma/G
-  #   #Q_inv = G*A_inv
-  #   #covb = Q_inv%*%Sigma%*%Q_inv/G
-  #   covb = A_inv%*%Sigma
-  # }else{
-  #
-  #
-  # }
-
 
   beta_tilde_hat = cbind(beta_tilde_hat)
 
@@ -225,10 +238,10 @@ estimation_func = function(y,X,Vg,Sigma=NULL,marker_gene = NULL,w=NULL,hc.type='
   beta_se = sqrt(diag(asyV))
   beta_se = matrix(beta_se,ncol=nb)
 
-  return(list(beta_tilde_hat=beta_tilde_hat,
-              beta_hat=beta_hat,
+  return(list(beta_hat=beta_hat,
               beta_se=beta_se,
               cov_beta_hat = asyV,
+              beta_tilde_hat=beta_tilde_hat,
               input = input))
 
 

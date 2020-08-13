@@ -26,9 +26,9 @@ ploter = function(results){
   plot(results$power_adj[p_order],ylim = range(c(results$power_adj,results$power_unadj,results$power_unadj_cv)),
        col=2,ylab="power",xlab='',main='power')
   lines(results$power_unadj[p_order],type='p',pch=2,col=4)
-  lines(results$power_unadj_cv[p_order],type='p',pch=0,col=3)
+  lines(results$power_unadj_cv[p_order],type='p',pch=2,col=3)
 
-  legend('topleft',c('adjusted','unadj_hc0',"unadj_lm"),col=c(2,4,3),pch=c(1,2,0))
+  legend('topleft',c('adjusted','unadj_hc0',"unadj_lm"),col=c(2,4,3),pch=c(1,2,2))
 
   par(mfrow=c(1,1))
 

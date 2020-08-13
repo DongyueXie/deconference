@@ -16,7 +16,7 @@
 #'@param marker_gene marker gene index
 #'@param bulk_lib_size bulk sample library size
 #'@param sc_lib_size single cell ref library size
-#'@param ref_lib_size bulk ref data library size
+#'@param ref_bulklib_size bulk ref data library size
 #'@param nk number of single cells of each cell type
 #'@param x_estimator estimate the reference matrix from single cell data, separate or aggregate
 #'@param nreps number of repetition.
@@ -37,7 +37,7 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
                       weight = 'default',
                       bulk_lib_size = 50,
                       sc_lib_size = 0.1,
-                      ref_lib_size = 50,
+                      ref_bulklib_size = 50,
                       nk = 100,
                       ref_scale = Ng,
                       same_indi = FALSE,
@@ -48,10 +48,10 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
                       x_estimator = 'aggregate',
                       nreps=100,alpha=0.05,a=0,
                       correction=TRUE,s,printevery=10,
-                      add_y2 = TRUE, b2=NULL,gene_thresh=10,
+                      gene_thresh=10,
                       n_indi = 6,sigma2known=FALSE,
                       sigma2 = matrix(runif(nrow(ref)*length(b),0.5/(nrow(ref))^3,1/(nrow(ref))^3),nrow=nrow(ref)),
-                      est_pop_var = FALSE,meta_var='adjust',meta_mode = 'one',eps=0){
+                      est_pop_var = FALSE,meta_var='adjust',meta_mode = 'universal',eps=0){
 
   G = nrow(ref)
   K = ncol(ref)
@@ -310,8 +310,8 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
         }
 
       }else{
-          X_i = Theta
-        }
+        X_i = Theta
+      }
 
 
       cell_type = rep(1:K,each=nk)
@@ -365,7 +365,7 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
       }
 
       fit_adj = deconference(data.obj,marker_gene=marker_gene,hc.type=hc.type,
-                             x_estimator=x_estimator,a=a,correction=correction,eps=eps)
+                             x_estimator=x_estimator,correction=correction,eps=eps)
       fit_unadj = unadjusted_lm(fit_adj$input$y,fit_adj$input$X,w=fit_adj$input$w)
 
 
@@ -390,8 +390,8 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
       }
 
 
-      Cr = rpois(K,ref_lib_size*Ng)+1
-      #Cr = rep(ref_lib_size,K)
+      Cr = rpois(K,ref_bulklib_size*Ng)+1
+      #Cr = rep(ref_bulklib_size,K)
       U = diag(Cr)
       #Theta = apply(ref_rep,2,function(z){z/sum(z)})
       Y = matrix(rpois(Ng*K,X_i%*%U/median(colSums(X_i))),ncol=K)
@@ -555,9 +555,9 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
                 est_unadj = est_unadj,
                 sigma2_hat=sigma2_hat,
                 simu_param = list(ref=ref,s=s,Ng=Ng,b=b,ref_type=ref_type,tau2known=tau2known,
-                                  sc_lib_size = sc_lib_size,ref_lib_size=ref_lib_size,
+                                  sc_lib_size = sc_lib_size,ref_bulklib_size=ref_bulklib_size,
                                   bulk_lib_size = bulk_lib_size,nk=nk,
-                                  nreps=nreps,alpha=alpha,a=a,correction=correction)))
+                                  nreps=nreps,alpha=alpha,correction=correction)))
 
   }else{
     return(list(p=p,
@@ -577,9 +577,9 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
                 est_unadj = est_unadj,
                 sigma2_hat=sigma2_hat,
                 simu_param = list(ref=ref,s=s,Ng=Ng,b=b,ref_type=ref_type,tau2known=tau2known,
-                                  sc_lib_size = sc_lib_size,ref_lib_size=ref_lib_size,
+                                  sc_lib_size = sc_lib_size,ref_bulklib_size=ref_bulklib_size,
                                   bulk_lib_size = bulk_lib_size,nk=nk,
-                                  nreps=nreps,alpha=alpha,a=a,correction=correction)))
+                                  nreps=nreps,alpha=alpha,correction=correction)))
   }
 
 

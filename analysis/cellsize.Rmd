@@ -1,0 +1,132 @@
+---
+title: "cell size"
+author: "DongyueXie"
+date: "2020-08-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Explore the difference of cell sizes of UMI/non-UMI methods.  
+
+Xin: rpkm and raw counts available
+
+segerstope: rpkm and raw counts available
+
+muraro: Transcript counts were then adjusted to the expected number of molecules based on counts, 256 possible UMI’s and poissonian counting statistics.
+
+baron: raw counts
+
+```{r}
+library(MuSiC)
+library(xbioc)
+library(MASS)
+source('code/deconference_main.R')
+XinT2Deset <- readRDS("data/MuSiC/XinT2Deset.rds")
+xin <- readRDS("data/GSE81608/xin.rds")
+segerstolpe <- readRDS("data/MuSiC/segerstolpe.rds")
+muraro <- readRDS("data/muraro.rds")
+baron <- readRDS("~/deconference/data/baron-human.rds")
+GSE50244bulkeset <- readRDS("data/MuSiC/GSE50244bulkeset.rds")
+# common genes
+common_genes = intersect(intersect(rownames(exprs(XinT2Deset)), rownames(segerstolpe)), intersect(unlist(lapply(strsplit(rownames(muraro),split='__'),function(z){z[1]})), rownames(baron)))
+
+common_genes = (intersect(rownames(GSE50244bulkeset),common_genes))
+common_cells = c('alpha','beta','delta','gamma')
+
+length(common_genes)
+```
+
+baron data set
+
+```{r}
+baron_gene = match(common_genes,rownames(baron))
+baron_cell = which(baron$cell_type1%in%common_cells)
+out_baron = scRef_multi_proc(counts(baron)[baron_gene,baron_cell],baron$cell_type1[baron_cell],baron$human[baron_cell],estimator='separate',eps=0,
+                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+
+out_baron$S_glm
+out_baron$S
+```
+
+muraro data set
+
+```{r}
+muraro_gene =  match(common_genes,unlist(lapply(strsplit(rownames(muraro),split='__'),function(z){z[1]})))
+muraro_cell = which(muraro$cell_type1%in%common_cells)
+out_muraro = scRef_multi_proc(normcounts(muraro)[muraro_gene,muraro_cell],muraro$cell_type1[muraro_cell],muraro$donor[muraro_cell],estimator='separate',eps=0,
+                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+
+out_muraro$S_glm
+out_muraro$S
+```
+
+Xin data set
+
+Use raw counts:
+
+```{r}
+xin_gene =  match(common_genes,rownames(exprs(XinT2Deset)))
+xin_cell = which(XinT2Deset$cellType%in%common_cells)
+out_xin = scRef_multi_proc(exprs(XinT2Deset)[xin_gene,xin_cell],XinT2Deset$cellType[xin_cell],XinT2Deset$SubjectName[xin_cell],estimator='separate',eps=0,
+                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+
+out_xin$S_glm
+out_xin$S
+```
+
+
+Use raw counts adjusted by gene length:
+
+```{r}
+xin_gene2 = match(common_genes,rownames(normcounts(xin)))
+xin_cell2 = which(xin$cell_type1%in%common_cells)
+out_xin2 = scRef_multi_proc(t(t(normcounts(xin)[xin_gene,xin_cell]*1e-9)*c(colSums(exprs(XinT2Deset)[xin_gene,xin_cell]))),
+                            xin$cell_type1[xin_cell2],xin$donor.id[xin_cell2],estimator='separate',eps=0,
+                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+
+out_xin2$S_glm
+out_xin2$S
+```
+
+
+segerstolpe data raw counts:
+
+```{r}
+segerstolpe_gene =  match(common_genes,unlist(lapply(strsplit(rownames(segerstolpe),split='__'),function(z){z[1]})))
+segerstolpe_cell = which(segerstolpe$cell_type1%in%common_cells)
+out_segerstolpe = scRef_multi_proc(counts(segerstolpe)[segerstolpe_gene,segerstolpe_cell],
+                                   segerstolpe$cell_type1[segerstolpe_cell],segerstolpe$age[segerstolpe_cell],estimator='separate',eps=0,
+                                   est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+
+out_segerstolpe$S_glm
+out_segerstolpe$S
+```
+
+
+## combine
+
+combine baron, muraro, xin2
+
+```{r}
+S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin2$S_mat)
+
+S = colMeans(S_mat,na.rm = TRUE)
+S = S/S[1]
+
+  # ## method 2: glm
+  #
+  S_mat_dataframe = data.frame(y = c(S_mat),
+                               indi = as.factor(rep(1:nrow(S_mat),ncol(S_mat))),
+                               type = as.factor(rep(common_cells,each = nrow(S_mat))))
+  fit = glm.nb(y~.,S_mat_dataframe)
+  S_glm = exp(fit$coefficients[-c(1:nrow(S_mat))])
+  S_glm = c(1,S_glm)
+  names(S_glm) = common_cells
+  
+  S
+  
+  S_glm
+```

@@ -209,23 +209,29 @@ knitr::kable(S_all,caption = 'glm estimates')
 
 ## combine
 
-```{r,eval=FALSE}
-S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin2$S_mat)
+combine baron, muraro, (xin, seger, enge) - ext
+
+```{r}
+S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin3$S_mat,out_segerstolpe3$S_mat,out_enge2$S_mat)
 
 S = colMeans(S_mat,na.rm = TRUE)
 S = S/S[1]
 
   # ## method 2: glm
   #
-  S_mat_dataframe = data.frame(y = c(S_mat),
-                               indi = as.factor(rep(1:nrow(S_mat),ncol(S_mat))),
-                               type = as.factor(rep(common_cells,each = nrow(S_mat))))
-  fit = glm.nb(y~.,S_mat_dataframe)
-  S_glm = exp(fit$coefficients[-c(1:nrow(S_mat))])
-  S_glm = c(1,S_glm)
+
+S_mat_dataframe = data.frame(y = c(S_mat),
+                               indi = factor(rep(1:nrow(S_mat),ncol(S_mat))),
+                               type = factor(rep(common_cells,each = nrow(S_mat)),levels = common_cells))
+  fit = MASS::glm.nb(y~.,S_mat_dataframe)
+
+  S_glm = S
+  S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
   names(S_glm) = common_cells
   
-  S
+  round(S_mat,2)
   
-  S_glm
+  round(S,2)
+  
+  round(S_glm,2)
 ```

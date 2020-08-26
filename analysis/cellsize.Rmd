@@ -19,98 +19,197 @@ muraro: Transcript counts were then adjusted to the expected number of molecules
 
 baron: raw counts
 
+Enge: smart-seq2, raw counts avaiable
+
+
+
 ```{r}
 library(MuSiC)
 library(xbioc)
 library(MASS)
 source('code/deconference_main.R')
-XinT2Deset <- readRDS("data/MuSiC/XinT2Deset.rds")
-xin <- readRDS("data/GSE81608/xin.rds")
-segerstolpe <- readRDS("data/MuSiC/segerstolpe.rds")
-muraro <- readRDS("data/muraro.rds")
-baron <- readRDS("~/deconference/data/baron-human.rds")
-GSE50244bulkeset <- readRDS("data/MuSiC/GSE50244bulkeset.rds")
-# common genes
-common_genes = intersect(intersect(rownames(exprs(XinT2Deset)), rownames(segerstolpe)), intersect(unlist(lapply(strsplit(rownames(muraro),split='__'),function(z){z[1]})), rownames(baron)))
+xin_raw <- readRDS("data/GSE81608Xin/xin_raw.rds")
+xin_rpkm <- readRDS("data/GSE81608Xin/xin_rpkm.rds")
 
+segerstolpe_raw <- readRDS("data/EMTAB5061Segerstolpe/segerstolpe_raw.rds")
+segerstolpe_rpkm <- readRDS("data/EMTAB5061Segerstolpe/segerstolpe_rpkm.rds")
+
+enge_raw <- readRDS('data/GSE81547Enge/gse/enge_raw.rds')
+
+muraro <- readRDS("data/GSE85241Muraro/muraro_expected.rds")
+baron <- readRDS("data/GSE84133Baron/baron_raw.rds")
+
+GSE50244bulkeset <- readRDS("data/MuSiC/GSE50244bulkeset.rds")
+
+genes <- read.csv("data/GSE81547Enge/hca/genes.csv")
+# common genes
+common_genes = intersect(intersect(rownames(exprs(xin_raw)), rownames(segerstolpe_raw)), intersect(unlist(lapply(strsplit(rownames(muraro),split='__'),function(z){z[1]})), rownames(baron)))
+
+common_genes = intersect(rownames(enge_raw),common_genes)
 common_genes = (intersect(rownames(GSE50244bulkeset),common_genes))
-common_cells = c('alpha','beta','delta','gamma')
+common_genes = intersect(common_genes,genes$featurename)
+common_cells = c('alpha','acinar','beta','delta','ductal','gamma')
 
 length(common_genes)
+
+gene_length = (genes$featureend-genes$featurestart)[match(common_genes,genes$featurename)]
 ```
 
-baron data set
+## baron data set
 
 ```{r}
 baron_gene = match(common_genes,rownames(baron))
 baron_cell = which(baron$cell_type1%in%common_cells)
-out_baron = scRef_multi_proc(counts(baron)[baron_gene,baron_cell],baron$cell_type1[baron_cell],baron$human[baron_cell],estimator='separate',eps=0,
-                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+out_baron = scRef_multi_proc(counts(baron)[baron_gene,baron_cell],baron$cell_type1[baron_cell],baron$human[baron_cell],estimator='separate',eps=0,est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
 
-out_baron$S_glm
-out_baron$S
+round(out_baron$S_glm,2)
+round(out_baron$S,2)
 ```
 
-muraro data set
+## muraro data set
 
 ```{r}
 muraro_gene =  match(common_genes,unlist(lapply(strsplit(rownames(muraro),split='__'),function(z){z[1]})))
 muraro_cell = which(muraro$cell_type1%in%common_cells)
-out_muraro = scRef_multi_proc(normcounts(muraro)[muraro_gene,muraro_cell],muraro$cell_type1[muraro_cell],muraro$donor[muraro_cell],estimator='separate',eps=0,
-                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+out_muraro = scRef_multi_proc(normcounts(muraro)[muraro_gene,muraro_cell],muraro$cell_type1[muraro_cell],muraro$donor[muraro_cell],estimator='separate',eps=0,est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
 
-out_muraro$S_glm
-out_muraro$S
+round(out_muraro$S_glm,2)
+round(out_muraro$S,2)
 ```
 
-Xin data set
+## Xin data set
 
-Use raw counts:
-
-```{r}
-xin_gene =  match(common_genes,rownames(exprs(XinT2Deset)))
-xin_cell = which(XinT2Deset$cellType%in%common_cells)
-out_xin = scRef_multi_proc(exprs(XinT2Deset)[xin_gene,xin_cell],XinT2Deset$cellType[xin_cell],XinT2Deset$SubjectName[xin_cell],estimator='separate',eps=0,
-                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
-
-out_xin$S_glm
-out_xin$S
-```
-
-
-Use raw counts adjusted by gene length:
+### Use raw counts:
 
 ```{r}
-xin_gene2 = match(common_genes,rownames(normcounts(xin)))
-xin_cell2 = which(xin$cell_type1%in%common_cells)
-out_xin2 = scRef_multi_proc(t(t(normcounts(xin)[xin_gene,xin_cell]*1e-9)*c(colSums(exprs(XinT2Deset)[xin_gene,xin_cell]))),
-                            xin$cell_type1[xin_cell2],xin$donor.id[xin_cell2],estimator='separate',eps=0,
-                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+xin_gene =  match(common_genes,rownames(exprs(xin_raw)))
+xin_cell = which(xin_raw$cellType%in%common_cells)
+out_xin = scRef_multi_proc(exprs(xin_raw)[xin_gene,xin_cell],xin_raw$cellType[xin_cell],xin_raw$SubjectName[xin_cell],estimator='separate',eps=0,est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
 
-out_xin2$S_glm
-out_xin2$S
+round(out_xin$S_glm,2)
+round(out_xin$S,2)
 ```
 
 
-segerstolpe data raw counts:
+### Use raw counts adjusted by gene length:
 
 ```{r}
-segerstolpe_gene =  match(common_genes,unlist(lapply(strsplit(rownames(segerstolpe),split='__'),function(z){z[1]})))
-segerstolpe_cell = which(segerstolpe$cell_type1%in%common_cells)
-out_segerstolpe = scRef_multi_proc(counts(segerstolpe)[segerstolpe_gene,segerstolpe_cell],
-                                   segerstolpe$cell_type1[segerstolpe_cell],segerstolpe$age[segerstolpe_cell],estimator='separate',eps=0,
+xin_gene2 = match(common_genes,rownames(normcounts(xin_rpkm)))
+xin_cell2 = which(xin_rpkm$cell_type1%in%common_cells)
+out_xin2 = scRef_multi_proc(t(t(normcounts(xin_rpkm)[xin_gene2,xin_cell2]*1e-6)*c(colSums(exprs(xin_raw)[xin_gene,xin_cell]))),
+                            xin_rpkm$cell_type1[xin_cell2],xin_rpkm$donor.id[xin_cell2],estimator='separate',eps=0,
+                            est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+
+round(out_xin2$S_glm,2)
+round(out_xin2$S,2)
+```
+
+### Use raw counts adjusted by gene length - external gene length data
+
+```{r}
+
+out_xin3 = scRef_multi_proc(exprs(xin_raw)[xin_gene,xin_cell]/gene_length*1e3,
+                            xin_raw$cellType[xin_cell],xin_raw$SubjectName[xin_cell],
+                            estimator='separate',eps=0,est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',
+                            meta_mode = "universal",cell_types = common_cells)
+
+round(out_xin3$S_glm,2)
+round(out_xin3$S,2)
+```
+
+## segerstolpe data 
+
+### raw counts:
+
+```{r}
+segerstolpe_raw_gene =  match(common_genes,unlist(lapply(strsplit(rownames(segerstolpe_raw),split='__'),function(z){z[1]})))
+segerstolpe_raw_cell = which(segerstolpe_raw$cell_type1%in%common_cells)
+out_segerstolpe_raw = scRef_multi_proc(counts(segerstolpe_raw)[segerstolpe_raw_gene,segerstolpe_raw_cell],
+                            segerstolpe_raw$cell_type1[segerstolpe_raw_cell],segerstolpe_raw$age[segerstolpe_raw_cell],
+                                   estimator='separate',eps=0,
                                    est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
 
-out_segerstolpe$S_glm
-out_segerstolpe$S
+round(out_segerstolpe_raw$S_glm,2)
+round(out_segerstolpe_raw$S,2)
+```
+
+### Use raw counts adjusted by gene length:
+
+```{r}
+out_segerstolpe2 = scRef_multi_proc(t(t(normcounts(segerstolpe_rpkm)[segerstolpe_raw_gene,segerstolpe_raw_cell]*1e-6)*c(colSums(counts(segerstolpe_raw)[segerstolpe_raw_gene,segerstolpe_raw_cell]))),
+                                       segerstolpe_rpkm$cell_type1[segerstolpe_raw_cell],
+                                       segerstolpe_rpkm$age[segerstolpe_raw_cell],estimator='separate',eps=0,
+                                    est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+
+round(out_segerstolpe2$S_glm,2)
+round(out_segerstolpe2$S,2)
+```
+
+### Use raw counts adjusted by gene length - external gene length data
+
+```{r}
+out_segerstolpe3 = scRef_multi_proc(counts(segerstolpe_raw)[segerstolpe_raw_gene,segerstolpe_raw_cell]/gene_length*1e3,
+                                   segerstolpe_raw$cell_type1[segerstolpe_raw_cell],segerstolpe_raw$age[segerstolpe_raw_cell],
+                                   estimator='separate',eps=0,
+                                   est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+
+round(out_segerstolpe3$S_glm,2)
+round(out_segerstolpe3$S,2)
+```
+
+## Enge data set
+
+### raw
+
+```{r}
+enge_gene = match(common_genes,rownames(enge_raw))
+enge_cell = which(enge_raw$inferred_cell_type.ch1%in%common_cells)
+out_enge_raw = scRef_multi_proc(counts(enge_raw)[enge_gene,enge_cell],enge_raw$inferred_cell_type.ch1[enge_cell],enge_raw$characteristics_ch1[enge_cell],estimator='separate',eps=0,est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+round(out_enge_raw$S_glm,2)
+round(out_enge_raw$S,2)
+```
+
+### Use raw counts adjusted by gene length - external gene length data
+
+```{r}
+out_enge2 = scRef_multi_proc(counts(enge_raw)[enge_gene,enge_cell]/gene_length*1e3,enge_raw$inferred_cell_type.ch1[enge_cell],enge_raw$characteristics_ch1[enge_cell],estimator='separate',eps=0,est_sigma2=F,sigma2=NULL,tau2=NULL,meta_var='plug_in',meta_mode = "universal",cell_types = common_cells)
+round(out_enge2$S_glm,2)
+round(out_enge2$S,2)
+```
+
+## Compare 
+
+```{r}
+S_all = rbind(out_baron$S,out_muraro$S,
+              out_xin$S,out_xin2$S,out_xin3$S,
+              out_segerstolpe_raw$S,out_segerstolpe2$S,out_segerstolpe3$S,
+              out_enge_raw$S,out_enge2$S)
+rownames(S_all) = c('baron','muraro',
+                    'xin_raw','xin/genelen-rpkm','xin/genelen-ext',
+                    'segerstolpe_raw','segerstolpe/genelen-rpkm','segerstolpe/genelen-ext',
+                    'enge_raw','enge/genelen-ext')
+S_all = round(S_all,2)
+knitr::kable(S_all,caption = 'ols estimates')
+```
+
+
+```{r}
+S_all = rbind(out_baron$S_glm,out_muraro$S_glm,
+              out_xin$S_glm,out_xin2$S_glm,out_xin3$S_glm,
+              out_segerstolpe_raw$S_glm,out_segerstolpe2$S_glm,out_segerstolpe3$S_glm,
+              out_enge_raw$S_glm,out_enge2$S_glm)
+rownames(S_all) = c('baron','muraro',
+                    'xin_raw','xin/genelen-rpkm','xin/genelen-ext',
+                    'segerstolpe_raw','segerstolpe/genelen-rpkm','segerstolpe/genelen-ext',
+                    'enge_raw','enge/genelen-ext')
+S_all = round(S_all,2)
+knitr::kable(S_all,caption = 'glm estimates')
 ```
 
 
 ## combine
 
-combine baron, muraro, xin2
-
-```{r}
+```{r,eval=FALSE}
 S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin2$S_mat)
 
 S = colMeans(S_mat,na.rm = TRUE)

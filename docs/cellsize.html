@@ -345,7 +345,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-08-25
+<strong>Last updated:</strong> 2020-08-26
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -436,16 +436,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree04ede4649cbc22e24459e8a5ea827d5ca442acd6targetblank04ede46a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/04ede4649cbc22e24459e8a5ea827d5ca442acd6" target="_blank">04ede46</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree71745aaf59a07e9e45d460a4541a22c6cd291c72targetblank71745aaa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/71745aaf59a07e9e45d460a4541a22c6cd291c72" target="_blank">71745aa</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree04ede4649cbc22e24459e8a5ea827d5ca442acd6targetblank04ede46a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree71745aaf59a07e9e45d460a4541a22c6cd291c72targetblank71745aaa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/04ede4649cbc22e24459e8a5ea827d5ca442acd6" target="_blank">04ede46</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/71745aaf59a07e9e45d460a4541a22c6cd291c72" target="_blank">71745aa</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -460,6 +460,7 @@ Untracked files:
     Untracked:  Xin_universal_hc3.RData
     Untracked:  analysis/meta_mode.Rmd
     Untracked:  analysis/multiIndNormal.Rmd
+    Untracked:  analysis/plotGeneVar.Rmd
     Untracked:  data/EMTAB5061Segerstolpe/
     Untracked:  data/GSE129788/
     Untracked:  data/GSE141115/
@@ -582,6 +583,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/71745aaf59a07e9e45d460a4541a22c6cd291c72/analysis/cellsize.Rmd" target="_blank">71745aa</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-26
+</td>
+<td>
+wflow_publish(“analysis/cellsize.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/29b057da3a8eb8a836c15fe1f4da9d75390d47ac/docs/cellsize.html" target="_blank">29b057d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-25
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1121,24 +1156,76 @@ knitr::kable(S_all,caption = &#39;glm estimates&#39;)</code></pre>
 </div>
 <div id="combine" class="section level2">
 <h2>combine</h2>
-<pre class="r"><code>S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin2$S_mat)
+<p>combine baron, muraro, (xin, seger, enge) - ext</p>
+<pre class="r"><code>S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin3$S_mat,out_segerstolpe3$S_mat,out_enge2$S_mat)
 
 S = colMeans(S_mat,na.rm = TRUE)
 S = S/S[1]
 
   # ## method 2: glm
   #
-  S_mat_dataframe = data.frame(y = c(S_mat),
-                               indi = as.factor(rep(1:nrow(S_mat),ncol(S_mat))),
-                               type = as.factor(rep(common_cells,each = nrow(S_mat))))
-  fit = glm.nb(y~.,S_mat_dataframe)
-  S_glm = exp(fit$coefficients[-c(1:nrow(S_mat))])
-  S_glm = c(1,S_glm)
+
+S_mat_dataframe = data.frame(y = c(S_mat),
+                               indi = factor(rep(1:nrow(S_mat),ncol(S_mat))),
+                               type = factor(rep(common_cells,each = nrow(S_mat)),levels = common_cells))
+  fit = MASS::glm.nb(y~.,S_mat_dataframe)
+
+  S_glm = S
+  S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
   names(S_glm) = common_cells
   
-  S
-  
-  S_glm</code></pre>
+  round(S_mat,2)</code></pre>
+<pre><code>               alpha acinar   beta  delta ductal  gamma
+1               4945  10273   5685   5889   5960   3976
+2               4476   7243   5131   4963   5687   3656
+3               3983   9804   4795   4187   4585   3912
+4               5582  11620   6210   6265   7962   4353
+D28            25988  42974  39426  18836  26667  15121
+D29            14702  18786  14802  11440  22329  10220
+D30            20858  39630  23292  19587  22593   9613
+D31            14414  27558  14928  13864  19336  11572
+Non T2D 1      45192     NA  43645  97835     NA  54432
+Non T2D 2      99569     NA  67217  76330     NA  82477
+Non T2D 3      50874     NA  41400 106246     NA  51167
+Non T2D 4      56386     NA  57912     NA     NA 106325
+Non T2D 5     102024     NA  88474 238605     NA 144246
+Non T2D 6      80305     NA  54812 175510     NA  13865
+Non T2D 7      61197     NA  56084     NA     NA  98103
+Non T2D 8      45927     NA  56716 193295     NA  61162
+Non T2D 9      47260     NA  54936  19903     NA 117861
+Non T2D 10     62212     NA  51946 132675     NA     NA
+Non T2D 11     46303     NA  49861 102072     NA  47452
+Non T2D 12     65957     NA  65380  76297     NA     NA
+T2D 1          66840     NA  64666 116835     NA  86499
+T2D 2          89650     NA  67580 160969     NA  88260
+T2D 3          42957     NA  42757 110548     NA  63745
+T2D 4          71964     NA  66725 135425     NA 103552
+T2D 5          54191     NA  41168 132534     NA  46400
+T2D 6          55528     NA  49075  76654     NA  90604
+22             24851  40967  34038  91439  38586  25135
+23             32465  61837  39134  75858  34734  49895
+25             89430 150748 151006 242715 103427 155437
+27             25827  15423  33669  47530  20470 148091
+37             61006 144068  31096 268467  65158  53812
+43            103666 310063  85979 200086  63592  78122
+48             25807  87836  61198  58387  34846  47889
+52             16413  22519  13370  41618  15206  16008
+55             27375  39022  26576  58448  27109  35775
+57             80019  95150 135045 256737 116921 129469
+donor_age: 1   41917  57496  59870  57209  21675     NA
+donor_age: 21  30860  13054  24476  34540  44694     NA
+donor_age: 22  24214  29878  26270  26465  34241     NA
+donor_age: 38  43929  56896  36527  62453  95102     NA
+donor_age: 44  59088  66949  57592  63227  60126     NA
+donor_age: 5   68487  79958  61387  51840  79633     NA
+donor_age: 54  37528  57858  29799  43462  39769     NA
+donor_age: 6   37183  83970  53366  48910     NA     NA</code></pre>
+<pre class="r"><code>  round(S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.29   1.01   1.91   0.86   1.29 </code></pre>
+<pre class="r"><code>  round(S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.66   1.03   1.71   1.20   1.16 </code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

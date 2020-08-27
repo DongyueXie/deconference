@@ -1,0 +1,317 @@
+---
+title: "cell size, remove top expressed genes 0.99"
+author: "DongyueXie"
+date: "2020-08-25"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE,message = FALSE)
+```
+
+## Introduction
+
+Explore the difference of cell sizes of UMI/non-UMI methods.  
+
+Xin: rpkm and raw counts available
+
+segerstope: rpkm and raw counts available
+
+muraro: Transcript counts were then adjusted to the expected number of molecules based on counts, 256 possible UMI’s and poissonian counting statistics.
+
+baron: raw counts
+
+Enge: smart-seq2, raw counts avaiable
+
+
+
+```{r}
+library(MuSiC)
+library(xbioc)
+library(MASS)
+source('code/deconference_main.R')
+xin_raw <- readRDS("data/GSE81608Xin/xin_raw.rds")
+xin_rpkm <- readRDS("data/GSE81608Xin/xin_rpkm.rds")
+
+segerstolpe_raw <- readRDS("data/EMTAB5061Segerstolpe/segerstolpe_raw.rds")
+segerstolpe_rpkm <- readRDS("data/EMTAB5061Segerstolpe/segerstolpe_rpkm.rds")
+
+enge_raw <- readRDS('data/GSE81547Enge/gse/enge_raw.rds')
+
+muraro <- readRDS("data/GSE85241Muraro/muraro_expected.rds")
+baron <- readRDS("data/GSE84133Baron/baron_raw.rds")
+
+GSE50244bulkeset <- readRDS("data/MuSiC/GSE50244bulkeset.rds")
+
+genes <- read.csv("data/GSE81547Enge/hca/genes.csv")
+# common genes
+common_genes = intersect(intersect(rownames(exprs(xin_raw)), rownames(segerstolpe_raw)), intersect(unlist(lapply(strsplit(rownames(muraro),split='__'),function(z){z[1]})), rownames(baron)))
+
+common_genes = intersect(rownames(enge_raw),common_genes)
+common_genes = (intersect(rownames(GSE50244bulkeset),common_genes))
+common_genes = intersect(common_genes,genes$featurename)
+common_cells = c('alpha','acinar','beta','delta','ductal','gamma')
+
+length(common_genes)
+
+gene_length = (genes$featureend-genes$featurestart)[match(common_genes,genes$featurename)]
+
+plott = function(out){
+  par(mfrow=c(3,2))
+  for(k in 1:6){
+    if(!is.nan(out$S[k])){
+      
+      plot(out$X[,k]*1e3,out$Sigma[,k]*1e6,
+       pch=20,col='grey60',
+       xlab='mean',ylab='var',
+       main=paste(common_cells[k],"cell : mean-var plot"))
+  loess_fit = loess(y~.,
+                    data.frame(x=out$X[,k]*1e3,y=out$Sigma[,k]*1e6))
+  x_seq = seq(range(out$X[,k]*1e3)[1],range(out$X[,k]*1e3)[2],length.out = 1e3)
+  lines(x_seq,predict(loess_fit,data.frame(x=x_seq)))
+  
+    }
+  
+}
+}
+
+```
+
+## baron data set
+
+```{r}
+baron_gene = match(common_genes,rownames(baron))
+baron_data = set_data_decon(rep(1,length(baron_gene)),counts(baron)[baron_gene,],
+                            cell_type_idx=baron$cell_type1,
+                            indi_idx = baron$human,
+                            cell_types=common_cells)
+
+
+out_baron = scRef_multi_proc(baron_data$Y,baron_data$cell_type_idx,baron_data$indi_idx,
+                             est_sigma2=F,cell_types = baron_data$cell_types,diag_cov=TRUE)
+
+round(out_baron$S_glm,2)
+round(out_baron$S,2)
+plott(out_baron)
+plot.new()
+```
+
+## muraro data set
+
+```{r}
+muraro_gene =  match(common_genes,unlist(lapply(strsplit(rownames(muraro),split='__'),function(z){z[1]})))
+muraro_data = set_data_decon(rep(1,length(muraro_gene)),normcounts(muraro)[muraro_gene,],
+                            cell_type_idx=muraro$cell_type1,
+                            indi_idx = muraro$donor,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+
+
+out_muraro = scRef_multi_proc(muraro_data$Y,muraro_data$cell_type_idx,muraro_data$indi_idx,
+                             est_sigma2=F,cell_types = muraro_data$cell_types,diag_cov=TRUE)
+round(out_muraro$S_glm,2)
+round(out_muraro$S,2)
+plot.new()
+```
+
+## Xin data set
+
+### Use raw counts:
+
+```{r}
+xin_gene =  match(common_genes,rownames(exprs(xin_raw)))
+xin_cell = which(xin_raw$cellType%in%common_cells)
+datax = set_data_decon(rep(1,length(xin_gene)),exprs(xin_raw)[xin_gene,],
+                          cell_type_idx = xin_raw$cellType,
+                          indi_idx = xin_raw$SubjectName,cell_types = common_cells)
+out_xin = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_xin$S_glm,2)
+round(out_xin$S,2)
+
+```
+
+
+### Use raw counts adjusted by gene length:
+
+```{r}
+xin_gene2 = match(common_genes,rownames(normcounts(xin_rpkm)))
+xin_cell2 = which(xin_rpkm$cell_type1%in%common_cells)
+datax = set_data_decon(rep(1,length(xin_gene)),
+                       t(t(normcounts(xin_rpkm)[xin_gene2,xin_cell2]*1e-6)*c(colSums(exprs(xin_raw)[xin_gene,xin_cell]))),
+                          cell_type_idx = xin_rpkm$cell_type1[xin_cell2],
+                          indi_idx = xin_rpkm$donor.id[xin_cell2],cell_types = common_cells)
+out_xin2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_xin2$S_glm,2)
+round(out_xin2$S,2)
+plott(out_xin2)
+plot.new()
+```
+
+### Use raw counts adjusted by gene length - external gene length data
+
+```{r}
+datax = set_data_decon(rep(1,length(xin_gene)),exprs(xin_raw)[xin_gene,]/gene_length*1e3,
+                          cell_type_idx = xin_raw$cellType,
+                          indi_idx = xin_raw$SubjectName,cell_types = common_cells)
+out_xin3 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_xin3$S_glm,2)
+round(out_xin3$S,2)
+plott(out_xin3)
+plot.new()
+```
+
+## segerstolpe data 
+
+### raw counts:
+
+```{r}
+segerstolpe_raw_gene =  match(common_genes,unlist(lapply(strsplit(rownames(segerstolpe_raw),split='__'),function(z){z[1]})))
+# segerstolpe_raw_cell = which(segerstolpe_raw$cell_type1%in%common_cells)
+datax = set_data_decon(rep(1,length(segerstolpe_raw_gene)),
+                       counts(segerstolpe_raw)[segerstolpe_raw_gene,],
+                            cell_type_idx=segerstolpe_raw$cell_type1,
+                            indi_idx = segerstolpe_raw$age,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+
+out_segerstolpe_raw = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+round(out_segerstolpe_raw$S_glm,2)
+round(out_segerstolpe_raw$S,2)
+```
+
+### Use raw counts adjusted by gene length:
+
+```{r}
+datax = set_data_decon(rep(1,length(segerstolpe_raw_gene)),
+                       t(t(normcounts(segerstolpe_rpkm)[segerstolpe_raw_gene,]*1e-6)*c(colSums(counts(segerstolpe_raw)[segerstolpe_raw_gene,]))),
+                            cell_type_idx=segerstolpe_raw$cell_type1,
+                            indi_idx = segerstolpe_raw$age,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+
+
+out_segerstolpe2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_segerstolpe2$S_glm,2)
+round(out_segerstolpe2$S,2)
+plott(out_segerstolpe2)
+plot.new()
+```
+
+### Use raw counts adjusted by gene length - external gene length data
+
+```{r}
+datax = set_data_decon(rep(1,length(segerstolpe_raw_gene)),
+                       counts(segerstolpe_raw)[segerstolpe_raw_gene,]/gene_length,
+                            cell_type_idx=segerstolpe_raw$cell_type1,
+                            indi_idx = segerstolpe_raw$age,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+
+out_segerstolpe3 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_segerstolpe3$S_glm,2)
+round(out_segerstolpe3$S,2)
+plott(out_segerstolpe3)
+plot.new()
+```
+
+## Enge data set
+
+### raw
+
+```{r}
+enge_gene = match(common_genes,rownames(enge_raw))
+#enge_cell = which(enge_raw$inferred_cell_type.ch1%in%common_cells)
+datax = set_data_decon(rep(1,length(enge_gene)),
+                       counts(enge_raw)[enge_gene,],
+                            cell_type_idx=enge_raw$inferred_cell_type.ch1,
+                            indi_idx = enge_raw$characteristics_ch1,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+out_enge_raw = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+round(out_enge_raw$S_glm,2)
+round(out_enge_raw$S,2)
+```
+
+### Use raw counts adjusted by gene length - external gene length data
+
+```{r}
+datax = set_data_decon(rep(1,length(enge_gene)),
+                       counts(enge_raw)[enge_gene,]/gene_length,
+                            cell_type_idx=enge_raw$inferred_cell_type.ch1,
+                            indi_idx = enge_raw$characteristics_ch1,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+out_enge2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+round(out_enge2$S_glm,2)
+round(out_enge2$S,2)
+plott(out_enge2)
+plot.new()
+```
+
+## Compare 
+
+```{r}
+S_all = rbind(out_baron$S,out_muraro$S,
+              out_xin$S,out_xin2$S,out_xin3$S,
+              out_segerstolpe_raw$S,out_segerstolpe2$S,out_segerstolpe3$S,
+              out_enge_raw$S,out_enge2$S)
+rownames(S_all) = c('baron','muraro',
+                    'xin_raw','xin/genelen-rpkm','xin/genelen-ext',
+                    'segerstolpe_raw','segerstolpe/genelen-rpkm','segerstolpe/genelen-ext',
+                    'enge_raw','enge/genelen-ext')
+S_all = round(S_all,2)
+knitr::kable(S_all,caption = 'ols estimates')
+```
+
+
+```{r}
+S_all = rbind(out_baron$S_glm,out_muraro$S_glm,
+              out_xin$S_glm,out_xin2$S_glm,out_xin3$S_glm,
+              out_segerstolpe_raw$S_glm,out_segerstolpe2$S_glm,out_segerstolpe3$S_glm,
+              out_enge_raw$S_glm,out_enge2$S_glm)
+rownames(S_all) = c('baron','muraro',
+                    'xin_raw','xin/genelen-rpkm','xin/genelen-ext',
+                    'segerstolpe_raw','segerstolpe/genelen-rpkm','segerstolpe/genelen-ext',
+                    'enge_raw','enge/genelen-ext')
+S_all = round(S_all,2)
+knitr::kable(S_all,caption = 'glm estimates')
+```
+
+
+## combine cell size
+
+combine baron, muraro, (xin, seger, enge) - ext
+
+```{r}
+S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin3$S_mat,out_segerstolpe3$S_mat,out_enge2$S_mat)
+
+S = colMeans(S_mat,na.rm = TRUE)
+S = S/S[1]
+
+  # ## method 2: glm
+  #
+
+S_mat_dataframe = data.frame(y = c(S_mat),
+                               indi = factor(rep(1:nrow(S_mat),ncol(S_mat))),
+                               type = factor(rep(common_cells,each = nrow(S_mat)),levels = common_cells))
+  fit = MASS::glm.nb(y~.,S_mat_dataframe)
+
+  S_glm = S
+  S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
+  names(S_glm) = common_cells
+  
+  round(S_mat,2)
+  
+  round(S,2)
+  
+  round(S_glm,2)
+```

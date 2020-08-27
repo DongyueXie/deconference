@@ -436,16 +436,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree693ba458e1c83c00e3a64e99c68a5a0a03722fa0targetblank693ba45a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/693ba458e1c83c00e3a64e99c68a5a0a03722fa0" target="_blank">693ba45</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreea2c14eed2dfe419bd4c57fb5c018bf923f86623dtargetblanka2c14eea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/a2c14eed2dfe419bd4c57fb5c018bf923f86623d" target="_blank">a2c14ee</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree693ba458e1c83c00e3a64e99c68a5a0a03722fa0targetblank693ba45a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreea2c14eed2dfe419bd4c57fb5c018bf923f86623dtargetblanka2c14eea" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/693ba458e1c83c00e3a64e99c68a5a0a03722fa0" target="_blank">693ba45</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/a2c14eed2dfe419bd4c57fb5c018bf923f86623d" target="_blank">a2c14ee</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -454,7 +454,6 @@ Note that you need to be careful to ensure that all relevant files for the analy
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
-    Ignored:    analysis/figure/
 
 Untracked files:
     Untracked:  Xin_universal.RData
@@ -592,6 +591,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/a2c14eed2dfe419bd4c57fb5c018bf923f86623d/analysis/cellsize2.Rmd" target="_blank">a2c14ee</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+<td>
+wflow_publish(“analysis/cellsize2.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/ce95e9d576f108e67534b9ac741caf51c6a3002c/docs/cellsize2.html" target="_blank">ce95e9d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/693ba458e1c83c00e3a64e99c68a5a0a03722fa0/analysis/cellsize2.Rmd" target="_blank">693ba45</a>
 </td>
 <td>
@@ -650,7 +683,7 @@ length(common_genes)</code></pre>
 <pre class="r"><code>gene_length = (genes$featureend-genes$featurestart)[match(common_genes,genes$featurename)]
 
 plott = function(out){
-  par(mfrow=c(3,2))
+  par(mfrow=c(2,3))
   for(k in 1:6){
     if(!is.nan(out$S[k])){
       
@@ -688,8 +721,43 @@ round(out_baron$S_glm,2)</code></pre>
   1.00   1.52   1.05   0.87   1.40   0.83 </code></pre>
 <pre class="r"><code>plott(out_baron)</code></pre>
 <p><img src="figure/cellsize2.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot.new()</code></pre>
-<p><img src="figure/cellsize2.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/ce95e9d576f108e67534b9ac741caf51c6a3002c/docs/figure/cellsize2.Rmd/unnamed-chunk-2-1.png" target="_blank">ce95e9d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="muraro-data-set" class="section level2">
 <h2>muraro data set</h2>
@@ -708,8 +776,6 @@ round(out_muraro$S_glm,2)</code></pre>
 <pre class="r"><code>round(out_muraro$S,2)</code></pre>
 <pre><code> alpha acinar   beta  delta ductal  gamma 
   1.00   1.58   1.42   0.90   1.46   0.62 </code></pre>
-<pre class="r"><code>plot.new()</code></pre>
-<p><img src="figure/cellsize2.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="xin-data-set" class="section level2">
 <h2>Xin data set</h2>
@@ -747,9 +813,45 @@ round(out_xin2$S_glm,2)</code></pre>
 <pre class="r"><code>round(out_xin2$S,2)</code></pre>
 <pre><code> alpha acinar   beta  delta ductal  gamma 
   1.00    NaN   1.35   1.32    NaN   1.06 </code></pre>
-<pre class="r"><code>plott(out_xin2)
-plot.new()</code></pre>
+<pre class="r"><code>plott(out_xin2)</code></pre>
 <p><img src="figure/cellsize2.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/ce95e9d576f108e67534b9ac741caf51c6a3002c/docs/figure/cellsize2.Rmd/unnamed-chunk-5-1.png" target="_blank">ce95e9d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="use-raw-counts-adjusted-by-gene-length---external-gene-length-data" class="section level3">
 <h3>Use raw counts adjusted by gene length - external gene length data</h3>
@@ -765,9 +867,45 @@ round(out_xin3$S_glm,2)</code></pre>
 <pre class="r"><code>round(out_xin3$S,2)</code></pre>
 <pre><code> alpha acinar   beta  delta ductal  gamma 
   1.00    NaN   1.29   1.15    NaN   0.95 </code></pre>
-<pre class="r"><code>plott(out_xin3)
-plot.new()</code></pre>
+<pre class="r"><code>plott(out_xin3)</code></pre>
 <p><img src="figure/cellsize2.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/ce95e9d576f108e67534b9ac741caf51c6a3002c/docs/figure/cellsize2.Rmd/unnamed-chunk-6-1.png" target="_blank">ce95e9d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="segerstolpe-data" class="section level2">
@@ -811,8 +949,43 @@ round(out_segerstolpe2$S_glm,2)</code></pre>
   1.00   1.26   0.83   0.81   1.44   0.71 </code></pre>
 <pre class="r"><code>plott(out_segerstolpe2)</code></pre>
 <p><img src="figure/cellsize2.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot.new()</code></pre>
-<p><img src="figure/cellsize2.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/ce95e9d576f108e67534b9ac741caf51c6a3002c/docs/figure/cellsize2.Rmd/unnamed-chunk-8-1.png" target="_blank">ce95e9d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="use-raw-counts-adjusted-by-gene-length---external-gene-length-data-1" class="section level3">
 <h3>Use raw counts adjusted by gene length - external gene length data</h3>
@@ -833,8 +1006,43 @@ round(out_segerstolpe3$S_glm,2)</code></pre>
   1.00   1.34   0.92   0.83   1.51   0.71 </code></pre>
 <pre class="r"><code>plott(out_segerstolpe3)</code></pre>
 <p><img src="figure/cellsize2.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>plot.new()</code></pre>
-<p><img src="figure/cellsize2.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/ce95e9d576f108e67534b9ac741caf51c6a3002c/docs/figure/cellsize2.Rmd/unnamed-chunk-9-1.png" target="_blank">ce95e9d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="enge-data-set" class="section level2">
@@ -872,9 +1080,45 @@ round(out_enge2$S_glm,2)</code></pre>
 <pre class="r"><code>round(out_enge2$S,2)</code></pre>
 <pre><code> alpha acinar   beta  delta ductal  gamma 
   1.00   0.51   0.98   0.97   1.36    NaN </code></pre>
-<pre class="r"><code>plott(out_enge2)
-plot.new()</code></pre>
+<pre class="r"><code>plott(out_enge2)</code></pre>
 <p><img src="figure/cellsize2.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/ce95e9d576f108e67534b9ac741caf51c6a3002c/docs/figure/cellsize2.Rmd/unnamed-chunk-11-1.png" target="_blank">ce95e9d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div id="compare" class="section level2">

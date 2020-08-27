@@ -209,7 +209,7 @@ plott(out_segerstolpe2)
 
 ```{r}
 datax = set_data_decon(rep(1,length(segerstolpe_raw_gene)),
-                       counts(segerstolpe_raw)[segerstolpe_raw_gene,]/gene_length,
+                       counts(segerstolpe_raw)[segerstolpe_raw_gene,]/gene_length*1e3,
                             cell_type_idx=segerstolpe_raw$cell_type1,
                             indi_idx = segerstolpe_raw$age,
                             cell_types=common_cells,max_count_quantile = 0.99)
@@ -226,6 +226,16 @@ plott(out_segerstolpe3)
 ## Enge data set
 
 ### raw
+
+```{r}
+par(mfrow=c(2,3))
+for(k in 1:6){
+  temp_idx = which(enge_raw$inferred_cell_type.ch1==common_cells[k])
+  if(length(temp_idx)!=0){
+    plot(rowSums(counts(enge_raw)[,temp_idx]),ylab = 'counts',main=common_cells[k])
+  }
+}
+```
 
 ```{r}
 enge_gene = match(common_genes,rownames(enge_raw))
@@ -245,7 +255,7 @@ round(out_enge_raw$S,2)
 
 ```{r}
 datax = set_data_decon(rep(1,length(enge_gene)),
-                       counts(enge_raw)[enge_gene,]/gene_length,
+                       counts(enge_raw)[enge_gene,]/gene_length*1e3,
                             cell_type_idx=enge_raw$inferred_cell_type.ch1,
                             indi_idx = enge_raw$characteristics_ch1,
                             cell_types=common_cells,max_count_quantile = 0.99)
@@ -297,6 +307,12 @@ S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin3$S_mat,out_segerstolpe3$S
 S = colMeans(S_mat,na.rm = TRUE)
 S = S/S[1]
 
+
+S_mat_2 = rbind(out_baron$S,out_muraro$S,
+                out_xin3$S,out_segerstolpe3$S,out_enge2$S)
+S_mat_2[is.nan(S_mat_2)] = NA
+rownames(S_mat_2) = c('baron','muraro','xin','seger','enge')
+
   # ## method 2: glm
   #
 
@@ -310,6 +326,9 @@ S_mat_dataframe = data.frame(y = c(S_mat),
   names(S_glm) = common_cells
   
   round(S_mat,2)
+  round(S_mat_2,2)
+  
+  round(apply(S_mat_2,2,mean,na.rm=T),2)
   
   round(S,2)
   

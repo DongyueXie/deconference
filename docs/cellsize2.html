@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="DongyueXie" />
+
+<meta name="date" content="2020-08-25" />
+
+<title>cell size, remove top expressed genes 0.99</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/sandstone.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">deconference</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+<li>
+  <a href="about.html">Data</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/DongyueXie/deconference">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">cell size, remove top expressed genes 0.99</h1>
+<h4 class="author"><em>DongyueXie</em></h4>
+<h4 class="date"><em>2020-08-25</em></h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-08-27
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>deconference/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20200403code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20200403)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20200403code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20200403)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree693ba458e1c83c00e3a64e99c68a5a0a03722fa0targetblank693ba45a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/693ba458e1c83c00e3a64e99c68a5a0a03722fa0" target="_blank">693ba45</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree693ba458e1c83c00e3a64e99c68a5a0a03722fa0targetblank693ba45a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/693ba458e1c83c00e3a64e99c68a5a0a03722fa0" target="_blank">693ba45</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
+
+Untracked files:
+    Untracked:  Xin_universal.RData
+    Untracked:  Xin_universal_hc3.RData
+    Untracked:  analysis/cellsize3.Rmd
+    Untracked:  analysis/meta_mode.Rmd
+    Untracked:  analysis/multiIndNormal.Rmd
+    Untracked:  analysis/plotGeneVar.Rmd
+    Untracked:  data/EMTAB5061Segerstolpe/
+    Untracked:  data/GSE129788/
+    Untracked:  data/GSE141115/
+    Untracked:  data/GSE81547Enge/
+    Untracked:  data/GSE81608Xin/
+    Untracked:  data/GSE84133Baron/
+    Untracked:  data/GSE85241Muraro/
+    Untracked:  data/MuSiC/
+    Untracked:  data/cibersort/
+    Untracked:  data/pbmc3k/
+    Untracked:  data/robots.txt
+    Untracked:  output/Xin_bycelltype_hc2.RData
+    Untracked:  output/Xin_bycelltype_hc3.RData
+    Untracked:  output/Xin_sampleM_hc2.RData
+    Untracked:  output/Xin_sampleM_hc3.RData
+    Untracked:  output/Xin_sampleM_unadj.RData
+    Untracked:  output/Xin_universal_hc0.RData
+    Untracked:  output/Xin_universal_hc2.RData
+    Untracked:  output/Xin_universal_hc3.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls05_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls10_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls1_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls3_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls50_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls5_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls05_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls10_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls1_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls3_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls50_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls5_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls05_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls10_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls1_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls3_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls50_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls5_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls05_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls10_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls1_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls50_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls5_bulkls50.RData
+    Untracked:  output/bulkref_simu_addw_G1000_K4_refls10_bulkls50.RData
+    Untracked:  output/bulkref_simu_addw_G1000_K4_refls1_bulkls50.RData
+    Untracked:  output/bulkref_simu_addw_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/bulkref_simu_addw_G1000_K4_refls5_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_G1000_K4_refls05_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_G1000_K4_refls1_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_addw_G1000_K4_refls1_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_addw_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/results_nsclc.RData
+    Untracked:  output/scref_multiInd100_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_multiInd100_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown_Nosigma2.RData
+    Untracked:  output/scref_multiInd10_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_multiInd10_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown_Nosigma2.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN10_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN10_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN300_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN30_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN30_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN10_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN10_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN300_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN30_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN30_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN10_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN10_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN300_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN30_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN30_bulkls50_addw_tauunknown.RData
+    Untracked:  output/twoBulk_bulkref_simu_G1000_K4_refls30.RData
+    Untracked:  output/twoBulk_bulkref_simu_G500_K4_refls30.RData
+    Untracked:  output/twoBulk_multiscref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_null_bulkref_simu_G1000_K4_refls30.RData
+    Untracked:  output/twoBulk_null_multiscref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_null_scref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_scref_simu_G1000_K4.RData
+
+Unstaged changes:
+    Modified:   analysis/cellsize.Rmd
+    Modified:   analysis/real_data_simu.Rmd
+    Modified:   code/deconference_meta.R
+    Modified:   code/deconference_setdata.R
+    Deleted:    data/pbmc.rds
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/cellsize2.Rmd</code>) and HTML (<code>docs/cellsize2.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/693ba458e1c83c00e3a64e99c68a5a0a03722fa0/analysis/cellsize2.Rmd" target="_blank">693ba45</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-08-27
+</td>
+<td>
+wflow_publish(“analysis/cellsize2.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Explore the difference of cell sizes of UMI/non-UMI methods.</p>
+<p>Xin: rpkm and raw counts available</p>
+<p>segerstope: rpkm and raw counts available</p>
+<p>muraro: Transcript counts were then adjusted to the expected number of molecules based on counts, 256 possible UMI’s and poissonian counting statistics.</p>
+<p>baron: raw counts</p>
+<p>Enge: smart-seq2, raw counts avaiable</p>
+<pre class="r"><code>library(MuSiC)
+library(xbioc)
+library(MASS)
+source(&#39;code/deconference_main.R&#39;)
+xin_raw &lt;- readRDS(&quot;data/GSE81608Xin/xin_raw.rds&quot;)
+xin_rpkm &lt;- readRDS(&quot;data/GSE81608Xin/xin_rpkm.rds&quot;)
+
+segerstolpe_raw &lt;- readRDS(&quot;data/EMTAB5061Segerstolpe/segerstolpe_raw.rds&quot;)
+segerstolpe_rpkm &lt;- readRDS(&quot;data/EMTAB5061Segerstolpe/segerstolpe_rpkm.rds&quot;)
+
+enge_raw &lt;- readRDS(&#39;data/GSE81547Enge/gse/enge_raw.rds&#39;)
+
+muraro &lt;- readRDS(&quot;data/GSE85241Muraro/muraro_expected.rds&quot;)
+baron &lt;- readRDS(&quot;data/GSE84133Baron/baron_raw.rds&quot;)
+
+GSE50244bulkeset &lt;- readRDS(&quot;data/MuSiC/GSE50244bulkeset.rds&quot;)
+
+genes &lt;- read.csv(&quot;data/GSE81547Enge/hca/genes.csv&quot;)
+# common genes
+common_genes = intersect(intersect(rownames(exprs(xin_raw)), rownames(segerstolpe_raw)), intersect(unlist(lapply(strsplit(rownames(muraro),split=&#39;__&#39;),function(z){z[1]})), rownames(baron)))
+
+common_genes = intersect(rownames(enge_raw),common_genes)
+common_genes = (intersect(rownames(GSE50244bulkeset),common_genes))
+common_genes = intersect(common_genes,genes$featurename)
+common_cells = c(&#39;alpha&#39;,&#39;acinar&#39;,&#39;beta&#39;,&#39;delta&#39;,&#39;ductal&#39;,&#39;gamma&#39;)
+
+length(common_genes)</code></pre>
+<pre><code>[1] 15374</code></pre>
+<pre class="r"><code>gene_length = (genes$featureend-genes$featurestart)[match(common_genes,genes$featurename)]
+
+plott = function(out){
+  par(mfrow=c(3,2))
+  for(k in 1:6){
+    if(!is.nan(out$S[k])){
+      
+      plot(out$X[,k]*1e3,out$Sigma[,k]*1e6,
+       pch=20,col=&#39;grey60&#39;,
+       xlab=&#39;mean&#39;,ylab=&#39;var&#39;,
+       main=paste(common_cells[k],&quot;cell : mean-var plot&quot;))
+  loess_fit = loess(y~.,
+                    data.frame(x=out$X[,k]*1e3,y=out$Sigma[,k]*1e6))
+  x_seq = seq(range(out$X[,k]*1e3)[1],range(out$X[,k]*1e3)[2],length.out = 1e3)
+  lines(x_seq,predict(loess_fit,data.frame(x=x_seq)))
+  
+    }
+  
+}
+}</code></pre>
+</div>
+<div id="baron-data-set" class="section level2">
+<h2>baron data set</h2>
+<pre class="r"><code>baron_gene = match(common_genes,rownames(baron))
+baron_data = set_data_decon(rep(1,length(baron_gene)),counts(baron)[baron_gene,],
+                            cell_type_idx=baron$cell_type1,
+                            indi_idx = baron$human,
+                            cell_types=common_cells)
+
+
+out_baron = scRef_multi_proc(baron_data$Y,baron_data$cell_type_idx,baron_data$indi_idx,
+                             est_sigma2=F,cell_types = baron_data$cell_types,diag_cov=TRUE)
+
+round(out_baron$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.51   1.04   0.87   1.39   0.83 </code></pre>
+<pre class="r"><code>round(out_baron$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.52   1.05   0.87   1.40   0.83 </code></pre>
+<pre class="r"><code>plott(out_baron)</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot.new()</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="muraro-data-set" class="section level2">
+<h2>muraro data set</h2>
+<pre class="r"><code>muraro_gene =  match(common_genes,unlist(lapply(strsplit(rownames(muraro),split=&#39;__&#39;),function(z){z[1]})))
+muraro_data = set_data_decon(rep(1,length(muraro_gene)),normcounts(muraro)[muraro_gene,],
+                            cell_type_idx=muraro$cell_type1,
+                            indi_idx = muraro$donor,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+
+
+out_muraro = scRef_multi_proc(muraro_data$Y,muraro_data$cell_type_idx,muraro_data$indi_idx,
+                             est_sigma2=F,cell_types = muraro_data$cell_types,diag_cov=TRUE)
+round(out_muraro$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.55   1.37   0.91   1.53   0.64 </code></pre>
+<pre class="r"><code>round(out_muraro$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.58   1.42   0.90   1.46   0.62 </code></pre>
+<pre class="r"><code>plot.new()</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="xin-data-set" class="section level2">
+<h2>Xin data set</h2>
+<div id="use-raw-counts" class="section level3">
+<h3>Use raw counts:</h3>
+<pre class="r"><code>xin_gene =  match(common_genes,rownames(exprs(xin_raw)))
+xin_cell = which(xin_raw$cellType%in%common_cells)
+datax = set_data_decon(rep(1,length(xin_gene)),exprs(xin_raw)[xin_gene,],
+                          cell_type_idx = xin_raw$cellType,
+                          indi_idx = xin_raw$SubjectName,cell_types = common_cells)
+out_xin = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_xin$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00    NaN   1.37   1.19    NaN   0.96 </code></pre>
+<pre class="r"><code>round(out_xin$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00    NaN   1.35   1.19    NaN   0.98 </code></pre>
+</div>
+<div id="use-raw-counts-adjusted-by-gene-length" class="section level3">
+<h3>Use raw counts adjusted by gene length:</h3>
+<pre class="r"><code>xin_gene2 = match(common_genes,rownames(normcounts(xin_rpkm)))
+xin_cell2 = which(xin_rpkm$cell_type1%in%common_cells)
+datax = set_data_decon(rep(1,length(xin_gene)),
+                       t(t(normcounts(xin_rpkm)[xin_gene2,xin_cell2]*1e-6)*c(colSums(exprs(xin_raw)[xin_gene,xin_cell]))),
+                          cell_type_idx = xin_rpkm$cell_type1[xin_cell2],
+                          indi_idx = xin_rpkm$donor.id[xin_cell2],cell_types = common_cells)
+out_xin2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_xin2$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00    NaN   1.39   1.32    NaN   1.04 </code></pre>
+<pre class="r"><code>round(out_xin2$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00    NaN   1.35   1.32    NaN   1.06 </code></pre>
+<pre class="r"><code>plott(out_xin2)
+plot.new()</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="use-raw-counts-adjusted-by-gene-length---external-gene-length-data" class="section level3">
+<h3>Use raw counts adjusted by gene length - external gene length data</h3>
+<pre class="r"><code>datax = set_data_decon(rep(1,length(xin_gene)),exprs(xin_raw)[xin_gene,]/gene_length*1e3,
+                          cell_type_idx = xin_raw$cellType,
+                          indi_idx = xin_raw$SubjectName,cell_types = common_cells)
+out_xin3 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_xin3$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00    NaN   1.31   1.15    NaN   0.92 </code></pre>
+<pre class="r"><code>round(out_xin3$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00    NaN   1.29   1.15    NaN   0.95 </code></pre>
+<pre class="r"><code>plott(out_xin3)
+plot.new()</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="segerstolpe-data" class="section level2">
+<h2>segerstolpe data</h2>
+<div id="raw-counts" class="section level3">
+<h3>raw counts:</h3>
+<pre class="r"><code>segerstolpe_raw_gene =  match(common_genes,unlist(lapply(strsplit(rownames(segerstolpe_raw),split=&#39;__&#39;),function(z){z[1]})))
+# segerstolpe_raw_cell = which(segerstolpe_raw$cell_type1%in%common_cells)
+datax = set_data_decon(rep(1,length(segerstolpe_raw_gene)),
+                       counts(segerstolpe_raw)[segerstolpe_raw_gene,],
+                            cell_type_idx=segerstolpe_raw$cell_type1,
+                            indi_idx = segerstolpe_raw$age,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+
+out_segerstolpe_raw = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+round(out_segerstolpe_raw$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.18   0.93   0.87   1.53   0.86 </code></pre>
+<pre class="r"><code>round(out_segerstolpe_raw$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.27   0.95   0.86   1.49   0.76 </code></pre>
+</div>
+<div id="use-raw-counts-adjusted-by-gene-length-1" class="section level3">
+<h3>Use raw counts adjusted by gene length:</h3>
+<pre class="r"><code>datax = set_data_decon(rep(1,length(segerstolpe_raw_gene)),
+                       t(t(normcounts(segerstolpe_rpkm)[segerstolpe_raw_gene,]*1e-6)*c(colSums(counts(segerstolpe_raw)[segerstolpe_raw_gene,]))),
+                            cell_type_idx=segerstolpe_raw$cell_type1,
+                            indi_idx = segerstolpe_raw$age,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+
+
+out_segerstolpe2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_segerstolpe2$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.17   0.82   0.83   1.49   0.81 </code></pre>
+<pre class="r"><code>round(out_segerstolpe2$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.26   0.83   0.81   1.44   0.71 </code></pre>
+<pre class="r"><code>plott(out_segerstolpe2)</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot.new()</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="use-raw-counts-adjusted-by-gene-length---external-gene-length-data-1" class="section level3">
+<h3>Use raw counts adjusted by gene length - external gene length data</h3>
+<pre class="r"><code>datax = set_data_decon(rep(1,length(segerstolpe_raw_gene)),
+                       counts(segerstolpe_raw)[segerstolpe_raw_gene,]/gene_length,
+                            cell_type_idx=segerstolpe_raw$cell_type1,
+                            indi_idx = segerstolpe_raw$age,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+
+out_segerstolpe3 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+
+round(out_segerstolpe3$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.33   0.92   0.83   1.51   0.71 </code></pre>
+<pre class="r"><code>round(out_segerstolpe3$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.34   0.92   0.83   1.51   0.71 </code></pre>
+<pre class="r"><code>plott(out_segerstolpe3)</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot.new()</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="enge-data-set" class="section level2">
+<h2>Enge data set</h2>
+<div id="raw" class="section level3">
+<h3>raw</h3>
+<pre class="r"><code>enge_gene = match(common_genes,rownames(enge_raw))
+#enge_cell = which(enge_raw$inferred_cell_type.ch1%in%common_cells)
+datax = set_data_decon(rep(1,length(enge_gene)),
+                       counts(enge_raw)[enge_gene,],
+                            cell_type_idx=enge_raw$inferred_cell_type.ch1,
+                            indi_idx = enge_raw$characteristics_ch1,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+out_enge_raw = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+round(out_enge_raw$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   0.48   0.99   1.00   1.32    NaN </code></pre>
+<pre class="r"><code>round(out_enge_raw$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   0.47   0.98   1.01   1.34    NaN </code></pre>
+</div>
+<div id="use-raw-counts-adjusted-by-gene-length---external-gene-length-data-2" class="section level3">
+<h3>Use raw counts adjusted by gene length - external gene length data</h3>
+<pre class="r"><code>datax = set_data_decon(rep(1,length(enge_gene)),
+                       counts(enge_raw)[enge_gene,]/gene_length,
+                            cell_type_idx=enge_raw$inferred_cell_type.ch1,
+                            indi_idx = enge_raw$characteristics_ch1,
+                            cell_types=common_cells,max_count_quantile = 0.99)
+out_enge2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                             est_sigma2=F,cell_types = datax$cell_types,diag_cov=TRUE)
+round(out_enge2$S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   0.51   0.98   0.97   1.35    NaN </code></pre>
+<pre class="r"><code>round(out_enge2$S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   0.51   0.98   0.97   1.36    NaN </code></pre>
+<pre class="r"><code>plott(out_enge2)
+plot.new()</code></pre>
+<p><img src="figure/cellsize2.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="compare" class="section level2">
+<h2>Compare</h2>
+<pre class="r"><code>S_all = rbind(out_baron$S,out_muraro$S,
+              out_xin$S,out_xin2$S,out_xin3$S,
+              out_segerstolpe_raw$S,out_segerstolpe2$S,out_segerstolpe3$S,
+              out_enge_raw$S,out_enge2$S)
+rownames(S_all) = c(&#39;baron&#39;,&#39;muraro&#39;,
+                    &#39;xin_raw&#39;,&#39;xin/genelen-rpkm&#39;,&#39;xin/genelen-ext&#39;,
+                    &#39;segerstolpe_raw&#39;,&#39;segerstolpe/genelen-rpkm&#39;,&#39;segerstolpe/genelen-ext&#39;,
+                    &#39;enge_raw&#39;,&#39;enge/genelen-ext&#39;)
+S_all = round(S_all,2)
+knitr::kable(S_all,caption = &#39;ols estimates&#39;)</code></pre>
+<table>
+<caption>ols estimates</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">alpha</th>
+<th align="right">acinar</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">ductal</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>baron</td>
+<td align="right">1</td>
+<td align="right">1.52</td>
+<td align="right">1.05</td>
+<td align="right">0.87</td>
+<td align="right">1.40</td>
+<td align="right">0.83</td>
+</tr>
+<tr class="even">
+<td>muraro</td>
+<td align="right">1</td>
+<td align="right">1.58</td>
+<td align="right">1.42</td>
+<td align="right">0.90</td>
+<td align="right">1.46</td>
+<td align="right">0.62</td>
+</tr>
+<tr class="odd">
+<td>xin_raw</td>
+<td align="right">1</td>
+<td align="right">NaN</td>
+<td align="right">1.35</td>
+<td align="right">1.19</td>
+<td align="right">NaN</td>
+<td align="right">0.98</td>
+</tr>
+<tr class="even">
+<td>xin/genelen-rpkm</td>
+<td align="right">1</td>
+<td align="right">NaN</td>
+<td align="right">1.35</td>
+<td align="right">1.32</td>
+<td align="right">NaN</td>
+<td align="right">1.06</td>
+</tr>
+<tr class="odd">
+<td>xin/genelen-ext</td>
+<td align="right">1</td>
+<td align="right">NaN</td>
+<td align="right">1.29</td>
+<td align="right">1.15</td>
+<td align="right">NaN</td>
+<td align="right">0.95</td>
+</tr>
+<tr class="even">
+<td>segerstolpe_raw</td>
+<td align="right">1</td>
+<td align="right">1.27</td>
+<td align="right">0.95</td>
+<td align="right">0.86</td>
+<td align="right">1.49</td>
+<td align="right">0.76</td>
+</tr>
+<tr class="odd">
+<td>segerstolpe/genelen-rpkm</td>
+<td align="right">1</td>
+<td align="right">1.26</td>
+<td align="right">0.83</td>
+<td align="right">0.81</td>
+<td align="right">1.44</td>
+<td align="right">0.71</td>
+</tr>
+<tr class="even">
+<td>segerstolpe/genelen-ext</td>
+<td align="right">1</td>
+<td align="right">1.34</td>
+<td align="right">0.92</td>
+<td align="right">0.83</td>
+<td align="right">1.51</td>
+<td align="right">0.71</td>
+</tr>
+<tr class="odd">
+<td>enge_raw</td>
+<td align="right">1</td>
+<td align="right">0.47</td>
+<td align="right">0.98</td>
+<td align="right">1.01</td>
+<td align="right">1.34</td>
+<td align="right">NaN</td>
+</tr>
+<tr class="even">
+<td>enge/genelen-ext</td>
+<td align="right">1</td>
+<td align="right">0.51</td>
+<td align="right">0.98</td>
+<td align="right">0.97</td>
+<td align="right">1.36</td>
+<td align="right">NaN</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>S_all = rbind(out_baron$S_glm,out_muraro$S_glm,
+              out_xin$S_glm,out_xin2$S_glm,out_xin3$S_glm,
+              out_segerstolpe_raw$S_glm,out_segerstolpe2$S_glm,out_segerstolpe3$S_glm,
+              out_enge_raw$S_glm,out_enge2$S_glm)
+rownames(S_all) = c(&#39;baron&#39;,&#39;muraro&#39;,
+                    &#39;xin_raw&#39;,&#39;xin/genelen-rpkm&#39;,&#39;xin/genelen-ext&#39;,
+                    &#39;segerstolpe_raw&#39;,&#39;segerstolpe/genelen-rpkm&#39;,&#39;segerstolpe/genelen-ext&#39;,
+                    &#39;enge_raw&#39;,&#39;enge/genelen-ext&#39;)
+S_all = round(S_all,2)
+knitr::kable(S_all,caption = &#39;glm estimates&#39;)</code></pre>
+<table>
+<caption>glm estimates</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">alpha</th>
+<th align="right">acinar</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">ductal</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>baron</td>
+<td align="right">1</td>
+<td align="right">1.51</td>
+<td align="right">1.04</td>
+<td align="right">0.87</td>
+<td align="right">1.39</td>
+<td align="right">0.83</td>
+</tr>
+<tr class="even">
+<td>muraro</td>
+<td align="right">1</td>
+<td align="right">1.55</td>
+<td align="right">1.37</td>
+<td align="right">0.91</td>
+<td align="right">1.53</td>
+<td align="right">0.64</td>
+</tr>
+<tr class="odd">
+<td>xin_raw</td>
+<td align="right">1</td>
+<td align="right">NaN</td>
+<td align="right">1.37</td>
+<td align="right">1.19</td>
+<td align="right">NaN</td>
+<td align="right">0.96</td>
+</tr>
+<tr class="even">
+<td>xin/genelen-rpkm</td>
+<td align="right">1</td>
+<td align="right">NaN</td>
+<td align="right">1.39</td>
+<td align="right">1.32</td>
+<td align="right">NaN</td>
+<td align="right">1.04</td>
+</tr>
+<tr class="odd">
+<td>xin/genelen-ext</td>
+<td align="right">1</td>
+<td align="right">NaN</td>
+<td align="right">1.31</td>
+<td align="right">1.15</td>
+<td align="right">NaN</td>
+<td align="right">0.92</td>
+</tr>
+<tr class="even">
+<td>segerstolpe_raw</td>
+<td align="right">1</td>
+<td align="right">1.18</td>
+<td align="right">0.93</td>
+<td align="right">0.87</td>
+<td align="right">1.53</td>
+<td align="right">0.86</td>
+</tr>
+<tr class="odd">
+<td>segerstolpe/genelen-rpkm</td>
+<td align="right">1</td>
+<td align="right">1.17</td>
+<td align="right">0.82</td>
+<td align="right">0.83</td>
+<td align="right">1.49</td>
+<td align="right">0.81</td>
+</tr>
+<tr class="even">
+<td>segerstolpe/genelen-ext</td>
+<td align="right">1</td>
+<td align="right">1.33</td>
+<td align="right">0.92</td>
+<td align="right">0.83</td>
+<td align="right">1.51</td>
+<td align="right">0.71</td>
+</tr>
+<tr class="odd">
+<td>enge_raw</td>
+<td align="right">1</td>
+<td align="right">0.48</td>
+<td align="right">0.99</td>
+<td align="right">1.00</td>
+<td align="right">1.32</td>
+<td align="right">NaN</td>
+</tr>
+<tr class="even">
+<td>enge/genelen-ext</td>
+<td align="right">1</td>
+<td align="right">0.51</td>
+<td align="right">0.98</td>
+<td align="right">0.97</td>
+<td align="right">1.35</td>
+<td align="right">NaN</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="combine-cell-size" class="section level2">
+<h2>combine cell size</h2>
+<p>combine baron, muraro, (xin, seger, enge) - ext</p>
+<pre class="r"><code>S_mat = rbind(out_baron$S_mat,out_muraro$S_mat,out_xin3$S_mat,out_segerstolpe3$S_mat,out_enge2$S_mat)
+
+S = colMeans(S_mat,na.rm = TRUE)
+S = S/S[1]
+
+  # ## method 2: glm
+  #
+
+S_mat_dataframe = data.frame(y = c(S_mat),
+                               indi = factor(rep(1:nrow(S_mat),ncol(S_mat))),
+                               type = factor(rep(common_cells,each = nrow(S_mat)),levels = common_cells))
+  fit = MASS::glm.nb(y~.,S_mat_dataframe)
+
+  S_glm = S
+  S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
+  names(S_glm) = common_cells
+  
+  round(S_mat,2)</code></pre>
+<pre><code>              alpha acinar  beta delta ductal gamma
+1              2722   3103  2581  2260   3520  2006
+2              2137   3965  2352  1923   3137  1792
+3              1963   2705  1941  1586   2595  1800
+4              2677   4704  3103  2504   4059  2262
+D28           15360  23852 26477 11758  18688  8882
+D29            8515   8802  9802  6875  15550  5788
+D30           11793  22474 15582 12151  15927  5800
+D31            7795  13703  9993  8267  13493  6571
+Non T2D 1     14431     NA 17269 19896     NA 14652
+Non T2D 2     32022     NA 25368 20204     NA 22679
+Non T2D 3     13034     NA 17325 17189     NA  9370
+Non T2D 4     14513     NA 22908    NA     NA 17615
+Non T2D 5     27621     NA 33778 38644     NA 27185
+Non T2D 6     20973     NA 23910 28640     NA  3574
+Non T2D 7     17006     NA 24565    NA     NA 17135
+Non T2D 8     11620     NA 21736 20931     NA 13609
+Non T2D 9     12566     NA 20701  3614     NA 19278
+Non T2D 10    15516     NA 18447 14344     NA    NA
+Non T2D 11    13384     NA 19328 15407     NA  7025
+Non T2D 12    18823     NA 25958 13334     NA    NA
+T2D 1         20112     NA 26789 19039     NA 19317
+T2D 2         24637     NA 28038 29710     NA 22726
+T2D 3         13000     NA 19389 19882     NA 13882
+T2D 4         19235     NA 26880 25400     NA 30770
+T2D 5         15284     NA 16431 20575     NA 12344
+T2D 6         14624     NA 20930 17894     NA 17717
+22                7      7     5     6     17     2
+23                9     15    12     9     15     8
+25               24     35    26    20     39    16
+27                8      5     5     3      9    14
+37               18     31     9    20     27    11
+43               34     47    23    20     28    12
+48                9     15    11    12     16     9
+52                5      5     5     5      7     4
+55                9      9    10     8     13     9
+57               23     26    28    18     49    18
+donor_age: 1     15      5    19    16      9    NA
+donor_age: 21    16      5    13    18     23    NA
+donor_age: 22     9      5     8     8     15    NA
+donor_age: 38    16      8    13    23     36    NA
+donor_age: 44    24     12    23    22     26    NA
+donor_age: 5     24      9    23    15     28    NA
+donor_age: 54    13     10     9    12     17    NA
+donor_age: 6     12     12    18    11     NA    NA</code></pre>
+<pre class="r"><code>  round(S,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   0.38   1.30   1.05   0.37   1.06 </code></pre>
+<pre class="r"><code>  round(S_glm,2)</code></pre>
+<pre><code> alpha acinar   beta  delta ductal  gamma 
+  1.00   1.33   1.19   1.02   1.60   0.82 </code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.1 (2018-07-02)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats4    parallel  stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+ [1] SingleCellExperiment_1.4.0  SummarizedExperiment_1.12.0
+ [3] DelayedArray_0.8.0          BiocParallel_1.16.0        
+ [5] matrixStats_0.54.0          GenomicRanges_1.34.0       
+ [7] GenomeInfoDb_1.18.1         MASS_7.3-51.1              
+ [9] xbioc_0.1.18                AnnotationDbi_1.44.0       
+[11] IRanges_2.16.0              S4Vectors_0.20.1           
+[13] Biobase_2.42.0              BiocGenerics_0.28.0        
+[15] MuSiC_0.1.1                 ggplot2_3.1.1              
+[17] nnls_1.4                   
+
+loaded via a namespace (and not attached):
+ [1] bit64_0.9-7            assertthat_0.2.0       highr_0.7             
+ [4] BiocManager_1.30.10    blob_1.1.1             GenomeInfoDbData_1.2.0
+ [7] yaml_2.2.0             pillar_1.3.1           RSQLite_2.1.1         
+[10] backports_1.1.2        lattice_0.20-38        quantreg_5.36         
+[13] glue_1.3.0             digest_0.6.18          promises_1.0.1        
+[16] XVector_0.22.0         colorspace_1.3-2       htmltools_0.3.6       
+[19] httpuv_1.4.5           Matrix_1.2-15          plyr_1.8.4            
+[22] pkgconfig_2.0.2        bibtex_0.4.2           SparseM_1.78          
+[25] zlibbioc_1.28.0        purrr_0.3.2            xtable_1.8-3          
+[28] scales_1.0.0           whisker_0.3-2          later_0.7.5           
+[31] MatrixModels_0.4-1     git2r_0.26.1           tibble_2.1.1          
+[34] pkgmaker_0.27          withr_2.1.2            lazyeval_0.2.1        
+[37] magrittr_1.5           crayon_1.3.4           memoise_1.1.0         
+[40] mcmc_0.9-7             evaluate_0.12          fs_1.3.1              
+[43] tools_3.5.1            registry_0.5           stringr_1.3.1         
+[46] MCMCpack_1.4-4         munsell_0.5.0          compiler_3.5.1        
+[49] rlang_0.4.0            grid_3.5.1             RCurl_1.95-4.11       
+[52] bitops_1.0-6           rmarkdown_1.10         gtable_0.2.0          
+[55] codetools_0.2-15       DBI_1.0.0              reshape2_1.4.3        
+[58] R6_2.3.0               knitr_1.20             dplyr_0.8.0.1         
+[61] bit_1.1-14             workflowr_1.6.2        rprojroot_1.3-2       
+[64] stringi_1.2.4          Rcpp_1.0.4.6           tidyselect_0.2.5      
+[67] coda_0.19-2           </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

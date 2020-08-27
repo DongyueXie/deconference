@@ -59,7 +59,7 @@ length(common_genes)
 gene_length = (genes$featureend-genes$featurestart)[match(common_genes,genes$featurename)]
 
 plott = function(out){
-  par(mfrow=c(3,2))
+  par(mfrow=c(2,3))
   for(k in 1:6){
     if(!is.nan(out$S[k])){
       
@@ -95,7 +95,7 @@ out_baron = scRef_multi_proc(baron_data$Y,baron_data$cell_type_idx,baron_data$in
 round(out_baron$S_glm,2)
 round(out_baron$S,2)
 plott(out_baron)
-plot.new()
+ 
 ```
 
 ## muraro data set
@@ -112,7 +112,7 @@ out_muraro = scRef_multi_proc(muraro_data$Y,muraro_data$cell_type_idx,muraro_dat
                              est_sigma2=F,cell_types = muraro_data$cell_types,diag_cov=TRUE)
 round(out_muraro$S_glm,2)
 round(out_muraro$S,2)
-plot.new()
+ 
 ```
 
 ## Xin data set
@@ -149,7 +149,7 @@ out_xin2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
 round(out_xin2$S_glm,2)
 round(out_xin2$S,2)
 plott(out_xin2)
-plot.new()
+ 
 ```
 
 ### Use raw counts adjusted by gene length - external gene length data
@@ -164,7 +164,7 @@ out_xin3 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
 round(out_xin3$S_glm,2)
 round(out_xin3$S,2)
 plott(out_xin3)
-plot.new()
+ 
 ```
 
 ## segerstolpe data 
@@ -202,7 +202,7 @@ out_segerstolpe2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
 round(out_segerstolpe2$S_glm,2)
 round(out_segerstolpe2$S,2)
 plott(out_segerstolpe2)
-plot.new()
+ 
 ```
 
 ### Use raw counts adjusted by gene length - external gene length data
@@ -220,7 +220,7 @@ out_segerstolpe3 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
 round(out_segerstolpe3$S_glm,2)
 round(out_segerstolpe3$S,2)
 plott(out_segerstolpe3)
-plot.new()
+ 
 ```
 
 ## Enge data set
@@ -254,7 +254,7 @@ out_enge2 = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
 round(out_enge2$S_glm,2)
 round(out_enge2$S,2)
 plott(out_enge2)
-plot.new()
+ 
 ```
 
 ## Compare 

@@ -1,0 +1,237 @@
+---
+title: "meta mode test"
+author: "DongyueXie"
+date: "2020-08-10"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE,message = FALSE)
+```
+
+```{r}
+source('code/deconference_main.R')
+plott = function(out,common_cells = c('acinar','alpha','beta','delta','ductal','gamma')){
+  par(mfrow=c(2,3))
+  for(k in 1:6){
+    if(!is.nan(out$S[k])){
+      
+      plot(out$X[,k]*1e3,out$Sigma[,k]*1e6,
+       pch=20,col='grey60',
+       xlab='mean',ylab='var',
+       main=paste(common_cells[k],"cell : mean-var plot"))
+  loess_fit = loess(y~.,
+                    data.frame(x=out$X[,k]*1e3,y=out$Sigma[,k]*1e6))
+  x_seq = seq(range(out$X[,k]*1e3)[1],range(out$X[,k]*1e3)[2],length.out = 1e3)
+  lines(x_seq,predict(loess_fit,data.frame(x=x_seq)))
+  
+    }
+  
+}
+}
+
+set.seed(12345)
+Ng=1000
+nk=100
+n_indi=10
+K=6
+library(gtools)
+ref = t(rdirichlet(K,rep(1,Ng)))
+Theta = apply(ref,2,function(z){z/sum(z)})*Ng
+sigma2 = 0.1
+sigma2 = matrix(sigma2,nrow=Ng,ncol=K)
+tau2=0.1
+tau2 = matrix(tau2,nrow=Ng,ncol=K)
+sc_lib_size = 0.1
+s=c(1.00,1.13,1.13,0.94,1.37,0.78)
+
+      Y = matrix(nrow=Ng,ncol=nk*n_indi*K)
+      indi_idx = rep(1:n_indi,each = K*nk)
+      cell_type = c()
+      Cr = c()
+      for(i in 1:n_indi){
+        #print(i)
+        indi_cell_idx = which(indi_idx==i)
+        indi_celltype_idx = rep(1:K,each=nk)
+
+        
+          X_i = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+        
+
+        Y_i = matrix(nrow=Ng,ncol=K*nk)
+        Cr_i = c()
+        for(k in 1:K){
+          cc = which(indi_celltype_idx==k)
+          ag = X_i[,k]%*%t(rep(1,nk))
+          Cr_i[cc] = rnbinom(nk,sc_lib_size*Ng*s[k],0.5)+1
+
+
+         
+            atau2 = tau2[,k]%*%t(rep(1,nk))
+            Y_i[,cc] = matrix(rgamma(Ng*nk,ag^2/atau2,rate=ag/atau2),ncol=nk)
+          
+
+
+        }
+        cell_type = c(cell_type,indi_celltype_idx)
+        Y[,indi_cell_idx] = Y_i
+        Cr = c(Cr,Cr_i)
+      }
+
+      #Y = matrix(rnorm(Ng*n_indi*K*nk,Y,sqrt(sc_noise_var)),ncol=n_indi*K*nk)
+      #y = rnorm(Ng,Xb,sqrt(bulk_noise_var))
+
+      Y = matrix(rpois(Ng*nk*n_indi*K,t(t(Y)*Cr/median(colSums(Y)))),ncol=nk*n_indi*K)
+      
+      
+data_obj = set_data_decon(rep(1,Ng),Y,ref_type = 'multi_sc',cell_type,indi_idx)
+out = scRef_multi_proc(Y = data_obj$Y,cell_type_idx = data_obj$cell_type_idx,
+                       indi_idx = data_obj$indi_idx,est_sigma2 = F,diag_cov = T)
+plott(out)
+round(out$S,2)
+round(out$S_glm,2)
+```
+
+
+
+
+
+
+
+```{r}
+sigma2 = 0.5
+sigma2 = matrix(sigma2,nrow=Ng,ncol=K)
+tau2=0.1
+tau2 = matrix(tau2,nrow=Ng,ncol=K)
+
+      Y = matrix(nrow=Ng,ncol=nk*n_indi*K)
+      indi_idx = rep(1:n_indi,each = K*nk)
+      cell_type = c()
+      Cr = c()
+      for(i in 1:n_indi){
+        #print(i)
+        indi_cell_idx = which(indi_idx==i)
+        indi_celltype_idx = rep(1:K,each=nk)
+
+        
+          X_i = matrix(rgamma(Ng*K,Theta^2/sigma2,rate=Theta/sigma2),ncol=K)
+        
+
+        Y_i = matrix(nrow=Ng,ncol=K*nk)
+        Cr_i = c()
+        for(k in 1:K){
+          cc = which(indi_celltype_idx==k)
+          ag = X_i[,k]%*%t(rep(1,nk))
+          Cr_i[cc] = rnbinom(nk,sc_lib_size*Ng*s[k],0.5)+1
+
+
+         
+            atau2 = tau2[,k]%*%t(rep(1,nk))
+            Y_i[,cc] = matrix(rgamma(Ng*nk,ag^2/atau2,rate=ag/atau2),ncol=nk)
+          
+
+
+        }
+        cell_type = c(cell_type,indi_celltype_idx)
+        Y[,indi_cell_idx] = Y_i
+        Cr = c(Cr,Cr_i)
+      }
+
+      #Y = matrix(rnorm(Ng*n_indi*K*nk,Y,sqrt(sc_noise_var)),ncol=n_indi*K*nk)
+      #y = rnorm(Ng,Xb,sqrt(bulk_noise_var))
+
+      Y = matrix(rpois(Ng*nk*n_indi*K,t(t(Y)*Cr/median(colSums(Y)))),ncol=nk*n_indi*K)
+      
+      
+data_obj = set_data_decon(rep(1,Ng),Y,ref_type = 'multi_sc',cell_type,indi_idx)
+out = scRef_multi_proc(Y = data_obj$Y,cell_type_idx = data_obj$cell_type_idx,
+                       indi_idx = data_obj$indi_idx,est_sigma2 = F,diag_cov = T)
+plott(out)
+round(out$S,2)
+round(out$S_glm,2)
+```
+
+
+
+
+## compare
+
+```{r}
+set.seed(12345)
+source('code/simu_func_multibulk.R')
+G = 1000
+K = 6
+b1 = c(0.05,0.05,0.05,0.05,0.1,0.7)
+b2 = c(0.05,0.06,0.08,0.1,0.2,0.51)
+n_bulk = 100
+b = cbind(t(rdirichlet(n_bulk/2,b1*K)),t(rdirichlet(n_bulk/2,b2*K)))
+library(gtools)
+ref = t(rdirichlet(K,rep(1,G)))
+```
+
+```{r}
+set.seed(12345)
+out1 = simu_study(ref,G,b,
+                ref_type='multi_sc',
+                nreps = 1,
+                sc_lib_size = 0.1,
+                printevery = 1,same_indi = F,mean_to_var_sigma = 1/3,mean_to_var_tau = 1/3,tau2 = NULL,sigma2 = NULL,
+                tau2known=F,sigma2known = F,est_pop_var = T,correction = T,
+                weight = 'equal',hc.type = 'hc3',n_indi = 10,meta_mode = 'smooth')
+
+
+```
+
+```{r}
+mean(out1$coverage_adj)
+mean(out1$coverage_unadj)
+mean(out1$coverage_unadj_cv)
+mean(out1$coverage_unadj_hc3)
+
+
+mean(out1$se_adj)
+mean(out1$se_unadj)
+mean(out1$se_unadj_cv)
+mean(out1$se_unadj_hc3)
+
+mean(out1$mse_adj)
+mean(out1$mse_unadj)
+```
+
+```{r}
+set.seed(12345)
+out1 = simu_study(ref,G,b,
+                ref_type='multi_sc',
+                nreps = 1,
+                sc_lib_size = 0.1,
+                printevery = 1,same_indi = F,mean_to_var_sigma = 1/3,mean_to_var_tau = 1/3,tau2 = NULL,sigma2 = NULL,
+                tau2known=F,sigma2known = F,est_pop_var = T,correction = T,
+                weight = 'equal',hc.type = 'hc3',n_indi = 10,meta_mode = 'local')
+
+
+```
+
+```{r}
+mean(out1$coverage_adj)
+mean(out1$coverage_unadj)
+mean(out1$coverage_unadj_cv)
+mean(out1$coverage_unadj_hc3)
+
+
+mean(out1$se_adj)
+mean(out1$se_unadj)
+mean(out1$se_unadj_cv)
+mean(out1$se_unadj_hc3)
+
+mean(out1$mse_adj)
+mean(out1$mse_unadj)
+```
+
+
+
+
+

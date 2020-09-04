@@ -15,6 +15,9 @@ estimation_func = function(y,X,Vg,X_var_pop=NULL,marker_gene = NULL,w=NULL,hc.ty
 
   #browser()
 
+  if(length(w)==1){
+    w = rep(w,nrow(X))
+  }
 
   if(!is.null(marker_gene)){
     gene_idx = match(marker_gene,rownames(X))

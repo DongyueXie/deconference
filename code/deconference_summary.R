@@ -34,7 +34,8 @@ two_group_test = function(out, groups){
 
   p_value = (1-pnorm(abs(z_score)))*2
 
-  return(list(p_value = p_value,z_score=z_score,V_tilde=V_tilde,diff_group=diff_group))
+  return(list(p_value = p_value,z_score=z_score,V_tilde=V_tilde,
+              diff_group=diff_group,diff_se = sqrt(diag(V_tilde)),a=a))
 
 }
 

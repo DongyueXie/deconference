@@ -1,9 +1,24 @@
 #'@title unadjusted method, either using ols or sandwich for variance estimation
-unadjusted_lm = function(y,X,w=NULL){
+unadjusted_lm = function(y,X,w=NULL,groups=NULL){
   G = nrow(X)
   K = ncol(X)
   y = cbind(y)
   nb = ncol(y)
+
+  if(!is.null(groups)){
+    if(is.factor(groups)){
+      group_name = levels(groups)
+    }else{
+      group_name = levels(as.factor(groups))
+    }
+
+    group1_idx = which(groups==group_name[1])
+    a = c()
+    a[group1_idx] = 1/length(group1_idx)
+
+    group2_idx = which(groups==group_name[2])
+    a[group2_idx] = -1/length(group2_idx)
+  }
 
   if(is.null(w)){
     w  = 1/rowSums(X)
@@ -35,9 +50,43 @@ unadjusted_lm = function(y,X,w=NULL){
   beta_se = sqrt(diag(asyV))
   beta_se = matrix(beta_se,ncol=nb)
 
-  ols.out = list(cov_beta_tilde_hat = covb,
-                 beta_se = beta_se,
-                 cov_beta_hat = asyV)
+
+  if(!is.null(groups)){
+
+    diff_group = rowMeans(beta_hat[,group1_idx]) - rowMeans(beta_hat[,group2_idx])
+
+    # N_indi = length(group1_idx) + length(group2_idx)
+
+    V_tilde = 0
+
+    idx = c(group1_idx,group2_idx)
+    for(i in idx){
+      for(j in idx){
+        V_tilde = V_tilde + a[i]*a[j]*asyV[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
+      }
+    }
+
+    z_score = diff_group/sqrt(diag(V_tilde))
+
+    p_value = (1-pnorm(abs(z_score)))*2
+
+    ols.out = list(cov_beta_tilde_hat = covb,
+                   beta_se = beta_se,
+                   cov_beta_hat = asyV,
+
+                   diff_se = sqrt(diag(V_tilde)),
+                   z_score=z_score,
+                   p_value=p_value)
+
+  }else{
+
+    ols.out = list(cov_beta_tilde_hat = covb,
+                   beta_se = beta_se,
+                   cov_beta_hat = asyV
+                   )
+  }
+
+
 
   # perform sandwich estimator of variance
 
@@ -67,9 +116,39 @@ unadjusted_lm = function(y,X,w=NULL){
   beta_se = sqrt(diag(asyV))
   beta_se = matrix(beta_se,ncol=nb)
 
-  sand.out = list(cov_beta_tilde_hat = covb,
-                  beta_se = beta_se,
-                  cov_beta_hat = asyV)
+
+  if(!is.null(groups)){
+
+    # N_indi = length(group1_idx) + length(group2_idx)
+
+    V_tilde = 0
+
+    idx = c(group1_idx,group2_idx)
+    for(i in idx){
+      for(j in idx){
+        V_tilde = V_tilde + a[i]*a[j]*asyV[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
+      }
+    }
+
+    z_score = diff_group/sqrt(diag(V_tilde))
+
+    p_value = (1-pnorm(abs(z_score)))*2
+
+    sand.out = list(cov_beta_tilde_hat = covb,
+                    beta_se = beta_se,
+                    cov_beta_hat = asyV,
+                   diff_se = sqrt(diag(V_tilde)),
+                   z_score=z_score,
+                   p_value=p_value)
+
+  }else{
+
+    sand.out = list(cov_beta_tilde_hat = covb,
+                    beta_se = beta_se,
+                    cov_beta_hat = asyV)
+
+  }
+
 
 
 
@@ -116,9 +195,39 @@ unadjusted_lm = function(y,X,w=NULL){
   beta_se = sqrt(diag(asyV))
   beta_se = matrix(beta_se,ncol=nb)
 
-  sand.out.hc3 = list(cov_beta_tilde_hat = covb,
-                  beta_se = beta_se,
-                  cov_beta_hat = asyV)
+  if(!is.null(groups)){
+
+    # N_indi = length(group1_idx) + length(group2_idx)
+
+    V_tilde = 0
+
+    idx = c(group1_idx,group2_idx)
+    for(i in idx){
+      for(j in idx){
+        V_tilde = V_tilde + a[i]*a[j]*asyV[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
+      }
+    }
+
+    z_score = diff_group/sqrt(diag(V_tilde))
+
+    p_value = (1-pnorm(abs(z_score)))*2
+
+    sand.out.hc3 = list(cov_beta_tilde_hat = covb,
+                        beta_se = beta_se,
+                        cov_beta_hat = asyV,
+                    diff_se = sqrt(diag(V_tilde)),
+                    z_score=z_score,
+                    p_value=p_value)
+
+  }else{
+
+    sand.out.hc3 = list(cov_beta_tilde_hat = covb,
+                        beta_se = beta_se,
+                        cov_beta_hat = asyV)
+
+  }
+
+
 
 
 
@@ -126,6 +235,7 @@ unadjusted_lm = function(y,X,w=NULL){
 
   return(list(beta_tilde_hat=beta_tilde_hat,
               beta_hat=beta_hat,
+              diff_group=diff_group,
               sand.out=sand.out,
               ols.out=ols.out,
               sand.out.hc3=sand.out.hc3))

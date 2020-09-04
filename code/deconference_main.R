@@ -2,6 +2,7 @@ source('code/deconference_setdata.R')
 source('code/deconference_meta.R')
 source('code/deconference_estfunc.R')
 source('code/deconference_summary.R')
+source('code/deconference_multiref.R')
 source('code/unadjusted_lm.R')
 
 #'@title deconvolution inference
@@ -26,6 +27,7 @@ source('code/unadjusted_lm.R')
 #'@param a alpha in the Fuller's small sample correction
 #'@param eps adjust of zero variane if a gene has no expression observed in one cell type
 #'@param gene_thresh remove genes that appear in less than number of  cells
+#'@param cellsize_est ols or glm
 #'@return a list from estimation_func
 
 
@@ -37,7 +39,7 @@ deconference = function(data.obj,
                         est_pop_var = FALSE,
                         meta_var = 'adjust',
                         meta_mode = 'universal',
-                        correction=FALSE,eps=0){
+                        correction=FALSE,eps=0,cellsize_est='glm'){
 
   ref_type = data.obj$ref_type
   w = data.obj$w
@@ -75,8 +77,15 @@ deconference = function(data.obj,
 
   #browser()
 
-  out = estimation_func(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
-                        w=w,hc.type=hc.type,correction=correction,S=design.mat$S)
+  if(cellsize_est=='ols'){
+    out = estimation_func(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
+                          w=w,hc.type=hc.type,correction=correction,S=design.mat$S)
+  }
+  if(cellsize_est=='glm'){
+    out = estimation_func(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
+                          w=w,hc.type=hc.type,correction=correction,S=design.mat$S_glm)
+  }
+
   return(out)
 }
 

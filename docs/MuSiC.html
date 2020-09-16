@@ -31,6 +31,14 @@
 <script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
 <script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
 
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
   pre:not([class]) {
@@ -306,13 +314,6 @@ div.tocify {
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-<!-- Add a small amount of space between sections. -->
-<style type="text/css">
-div.section {
-  padding-top: 12px;
-}
-</style>
-
 <div class="fluid-row" id="header">
 
 
@@ -326,7 +327,7 @@ div.section {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -335,7 +336,7 @@ div.section {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -344,17 +345,17 @@ div.section {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-04-30
+<strong>Last updated:</strong> 2020-09-16
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>deconference/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
 </p>
 <p>
 This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
-  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
 </p>
 <hr>
 </div>
@@ -423,57 +424,31 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongabsolute"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>File paths:</strong> absolute </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
 </p>
 </div>
-<div id="strongFilepathsstrongabsolute" class="panel-collapse collapse">
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
 <div class="panel-body">
-<p>
-Using absolute paths to the files within your workflowr project makes it difficult for you and others to run your code on a different machine. Change the absolute path(s) below to the suggested relative path(s) to make your code more reproducible.
-</p>
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th style="text-align:left;">
-absolute
-</th>
-<th style="text-align:left;">
-relative
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-~/deconference/data/MuSiC/GSE50244bulkeset.rds
-</td>
-<td style="text-align:left;">
-data/MuSiC/GSE50244bulkeset.rds
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-~/deconference/data/MuSiC/EMTABesethealthy.rds
-</td>
-<td style="text-align:left;">
-data/MuSiC/EMTABesethealthy.rds
-</td>
-</tr>
-</tbody>
-</table>
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreeb45300c3032545b969e162f0198bd093ad76424dtargetblankb45300ca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/b45300c3032545b969e162f0198bd093ad76424d" target="_blank">b45300c</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreed8960e8d2713ef3606d7ce0900467f7de0059016targetblankd8960e8a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/d8960e8d2713ef3606d7ce0900467f7de0059016" target="_blank">d8960e8</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreeb45300c3032545b969e162f0198bd093ad76424dtargetblankb45300ca" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreed8960e8d2713ef3606d7ce0900467f7de0059016targetblankd8960e8a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
-Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/d8960e8d2713ef3606d7ce0900467f7de0059016" target="_blank">d8960e8</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
 </p>
 <pre><code>
 Ignored files:
@@ -481,12 +456,31 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
-    Untracked:  code/bulkSimulationFake.R
-    Untracked:  code/deconference.R
-    Untracked:  code/plot_simu.R
-    Untracked:  code/scSimulation.R
-    Untracked:  code/scSimulationFake.R
+    Untracked:  analysis/multiIndNormal.Rmd
+    Untracked:  analysis/multiref_seger.Rmd
+    Untracked:  analysis/music_weights.Rmd
+    Untracked:  analysis/plotGeneVar.Rmd
+    Untracked:  data/EMTAB5061Segerstolpe/
+    Untracked:  data/GSE129788/
+    Untracked:  data/GSE141115/
+    Untracked:  data/GSE81547Enge/
+    Untracked:  data/GSE81608Xin/
+    Untracked:  data/GSE84133Baron/
+    Untracked:  data/GSE85241Muraro/
     Untracked:  data/MuSiC/
+    Untracked:  data/cibersort/
+    Untracked:  data/pancreas/
+    Untracked:  data/pbmc3k/
+    Untracked:  data/robots.txt
+    Untracked:  data/toSCE.R
+    Untracked:  output/Xin_bycelltype_hc2.RData
+    Untracked:  output/Xin_bycelltype_hc3.RData
+    Untracked:  output/Xin_sampleM_hc2.RData
+    Untracked:  output/Xin_sampleM_hc3.RData
+    Untracked:  output/Xin_sampleM_unadj.RData
+    Untracked:  output/Xin_universal_hc0.RData
+    Untracked:  output/Xin_universal_hc2.RData
+    Untracked:  output/Xin_universal_hc3.RData
     Untracked:  output/bulkref_pbmc_allgene_refls05_bulkls50.RData
     Untracked:  output/bulkref_pbmc_allgene_refls10_bulkls50.RData
     Untracked:  output/bulkref_pbmc_allgene_refls1_bulkls50.RData
@@ -520,6 +514,16 @@ Untracked files:
     Untracked:  output/bulkref_simu_correction_G1000_K4_refls3_bulkls50.RData
     Untracked:  output/bulkref_simu_correction_addw_G1000_K4_refls1_bulkls50.RData
     Untracked:  output/bulkref_simu_correction_addw_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/multiref_all.RData
+    Untracked:  output/multiref_baron.RData
+    Untracked:  output/multiref_enge.RData
+    Untracked:  output/multiref_muraro.RData
+    Untracked:  output/multiref_seger.RData
+    Untracked:  output/results_nsclc.RData
+    Untracked:  output/scref_multiInd100_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_multiInd100_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown_Nosigma2.RData
+    Untracked:  output/scref_multiInd10_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_multiInd10_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown_Nosigma2.RData
     Untracked:  output/scref_simu_G1000_K4_scls01_scN10_bulkls50.RData
     Untracked:  output/scref_simu_G1000_K4_scls01_scN10_bulkls50_addw_tauunknown.RData
     Untracked:  output/scref_simu_G1000_K4_scls01_scN300_bulkls50_addw_tauunknown.RData
@@ -535,10 +539,22 @@ Untracked files:
     Untracked:  output/scref_simu_G1000_K4_scls05_scN300_bulkls50_addw_tauunknown.RData
     Untracked:  output/scref_simu_G1000_K4_scls05_scN30_bulkls50.RData
     Untracked:  output/scref_simu_G1000_K4_scls05_scN30_bulkls50_addw_tauunknown.RData
+    Untracked:  output/twoBulk_bulkref_simu_G1000_K4_refls30.RData
+    Untracked:  output/twoBulk_bulkref_simu_G500_K4_refls30.RData
+    Untracked:  output/twoBulk_multiscref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_null_bulkref_simu_G1000_K4_refls30.RData
+    Untracked:  output/twoBulk_null_multiscref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_null_scref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_scref_simu_G1000_K4.RData
 
 Unstaged changes:
-    Modified:   code/gls.R
-    Deleted:    code/plot_bulksimu.R
+    Modified:   analysis/cellsize.Rmd
+    Modified:   analysis/cellsize2.Rmd
+    Modified:   analysis/real_data_simu.Rmd
+    Modified:   code/deconference_multiref.R
+    Modified:   code/deconference_setdata.R
+    Modified:   code/unadjusted_lm.R
+    Deleted:    data/pbmc.rds
 
 </code></pre>
 <p>
@@ -553,7 +569,7 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <div id="versions" class="tab-pane fade">
 
 <p>
-These are the previous versions of the R Markdown and HTML files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view them.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/MuSiC.Rmd</code>) and HTML (<code>docs/MuSiC.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
 <div class="table-responsive">
 <table class="table table-condensed table-hover">
@@ -577,6 +593,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/d8960e8d2713ef3606d7ce0900467f7de0059016/analysis/MuSiC.Rmd" target="_blank">d8960e8</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-09-16
+</td>
+<td>
+wflow_publish(“analysis/MuSiC.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/d5b4b91530c58230af5ae054a4fe52dfafb625f6/docs/MuSiC.html" target="_blank">d5b4b91</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-04-30
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -609,22 +659,176 @@ wflow_publish(“analysis/MuSiC.Rmd”)
 <div id="walk-through" class="section level1">
 <h1>Walk through</h1>
 <pre class="r"><code>library(MuSiC)
-GSE50244.bulk.eset &lt;- readRDS(&quot;~/deconference/data/MuSiC/GSE50244bulkeset.rds&quot;)
-EMTAB.eset &lt;- readRDS(&quot;~/deconference/data/MuSiC/EMTABesethealthy.rds&quot;)
-library(xbioc)</code></pre>
+library(xbioc)
+library(Biobase)
+XinT2D.eset &lt;- readRDS(&quot;data/MuSiC/XinT2Deset.rds&quot;)
+XinT2D.construct.full = bulk_construct(XinT2D.eset, clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;)
+XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+EMTAB.eset &lt;- readRDS(&quot;data/MuSiC/EMTABesethealthy.rds&quot;)
+
+
+
+music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples, 
+    select.ct = NULL, cell_size = NULL, ct.cov = FALSE, verbose = TRUE, 
+    iter.max = 1000, nu = 1e-04, eps = 0.01, centered = FALSE, 
+    normalize = FALSE, ...) 
+{
+    bulk.gene = rownames(bulk.eset)[rowMeans(exprs(bulk.eset)) != 
+        0]
+    bulk.eset = bulk.eset[bulk.gene, , drop = FALSE]
+    if (is.null(markers)) {
+        sc.markers = bulk.gene
+    }
+    else {
+        sc.markers = intersect(bulk.gene, unlist(markers))
+    }
+    sc.basis = music_basis(sc.eset, non.zero = TRUE, markers = sc.markers, 
+        clusters = clusters, samples = samples, select.ct = select.ct, 
+        cell_size = cell_size, ct.cov = ct.cov, verbose = verbose)
+    cm.gene = intersect(rownames(sc.basis$Disgn.mtx), bulk.gene)
+    if (is.null(markers)) {
+        if (length(cm.gene) &lt; 0.2 * min(length(bulk.gene), nrow(sc.eset))) 
+            stop(&quot;Too few common genes!&quot;)
+    }
+    else {
+        if (length(cm.gene) &lt; 0.2 * length(unlist(markers))) 
+            stop(&quot;Too few common genes!&quot;)
+    }
+    if (verbose) {
+        message(paste(&quot;Used&quot;, length(cm.gene), &quot;common genes...&quot;))
+    }
+    m.sc = match(cm.gene, rownames(sc.basis$Disgn.mtx))
+    m.bulk = match(cm.gene, bulk.gene)
+    D1 = sc.basis$Disgn.mtx[m.sc, ]
+    M.S = colMeans(sc.basis$S, na.rm = T)
+    if (!is.null(cell_size)) {
+        if (!is.data.frame(cell_size)) {
+            stop(&quot;cell_size paramter should be a data.frame with 1st column for cell type names and 2nd column for cell sizes&quot;)
+        }
+        else if (sum(names(M.S) %in% cell_size[, 1]) != length(names(M.S))) {
+            stop(&quot;Cell type names in cell_size must match clusters&quot;)
+        }
+        else if (any(is.na(as.numeric(cell_size[, 2])))) {
+            stop(&quot;Cell sizes should all be numeric&quot;)
+        }
+        my_ms_names &lt;- names(M.S)
+        cell_size &lt;- cell_size[my_ms_names %in% cell_size[, 1], 
+            ]
+        M.S &lt;- cell_size[match(my_ms_names, cell_size[, 1]), 
+            ]
+        M.S &lt;- M.S[, 2]
+        names(M.S) &lt;- my_ms_names
+    }
+    Yjg = relative.ab(exprs(bulk.eset)[m.bulk, ])
+    N.bulk = ncol(bulk.eset)
+    if (ct.cov) {
+        Sigma.ct = sc.basis$Sigma.ct[, m.sc]
+        if (sum(Yjg[, i] == 0) &gt; 0) {
+            D1.temp = D1[Yjg[, i] != 0, ]
+            Yjg.temp = Yjg[Yjg[, i] != 0, i]
+            Sigma.ct.temp = Sigma.ct[, Yjg[, i] != 0]
+            if (verbose) 
+                message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                  sum(Yjg[, i] != 0), &quot;...&quot;))
+        }
+        else {
+            D1.temp = D1
+            Yjg.temp = Yjg[, i]
+            Sigma.ct.temp = Sigma.ct
+            if (verbose) 
+                message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                  sum(Yjg[, i] != 0), &quot;...&quot;))
+        }
+        lm.D1.weighted = music.iter.ct(Yjg.temp, D1.temp, M.S, 
+            Sigma.ct.temp, iter.max = iter.max, nu = nu, eps = eps, 
+            centered = centered, normalize = normalize)
+        Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+        Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+        weight.gene.temp = rep(NA, nrow(Yjg))
+        weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+        Weight.gene = cbind(Weight.gene, weight.gene.temp)
+        r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+        Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+    }
+    else {
+        Sigma = sc.basis$Sigma[m.sc, ]
+        valid.ct = (colSums(is.na(Sigma)) == 0) &amp; (colSums(is.na(D1)) == 
+            0) &amp; (!is.na(M.S))
+        if (sum(valid.ct) &lt;= 1) {
+            stop(&quot;Not enough valid cell type!&quot;)
+        }
+        if (verbose) {
+            message(paste(&quot;Used&quot;, sum(valid.ct), &quot;cell types in deconvolution...&quot;))
+        }
+        D1 = D1[, valid.ct]
+        M.S = M.S[valid.ct]
+        D1 = D1/M.S[1]
+        M.S = M.S/M.S[1]
+        
+        Sigma = Sigma[, valid.ct]
+        Est.prop.allgene = NULL
+        Est.prop.weighted = NULL
+        Weight.gene = NULL
+        r.squared.full = NULL
+        Var.prop = NULL
+        for (i in 1:N.bulk) {
+            if (sum(Yjg[, i] == 0) &gt; 0) {
+                D1.temp = D1[Yjg[, i] != 0, ]
+                Yjg.temp = Yjg[Yjg[, i] != 0, i]
+                Sigma.temp = Sigma[Yjg[, i] != 0, ]
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                    sum(Yjg[, i] != 0), &quot;...&quot;))
+            }
+            else {
+                D1.temp = D1
+                Yjg.temp = Yjg[, i]
+                Sigma.temp = Sigma
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                    sum(Yjg[, i] != 0), &quot;...&quot;))
+            }
+            lm.D1.weighted = music.iter(Yjg.temp, D1.temp, M.S, 
+                Sigma.temp, iter.max = iter.max, nu = nu, eps = eps, 
+                centered = centered, normalize = normalize)
+            Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+            Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+            weight.gene.temp = rep(NA, nrow(Yjg))
+            weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+            Weight.gene = cbind(Weight.gene, weight.gene.temp)
+            r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+            Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+        }
+    }
+    colnames(Est.prop.weighted) = colnames(D1)
+    rownames(Est.prop.weighted) = colnames(Yjg)
+    colnames(Est.prop.allgene) = colnames(D1)
+    rownames(Est.prop.allgene) = colnames(Yjg)
+    names(r.squared.full) = colnames(Yjg)
+    colnames(Weight.gene) = colnames(Yjg)
+    rownames(Weight.gene) = cm.gene
+    colnames(Var.prop) = colnames(D1)
+    rownames(Var.prop) = colnames(Yjg)
+    return(list(Est.prop.weighted = Est.prop.weighted, Est.prop.allgene = Est.prop.allgene, 
+        Weight.gene = Weight.gene, r.squared.full = r.squared.full, 
+        Var.prop = Var.prop,X=D1,S=M.S))
+}</code></pre>
 <p>6 major cell types: alpha, beta, delta, gamma, acinar and ductal, which make up over 90% of the whole islet.</p>
 <p>set data and input parameters</p>
-<pre class="r"><code>bulk.eset = GSE50244.bulk.eset
+<pre class="r"><code>bulk.eset = XinT2D.construct.full$Bulk.counts
 sc.eset = EMTAB.eset
 clusters = &#39;cellType&#39;
 samples = &#39;sampleID&#39;
-select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;,&#39;acinar&#39;, &#39;ductal&#39;)
-verbose = F
+select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;)
+verbose = T
 
 
 # filter out genes has no counts in bulk data
 bulk.gene = rownames(bulk.eset)[rowMeans(exprs(bulk.eset)) != 0]
-bulk.eset = bulk.eset[bulk.gene, , drop = FALSE]</code></pre>
+bulk.eset = bulk.eset[bulk.gene, , drop = FALSE]
+dim(bulk.eset)</code></pre>
+<pre><code>Features  Samples 
+   27461       18 </code></pre>
 <div id="process-single-cell-reference-data" class="section level2">
 <h2>Process single cell reference data</h2>
 <p>extract single cell information, function: <code>music_basis</code>, This function is used for generating cell type specific cross-subject mean and variance for each gene. Cell type specific library size is also calcualted.</p>
@@ -651,7 +855,7 @@ M.theta &lt;- sapply(unique(clusters), function(ct){
     }), na.rm = TRUE)
   })
 dim(M.theta)</code></pre>
-<pre><code>[1] 21464     6</code></pre>
+<pre><code>[1] 20444     4</code></pre>
 <p>M.theta is a gene by cell type matrix. Each column is gene relative expression in a cell type. How M.theta is calculated? For each cell type <span class="math inline">\(k\)</span>, calculate gene relative expression in each individual by rowSums(y)/sum(y) (note: not mean of every cell, but aggregate all cells), then take the mean of gene relative expression in each individual as <span class="math inline">\(\hat x_{k}\)</span>(a vector, of length the number of genes). In short, <span class="math inline">\(\hat x_k = \frac{1}{N_{individual}}\sum_i \hat x_{ik}\)</span>, where <span class="math inline">\(\hat x_{ik} = \frac{rowSums(Y_{ik})}{sum(Y_{ik})}\)</span> and <span class="math inline">\(Y_{ik}\)</span> is gene by cell matrix of individual <span class="math inline">\(i\)</span> and cell type <span class="math inline">\(k\)</span>.</p>
 <p>Next step is to estimate variance across individuals.</p>
 <pre class="r"><code>Sigma &lt;- sapply(unique(clusters), function(ct){
@@ -661,9 +865,20 @@ dim(M.theta)</code></pre>
       }), 1, var, na.rm = TRUE)
     })
 dim(Sigma)</code></pre>
-<pre><code>[1] 21464     6</code></pre>
-<pre class="r"><code>m.ct = match(select.ct, colnames(Sigma))
-Sigma = Sigma[, m.ct]</code></pre>
+<pre><code>[1] 20444     4</code></pre>
+<pre class="r"><code>if (!is.null(select.ct)) {
+            m.ct = match(select.ct, colnames(Sigma))
+            Sigma = Sigma[, m.ct]
+        }
+        if (!is.null(markers)) {
+            ids &lt;- intersect(unlist(markers), rownames(x))
+            m.ids = match(ids, rownames(x))
+            Sigma &lt;- Sigma[m.ids, ]
+        }
+#m.ct = match(select.ct, colnames(Sigma))
+#Sigma = Sigma[, m.ct]
+dim(Sigma)</code></pre>
+<pre><code>[1] 17884     4</code></pre>
 <p>Sigma is a gene by cell matrix. Its entry <span class="math inline">\(v_{gk}\)</span> is an estimate of gene relative expression in cell type <span class="math inline">\(k\)</span> variance across individuals. How? For each cell type <span class="math inline">\(k\)</span>, calculate sample variance of <span class="math inline">\(\hat x_{ik}\)</span> for <span class="math inline">\(i=1,2,...,6\)</span>.</p>
 <p>MuSiC has another option of setting ct.cov = TRUE, saying “If TRUE, use the covariance across cell types”. Let’s see what it does.</p>
 <pre class="r"><code>    nGenes = nrow(x);
@@ -700,28 +915,43 @@ Sigma = Sigma[, m.ct]</code></pre>
     }), na.rm = TRUE)
   })
 S</code></pre>
-<pre><code>     delta     alpha     gamma    ductal    acinar     beta
-1 771492.5 1112535.6 441998.45  745700.5 1931490.1 672700.3
-2 813057.3  950452.0 656086.57 1065658.7 1082554.4 843435.9
-4 328635.8  384778.1 320486.22  443171.8  540339.3 362149.6
-5 318821.2  263706.3 270594.95  354052.4  505857.6 328880.0
-6 250652.9  240645.2  87412.08  371934.3  241888.4 137893.2
-8 119419.0  231126.2 506790.55  192096.1  112532.5 139679.5</code></pre>
+<pre><code>     delta     alpha     gamma     beta
+1 771492.5 1112535.6 441998.45 672700.3
+2 813057.3  950452.0 656086.57 843435.9
+4 328635.8  384778.1 320486.22 362149.6
+5 318821.2  263706.3 270594.95 328880.0
+6 250652.9  240645.2  87412.08 137893.2
+8 119419.0  231126.2 506790.55 139679.5</code></pre>
 <pre class="r"><code>M.S = colMeans(S, na.rm = TRUE)
 M.S</code></pre>
-<pre><code>   delta    alpha    gamma   ductal   acinar     beta 
-433679.8 530540.6 380561.5 528769.0 735777.1 414123.1 </code></pre>
+<pre><code>   delta    alpha    gamma     beta 
+433679.8 530540.6 380561.5 414123.1 </code></pre>
 <p>Obtain the design matrix for regression. Note that MuSiC estimates cell type proportion with strict assumptions. So the design matirx is relative expression times cell size.</p>
 <pre class="r"><code>D &lt;- t(t(M.theta)*M.S)
+if (!is.null(select.ct)) {
+        m.ct = match(select.ct, colnames(D))
+        D = D[, m.ct]
+        S = S[, m.ct]
+        M.S = M.S[m.ct]
+        M.theta = M.theta[, m.ct]
+    }
+    if (!is.null(markers)) {
+        ids &lt;- intersect(unlist(markers), rownames(x))
+        m.ids = match(ids, rownames(x))
+        D &lt;- D[m.ids, ]
+        M.theta &lt;- M.theta[m.ids, ]
+    }
 sc.basis = list(Disgn.mtx = D, S = S, M.S = M.S, M.theta = M.theta, Sigma = Sigma)</code></pre>
 </div>
 <div id="perform-regression" class="section level2">
 <h2>Perform regression</h2>
 <p>Note: MuSiC selets common genes among bulk and reference data after processing reference data.</p>
 <p>Let’s take a look at how it handles ct.cov=TRUE.</p>
-<pre class="r"><code>sc.basis = list(Disgn.mtx = D, S = S, M.S = M.S, M.theta = M.theta, Sigma.ct = Sigma.ct)
+<pre class="r"><code>#sc.basis = list(Disgn.mtx = D, S = S, M.S = M.S, M.theta = M.theta, Sigma.ct = Sigma.ct)
 cm.gene = intersect( rownames(sc.basis$Disgn.mtx), bulk.gene )
-m.sc = match(cm.gene, rownames(sc.basis$Disgn.mtx))
+message(paste(&#39;Used&#39;, length(cm.gene), &#39;common genes...&#39;))</code></pre>
+<pre><code>Used 17884 common genes...</code></pre>
+<pre class="r"><code>m.sc = match(cm.gene, rownames(sc.basis$Disgn.mtx))
 m.bulk = match(cm.gene, bulk.gene)
 D1 = sc.basis$Disgn.mtx[m.sc, ] 
 M.S = colMeans(sc.basis$S, na.rm = T)
@@ -729,22 +959,80 @@ M.S = colMeans(sc.basis$S, na.rm = T)
 ## obtain bulk data gene relative expression
 Yjg = relative.ab(exprs(bulk.eset)[m.bulk, ]); N.bulk = ncol(bulk.eset)
 
-Sigma.ct = sc.basis$Sigma.ct[, m.sc];
+Sigma = sc.basis$Sigma[m.sc, ]
+valid.ct = (colSums(is.na(Sigma)) == 0) &amp; (colSums(is.na(D1)) == 0) &amp; (!is.na(M.S))
 
-i=1
-## perform weighted ls ......
-
-if(sum(Yjg[, i] == 0) &gt; 0){
-      D1.temp = D1[Yjg[, i]!=0, ];
-      Yjg.temp = Yjg[Yjg[, i]!=0, i];
-      Sigma.ct.temp = Sigma.ct[, Yjg[,i]!=0];
-      if(verbose) message(paste(colnames(Yjg)[i], &#39;has common genes&#39;, sum(Yjg[, i] != 0), &#39;...&#39;) )
-    }else{
-      D1.temp = D1;
-      Yjg.temp = Yjg[, i];
-      Sigma.ct.temp = Sigma.ct;
-      if(verbose) message(paste(colnames(Yjg)[i], &#39;has common genes&#39;, sum(Yjg[, i] != 0), &#39;...&#39;))
-    }</code></pre>
+D1 = D1[, valid.ct]
+        M.S = M.S[valid.ct]
+        Sigma = Sigma[, valid.ct]
+        Est.prop.allgene = NULL
+        Est.prop.weighted = NULL
+        Weight.gene = NULL
+        r.squared.full = NULL
+        Var.prop = NULL
+        for (i in 1:N.bulk) {
+            if (sum(Yjg[, i] == 0) &gt; 0) {
+                D1.temp = D1[Yjg[, i] != 0, ]
+                Yjg.temp = Yjg[Yjg[, i] != 0, i]
+                Sigma.temp = Sigma[Yjg[, i] != 0, ]
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                    sum(Yjg[, i] != 0), &quot;...&quot;))
+            }
+            else {
+                D1.temp = D1
+                Yjg.temp = Yjg[, i]
+                Sigma.temp = Sigma
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                    sum(Yjg[, i] != 0), &quot;...&quot;))
+            }
+            lm.D1.weighted = music.iter(Yjg.temp, D1.temp, M.S, 
+                Sigma.temp)
+            Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+            Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+            weight.gene.temp = rep(NA, nrow(Yjg))
+            weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+            Weight.gene = cbind(Weight.gene, weight.gene.temp)
+            r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+            Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+        }</code></pre>
+<pre><code>Non T2D 1 has common genes 15115 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 12826 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 13553 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 13491 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 14585 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 13984 ...</code></pre>
+<pre><code>Non T2D 7 has common genes 13065 ...</code></pre>
+<pre><code>Non T2D 8 has common genes 13756 ...</code></pre>
+<pre><code>Non T2D 9 has common genes 13813 ...</code></pre>
+<pre><code>Non T2D 10 has common genes 14566 ...</code></pre>
+<pre><code>Non T2D 11 has common genes 14197 ...</code></pre>
+<pre><code>Non T2D 12 has common genes 15507 ...</code></pre>
+<pre><code>T2D 1 has common genes 14936 ...</code></pre>
+<pre><code>T2D 2 has common genes 15084 ...</code></pre>
+<pre><code>T2D 3 has common genes 14175 ...</code></pre>
+<pre><code>T2D 4 has common genes 16163 ...</code></pre>
+<pre><code>T2D 5 has common genes 15866 ...</code></pre>
+<pre><code>T2D 6 has common genes 15673 ...</code></pre>
+<pre class="r"><code>        colnames(Est.prop.weighted) = colnames(D1)
+    rownames(Est.prop.weighted) = colnames(Yjg)
+    colnames(Est.prop.allgene) = colnames(D1)
+    rownames(Est.prop.allgene) = colnames(Yjg)
+    names(r.squared.full) = colnames(Yjg)
+    colnames(Weight.gene) = colnames(Yjg)
+    rownames(Weight.gene) = cm.gene
+    colnames(Var.prop) = colnames(D1)
+    rownames(Var.prop) = colnames(Yjg)
+Est.prop.Xin = list(Est.prop.weighted = Est.prop.weighted, Est.prop.allgene = Est.prop.allgene, Weight.gene = Weight.gene, r.squared.full = r.squared.full, 
+        Var.prop = Var.prop)
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(Est.prop.Xin$Est.prop.weighted), 
+                           data.matrix(Est.prop.Xin$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD      R
+MuSiC 0.09881 0.06357 0.9378
+NNLS  0.17161 0.11749 0.8159</code></pre>
 <p>Then Yjg.temp, D1.temp, M.S, Sigma.ct.temp are passed to function <code>music.iter.ct</code>. In this function there is a line. So I guess in order to avoid numerical issue, they multiply Y by 100.</p>
 <pre class="r"><code>if(normalize){
     X = X/sd(as.vector(X));
@@ -766,6 +1054,184 @@ if(sum(Yjg[, i] == 0) &gt; 0){
 </ol>
 <p>MuSiC estimates the variance <span class="math inline">\(v_{gk} = Var(\hat{\mathbf{x}}_{gk})\)</span> as sample variance of <span class="math inline">\(\hat{\mathbf{x}}_{igk}\)</span>, <span class="math inline">\(i=1,2,...,I\)</span>.</p>
 <p>Or, it estimates the covariance matrix <span class="math inline">\(V_{g} = Var(\hat{\mathbf{x}}_{g\cdot})\in R_+^{K\times K}\)</span> as sample covariance matrix of <span class="math inline">\(\hat{\mathbf{x}}_{ig\cdot}\)</span>, <span class="math inline">\(i=1,2,...,I\)</span>.</p>
+<p>Note: MuSiC first remove genes that have no expression in all samples in bulk data, then remove genes that have no expression in all cells in reference data, and formulate reference matrix. Then use common genes of bulk and reference data to perform regression for each bulk sample, in which it also removes genes with 0 expression in that specific bulk sample.</p>
+<p>Does filter out common gene then build reference matrix work?</p>
+<pre class="r"><code>cm.gene = intersect(rownames(EMTAB.eset),rownames(XinT2D.construct.full$Bulk.counts))
+g.bulk = match(cm.gene,rownames(XinT2D.construct.full$Bulk.counts))
+g.ref = match(cm.gene,rownames(EMTAB.eset))
+fit = music_prop(XinT2D.construct.full$Bulk.counts[g.bulk,],EMTAB.eset[g.ref,],clusters = &#39;cellType&#39;, samples = &#39;sampleID&#39;, select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;))</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 17884 common genes...</code></pre>
+<pre><code>Used 4 cell types in deconvolution...</code></pre>
+<pre><code>Non T2D 1 has common genes 15115 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 12826 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 13553 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 13491 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 14585 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 13984 ...</code></pre>
+<pre><code>Non T2D 7 has common genes 13065 ...</code></pre>
+<pre><code>Non T2D 8 has common genes 13756 ...</code></pre>
+<pre><code>Non T2D 9 has common genes 13813 ...</code></pre>
+<pre><code>Non T2D 10 has common genes 14566 ...</code></pre>
+<pre><code>Non T2D 11 has common genes 14197 ...</code></pre>
+<pre><code>Non T2D 12 has common genes 15507 ...</code></pre>
+<pre><code>T2D 1 has common genes 14936 ...</code></pre>
+<pre><code>T2D 2 has common genes 15084 ...</code></pre>
+<pre><code>T2D 3 has common genes 14175 ...</code></pre>
+<pre><code>T2D 4 has common genes 16163 ...</code></pre>
+<pre><code>T2D 5 has common genes 15866 ...</code></pre>
+<pre><code>T2D 6 has common genes 15673 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(fit$Est.prop.weighted), 
+                           data.matrix(fit$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD      R
+MuSiC 0.09877 0.06350 0.9377
+NNLS  0.17147 0.11739 0.8161</code></pre>
+<pre class="r"><code>set.seed(12345)
+#cell_size = data.frame(type = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;), size=c(1,1,1,1))
+cell_size = NULL
+cm.gene = intersect(rownames(EMTAB.eset),rownames(XinT2D.construct.full$Bulk.counts))
+cm.gene = cm.gene[sample(1:length(cm.gene),10000)]
+g.bulk = match(cm.gene,rownames(XinT2D.construct.full$Bulk.counts))
+g.ref = match(cm.gene,rownames(EMTAB.eset))
+fit = music_prop(XinT2D.construct.full$Bulk.counts[g.bulk,],EMTAB.eset[g.ref,],clusters = &#39;cellType&#39;, samples = &#39;sampleID&#39;, 
+                 select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;),
+                 verbose = F,cell_size = cell_size)
+
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(fit$Est.prop.weighted), 
+                           data.matrix(fit$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD       R
+MuSiC 0.30148 0.26034  0.0934
+NNLS  0.39176 0.31076 -0.0332</code></pre>
+<pre class="r"><code>fit2 = music_prop(XinT2D.construct.full$Bulk.counts,EMTAB.eset,clusters = &#39;cellType&#39;, samples = &#39;sampleID&#39;, select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;),markers = cm.gene,
+                  verbose = F,cell_size = cell_size)
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(fit2$Est.prop.weighted), 
+                           data.matrix(fit2$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD    mAD       R
+MuSiC 0.31045 0.2711  0.0264
+NNLS  0.39069 0.3094 -0.0301</code></pre>
+<pre class="r"><code>library(cowplot)</code></pre>
+<pre><code>
+Attaching package: &#39;cowplot&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:ggplot2&#39;:
+
+    ggsave</code></pre>
+<pre class="r"><code>prop.comp.fig = Prop_comp_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real),
+                                prop.est = list(data.matrix(fit$Est.prop.weighted),
+                                                data.matrix(fit$Est.prop.allgene)),
+                                method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;), 
+                                title = &#39;Heatmap of Real and Est. Prop&#39; )
+
+abs.diff.fig = Abs_diff_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real),
+                              prop.est = list(data.matrix(fit$Est.prop.weighted),
+                                              data.matrix(fit$Est.prop.allgene)),
+                              method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;), 
+                              title = &#39;Abs.Diff between Real and Est. Prop&#39; )
+
+plot_grid(prop.comp.fig, abs.diff.fig, labels = &quot;auto&quot;, rel_widths = c(4,3))</code></pre>
+<p><img src="figure/MuSiC.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>how about using Xin to infer seger pseudo-bulk data?</p>
+<pre class="r"><code>seger.bulk = bulk_construct(EMTAB.eset, clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;,
+                            select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;))
+seger.bulk$prop.real = relative.ab(seger.bulk$num.real, by.col = FALSE)
+
+Est.prop.seger = music_prop(bulk.eset = seger.bulk$Bulk.counts, sc.eset = XinT2D.eset,clusters = &#39;cellType&#39;, samples = &#39;sampleID&#39;, select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;))</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 17884 common genes...</code></pre>
+<pre><code>Used 4 cell types in deconvolution...</code></pre>
+<pre><code>Non T2D 1 has common genes 13835 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 16293 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 15163 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 15791 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 16236 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 14932 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(seger.bulk$prop.real), 
+           prop.est = list(data.matrix(Est.prop.seger$Est.prop.weighted), 
+                           data.matrix(Est.prop.seger$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD      R
+MuSiC 0.16138 0.12899 0.8991
+NNLS  0.16792 0.12718 0.8433</code></pre>
+<p>how about using enge to infer seger pseduo-bulk?</p>
+<pre class="r"><code>enge = readRDS(&quot;data/pancreas/enge_raw.rds&quot;)
+pheno_Data = data.frame(cellType = enge$cell_type,SubjectName = enge$individual)</code></pre>
+<pre><code>Loading required package: SingleCellExperiment</code></pre>
+<pre><code>Loading required package: SummarizedExperiment</code></pre>
+<pre><code>Loading required package: GenomicRanges</code></pre>
+<pre><code>Loading required package: GenomeInfoDb</code></pre>
+<pre><code>Loading required package: DelayedArray</code></pre>
+<pre><code>Loading required package: matrixStats</code></pre>
+<pre><code>
+Attaching package: &#39;matrixStats&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:Biobase&#39;:
+
+    anyMissing, rowMedians</code></pre>
+<pre><code>Loading required package: BiocParallel</code></pre>
+<pre><code>
+Attaching package: &#39;DelayedArray&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:matrixStats&#39;:
+
+    colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges</code></pre>
+<pre><code>The following objects are masked from &#39;package:base&#39;:
+
+    aperm, apply</code></pre>
+<pre class="r"><code>rownames(pheno_Data) = colnames(enge)
+enge.set = ExpressionSet(assayData = counts(enge),phenoData = AnnotatedDataFrame(pheno_Data))
+
+seger.bulk = bulk_construct(EMTAB.eset, clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;,
+                            select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;acinar&#39;,&#39;ductal&#39;))
+seger.bulk$prop.real = relative.ab(seger.bulk$num.real, by.col = FALSE)
+
+Est.prop.seger = music_prop(bulk.eset = seger.bulk$Bulk.counts, sc.eset = enge.set,clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;, select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;acinar&#39;,&#39;ductal&#39;))</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 18135 common genes...</code></pre>
+<pre><code>Used 5 cell types in deconvolution...</code></pre>
+<pre><code>Non T2D 1 has common genes 14005 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 16255 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 14766 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 17017 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 16314 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 15427 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(seger.bulk$prop.real), 
+           prop.est = list(data.matrix(Est.prop.seger$Est.prop.weighted), 
+                           data.matrix(Est.prop.seger$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD      R
+MuSiC 0.12400 0.08880 0.9509
+NNLS  0.13261 0.10239 0.8466</code></pre>
+<pre class="r"><code>cm.gene = intersect(rownames(seger.bulk$Bulk.counts),rownames(enge.set))
+g.bulk = match(cm.gene,rownames(seger.bulk$Bulk.counts))
+g.ref = match(cm.gene,rownames(enge.set))
+Est.prop.seger2 = music_prop(bulk.eset = seger.bulk$Bulk.counts[g.bulk,], sc.eset = enge.set[g.ref,],clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;, select.ct = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;acinar&#39;,&#39;ductal&#39;))</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 18135 common genes...</code></pre>
+<pre><code>Used 5 cell types in deconvolution...</code></pre>
+<pre><code>Non T2D 1 has common genes 14005 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 16255 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 14766 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 17017 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 16314 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 15427 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(seger.bulk$prop.real), 
+           prop.est = list(data.matrix(Est.prop.seger2$Est.prop.weighted), 
+                           data.matrix(Est.prop.seger2$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD      R
+MuSiC 0.12480 0.09047 0.9491
+NNLS  0.13241 0.10241 0.8451</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -794,32 +1260,40 @@ attached base packages:
 [8] methods   base     
 
 other attached packages:
-[1] xbioc_0.1.18         AnnotationDbi_1.44.0 IRanges_2.16.0      
-[4] S4Vectors_0.20.1     Biobase_2.42.0       BiocGenerics_0.28.0 
-[7] MuSiC_0.1.1          ggplot2_3.1.1        nnls_1.4            
+ [1] SingleCellExperiment_1.4.0  SummarizedExperiment_1.12.0
+ [3] DelayedArray_0.8.0          BiocParallel_1.16.0        
+ [5] matrixStats_0.54.0          GenomicRanges_1.34.0       
+ [7] GenomeInfoDb_1.18.1         cowplot_0.9.4              
+ [9] xbioc_0.1.18                AnnotationDbi_1.44.0       
+[11] IRanges_2.16.0              S4Vectors_0.20.1           
+[13] Biobase_2.42.0              BiocGenerics_0.28.0        
+[15] MuSiC_0.1.1                 ggplot2_3.1.1              
+[17] nnls_1.4                   
 
 loaded via a namespace (and not attached):
- [1] Rcpp_1.0.4.6        lattice_0.20-38     assertthat_0.2.0   
- [4] rprojroot_1.3-2     digest_0.6.18       R6_2.3.0           
- [7] plyr_1.8.4          backports_1.1.2     MatrixModels_0.4-1 
-[10] RSQLite_2.1.1       evaluate_0.12       coda_0.19-2        
-[13] highr_0.7           pillar_1.3.1        rlang_0.4.0        
-[16] lazyeval_0.2.1      SparseM_1.78        whisker_0.3-2      
-[19] blob_1.1.1          Matrix_1.2-15       rmarkdown_1.10     
-[22] stringr_1.3.1       bit_1.1-14          munsell_0.5.0      
-[25] compiler_3.5.1      httpuv_1.4.5        pkgconfig_2.0.2    
-[28] pkgmaker_0.27       mcmc_0.9-7          htmltools_0.3.6    
-[31] tidyselect_0.2.5    tibble_2.1.1        workflowr_1.6.0    
-[34] codetools_0.2-15    crayon_1.3.4        dplyr_0.8.0.1      
-[37] withr_2.1.2         later_0.7.5         MASS_7.3-51.1      
-[40] grid_3.5.1          xtable_1.8-3        gtable_0.2.0       
-[43] registry_0.5        DBI_1.0.0           git2r_0.26.1       
-[46] magrittr_1.5        scales_1.0.0        bibtex_0.4.2       
-[49] stringi_1.2.4       reshape2_1.4.3      fs_1.3.1           
-[52] promises_1.0.1      tools_3.5.1         bit64_0.9-7        
-[55] glue_1.3.0          purrr_0.3.2         yaml_2.2.0         
-[58] colorspace_1.3-2    BiocManager_1.30.10 memoise_1.1.0      
-[61] knitr_1.20          quantreg_5.36       MCMCpack_1.4-4     </code></pre>
+ [1] bit64_0.9-7            assertthat_0.2.0       BiocManager_1.30.10   
+ [4] blob_1.1.1             GenomeInfoDbData_1.2.0 yaml_2.2.0            
+ [7] pillar_1.3.1           RSQLite_2.1.1          backports_1.1.2       
+[10] lattice_0.20-38        quantreg_5.36          glue_1.3.0            
+[13] digest_0.6.18          promises_1.0.1         XVector_0.22.0        
+[16] colorspace_1.3-2       htmltools_0.3.6        httpuv_1.4.5          
+[19] Matrix_1.2-15          plyr_1.8.4             pkgconfig_2.0.2       
+[22] bibtex_0.4.2           SparseM_1.78           zlibbioc_1.28.0       
+[25] purrr_0.3.2            xtable_1.8-3           scales_1.0.0          
+[28] whisker_0.3-2          later_0.7.5            MatrixModels_0.4-1    
+[31] git2r_0.26.1           tibble_2.1.1           pkgmaker_0.27         
+[34] withr_2.1.2            lazyeval_0.2.1         magrittr_1.5          
+[37] crayon_1.3.4           memoise_1.1.0          mcmc_0.9-7            
+[40] evaluate_0.12          fs_1.3.1               MASS_7.3-51.1         
+[43] tools_3.5.1            registry_0.5           stringr_1.3.1         
+[46] MCMCpack_1.4-4         munsell_0.5.0          compiler_3.5.1        
+[49] rlang_0.4.0            grid_3.5.1             RCurl_1.95-4.11       
+[52] bitops_1.0-6           labeling_0.3           rmarkdown_1.10        
+[55] gtable_0.2.0           codetools_0.2-15       DBI_1.0.0             
+[58] reshape2_1.4.3         R6_2.3.0               knitr_1.20            
+[61] dplyr_0.8.0.1          bit_1.1-14             workflowr_1.6.2       
+[64] rprojroot_1.3-2        stringi_1.2.4          Rcpp_1.0.4.6          
+[67] tidyselect_0.2.5       coda_0.19-2           </code></pre>
 </div>
 </div>
 

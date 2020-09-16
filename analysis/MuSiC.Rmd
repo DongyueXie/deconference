@@ -17,9 +17,160 @@ $j$ indexes individual and $g$ indexes gene.
 
 ```{r,warning=FALSE,message=FALSE}
 library(MuSiC)
-GSE50244.bulk.eset <- readRDS("~/deconference/data/MuSiC/GSE50244bulkeset.rds")
-EMTAB.eset <- readRDS("~/deconference/data/MuSiC/EMTABesethealthy.rds")
 library(xbioc)
+library(Biobase)
+XinT2D.eset <- readRDS("data/MuSiC/XinT2Deset.rds")
+XinT2D.construct.full = bulk_construct(XinT2D.eset, clusters = 'cellType', samples = 'SubjectName')
+XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+EMTAB.eset <- readRDS("data/MuSiC/EMTABesethealthy.rds")
+
+
+
+music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples, 
+    select.ct = NULL, cell_size = NULL, ct.cov = FALSE, verbose = TRUE, 
+    iter.max = 1000, nu = 1e-04, eps = 0.01, centered = FALSE, 
+    normalize = FALSE, ...) 
+{
+    bulk.gene = rownames(bulk.eset)[rowMeans(exprs(bulk.eset)) != 
+        0]
+    bulk.eset = bulk.eset[bulk.gene, , drop = FALSE]
+    if (is.null(markers)) {
+        sc.markers = bulk.gene
+    }
+    else {
+        sc.markers = intersect(bulk.gene, unlist(markers))
+    }
+    sc.basis = music_basis(sc.eset, non.zero = TRUE, markers = sc.markers, 
+        clusters = clusters, samples = samples, select.ct = select.ct, 
+        cell_size = cell_size, ct.cov = ct.cov, verbose = verbose)
+    cm.gene = intersect(rownames(sc.basis$Disgn.mtx), bulk.gene)
+    if (is.null(markers)) {
+        if (length(cm.gene) < 0.2 * min(length(bulk.gene), nrow(sc.eset))) 
+            stop("Too few common genes!")
+    }
+    else {
+        if (length(cm.gene) < 0.2 * length(unlist(markers))) 
+            stop("Too few common genes!")
+    }
+    if (verbose) {
+        message(paste("Used", length(cm.gene), "common genes..."))
+    }
+    m.sc = match(cm.gene, rownames(sc.basis$Disgn.mtx))
+    m.bulk = match(cm.gene, bulk.gene)
+    D1 = sc.basis$Disgn.mtx[m.sc, ]
+    M.S = colMeans(sc.basis$S, na.rm = T)
+    if (!is.null(cell_size)) {
+        if (!is.data.frame(cell_size)) {
+            stop("cell_size paramter should be a data.frame with 1st column for cell type names and 2nd column for cell sizes")
+        }
+        else if (sum(names(M.S) %in% cell_size[, 1]) != length(names(M.S))) {
+            stop("Cell type names in cell_size must match clusters")
+        }
+        else if (any(is.na(as.numeric(cell_size[, 2])))) {
+            stop("Cell sizes should all be numeric")
+        }
+        my_ms_names <- names(M.S)
+        cell_size <- cell_size[my_ms_names %in% cell_size[, 1], 
+            ]
+        M.S <- cell_size[match(my_ms_names, cell_size[, 1]), 
+            ]
+        M.S <- M.S[, 2]
+        names(M.S) <- my_ms_names
+    }
+    Yjg = relative.ab(exprs(bulk.eset)[m.bulk, ])
+    N.bulk = ncol(bulk.eset)
+    if (ct.cov) {
+        Sigma.ct = sc.basis$Sigma.ct[, m.sc]
+        if (sum(Yjg[, i] == 0) > 0) {
+            D1.temp = D1[Yjg[, i] != 0, ]
+            Yjg.temp = Yjg[Yjg[, i] != 0, i]
+            Sigma.ct.temp = Sigma.ct[, Yjg[, i] != 0]
+            if (verbose) 
+                message(paste(colnames(Yjg)[i], "has common genes", 
+                  sum(Yjg[, i] != 0), "..."))
+        }
+        else {
+            D1.temp = D1
+            Yjg.temp = Yjg[, i]
+            Sigma.ct.temp = Sigma.ct
+            if (verbose) 
+                message(paste(colnames(Yjg)[i], "has common genes", 
+                  sum(Yjg[, i] != 0), "..."))
+        }
+        lm.D1.weighted = music.iter.ct(Yjg.temp, D1.temp, M.S, 
+            Sigma.ct.temp, iter.max = iter.max, nu = nu, eps = eps, 
+            centered = centered, normalize = normalize)
+        Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+        Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+        weight.gene.temp = rep(NA, nrow(Yjg))
+        weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+        Weight.gene = cbind(Weight.gene, weight.gene.temp)
+        r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+        Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+    }
+    else {
+        Sigma = sc.basis$Sigma[m.sc, ]
+        valid.ct = (colSums(is.na(Sigma)) == 0) & (colSums(is.na(D1)) == 
+            0) & (!is.na(M.S))
+        if (sum(valid.ct) <= 1) {
+            stop("Not enough valid cell type!")
+        }
+        if (verbose) {
+            message(paste("Used", sum(valid.ct), "cell types in deconvolution..."))
+        }
+        D1 = D1[, valid.ct]
+        M.S = M.S[valid.ct]
+        D1 = D1/M.S[1]
+        M.S = M.S/M.S[1]
+        
+        Sigma = Sigma[, valid.ct]
+        Est.prop.allgene = NULL
+        Est.prop.weighted = NULL
+        Weight.gene = NULL
+        r.squared.full = NULL
+        Var.prop = NULL
+        for (i in 1:N.bulk) {
+            if (sum(Yjg[, i] == 0) > 0) {
+                D1.temp = D1[Yjg[, i] != 0, ]
+                Yjg.temp = Yjg[Yjg[, i] != 0, i]
+                Sigma.temp = Sigma[Yjg[, i] != 0, ]
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], "has common genes", 
+                    sum(Yjg[, i] != 0), "..."))
+            }
+            else {
+                D1.temp = D1
+                Yjg.temp = Yjg[, i]
+                Sigma.temp = Sigma
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], "has common genes", 
+                    sum(Yjg[, i] != 0), "..."))
+            }
+            lm.D1.weighted = music.iter(Yjg.temp, D1.temp, M.S, 
+                Sigma.temp, iter.max = iter.max, nu = nu, eps = eps, 
+                centered = centered, normalize = normalize)
+            Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+            Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+            weight.gene.temp = rep(NA, nrow(Yjg))
+            weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+            Weight.gene = cbind(Weight.gene, weight.gene.temp)
+            r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+            Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+        }
+    }
+    colnames(Est.prop.weighted) = colnames(D1)
+    rownames(Est.prop.weighted) = colnames(Yjg)
+    colnames(Est.prop.allgene) = colnames(D1)
+    rownames(Est.prop.allgene) = colnames(Yjg)
+    names(r.squared.full) = colnames(Yjg)
+    colnames(Weight.gene) = colnames(Yjg)
+    rownames(Weight.gene) = cm.gene
+    colnames(Var.prop) = colnames(D1)
+    rownames(Var.prop) = colnames(Yjg)
+    return(list(Est.prop.weighted = Est.prop.weighted, Est.prop.allgene = Est.prop.allgene, 
+        Weight.gene = Weight.gene, r.squared.full = r.squared.full, 
+        Var.prop = Var.prop,X=D1,S=M.S))
+}
 ```
 
 6 major cell types: alpha, beta, delta, gamma, acinar and ductal, which make up over 90% of the whole islet.
@@ -27,17 +178,18 @@ library(xbioc)
 set data and input parameters
 
 ```{r}
-bulk.eset = GSE50244.bulk.eset
+bulk.eset = XinT2D.construct.full$Bulk.counts
 sc.eset = EMTAB.eset
 clusters = 'cellType'
 samples = 'sampleID'
-select.ct = c('alpha', 'beta', 'delta', 'gamma','acinar', 'ductal')
-verbose = F
+select.ct = c('alpha', 'beta', 'delta', 'gamma')
+verbose = T
 
 
 # filter out genes has no counts in bulk data
 bulk.gene = rownames(bulk.eset)[rowMeans(exprs(bulk.eset)) != 0]
 bulk.eset = bulk.eset[bulk.gene, , drop = FALSE]
+dim(bulk.eset)
 ```
 
 ##  Process single cell reference data
@@ -84,8 +236,18 @@ Sigma <- sapply(unique(clusters), function(ct){
       }), 1, var, na.rm = TRUE)
     })
 dim(Sigma)
-m.ct = match(select.ct, colnames(Sigma))
-Sigma = Sigma[, m.ct]
+if (!is.null(select.ct)) {
+            m.ct = match(select.ct, colnames(Sigma))
+            Sigma = Sigma[, m.ct]
+        }
+        if (!is.null(markers)) {
+            ids <- intersect(unlist(markers), rownames(x))
+            m.ids = match(ids, rownames(x))
+            Sigma <- Sigma[m.ids, ]
+        }
+#m.ct = match(select.ct, colnames(Sigma))
+#Sigma = Sigma[, m.ct]
+dim(Sigma)
 ```
 
 
@@ -93,7 +255,7 @@ Sigma is a gene by cell matrix. Its entry $v_{gk}$ is an estimate of gene relati
 
 MuSiC has another option of setting ct.cov = TRUE, saying  "If TRUE, use the covariance across cell types". Let's see what it does.
 
-```{r}
+```{r,eval=F}
     nGenes = nrow(x);
     n.ct = length(unique(clusters));
     nSubs = length(unique(samples))
@@ -142,6 +304,19 @@ Obtain the design matrix for regression. Note that MuSiC estimates cell type pro
 
 ```{r}
 D <- t(t(M.theta)*M.S)
+if (!is.null(select.ct)) {
+        m.ct = match(select.ct, colnames(D))
+        D = D[, m.ct]
+        S = S[, m.ct]
+        M.S = M.S[m.ct]
+        M.theta = M.theta[, m.ct]
+    }
+    if (!is.null(markers)) {
+        ids <- intersect(unlist(markers), rownames(x))
+        m.ids = match(ids, rownames(x))
+        D <- D[m.ids, ]
+        M.theta <- M.theta[m.ids, ]
+    }
 sc.basis = list(Disgn.mtx = D, S = S, M.S = M.S, M.theta = M.theta, Sigma = Sigma)
 ```
 
@@ -154,8 +329,9 @@ Let's take a look at how it handles ct.cov=TRUE.
 
 
 ```{r}
-sc.basis = list(Disgn.mtx = D, S = S, M.S = M.S, M.theta = M.theta, Sigma.ct = Sigma.ct)
+#sc.basis = list(Disgn.mtx = D, S = S, M.S = M.S, M.theta = M.theta, Sigma.ct = Sigma.ct)
 cm.gene = intersect( rownames(sc.basis$Disgn.mtx), bulk.gene )
+message(paste('Used', length(cm.gene), 'common genes...'))
 m.sc = match(cm.gene, rownames(sc.basis$Disgn.mtx))
 m.bulk = match(cm.gene, bulk.gene)
 D1 = sc.basis$Disgn.mtx[m.sc, ] 
@@ -164,22 +340,60 @@ M.S = colMeans(sc.basis$S, na.rm = T)
 ## obtain bulk data gene relative expression
 Yjg = relative.ab(exprs(bulk.eset)[m.bulk, ]); N.bulk = ncol(bulk.eset)
 
-Sigma.ct = sc.basis$Sigma.ct[, m.sc];
+Sigma = sc.basis$Sigma[m.sc, ]
+valid.ct = (colSums(is.na(Sigma)) == 0) & (colSums(is.na(D1)) == 0) & (!is.na(M.S))
 
-i=1
-## perform weighted ls ......
+D1 = D1[, valid.ct]
+        M.S = M.S[valid.ct]
+        Sigma = Sigma[, valid.ct]
+        Est.prop.allgene = NULL
+        Est.prop.weighted = NULL
+        Weight.gene = NULL
+        r.squared.full = NULL
+        Var.prop = NULL
+        for (i in 1:N.bulk) {
+            if (sum(Yjg[, i] == 0) > 0) {
+                D1.temp = D1[Yjg[, i] != 0, ]
+                Yjg.temp = Yjg[Yjg[, i] != 0, i]
+                Sigma.temp = Sigma[Yjg[, i] != 0, ]
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], "has common genes", 
+                    sum(Yjg[, i] != 0), "..."))
+            }
+            else {
+                D1.temp = D1
+                Yjg.temp = Yjg[, i]
+                Sigma.temp = Sigma
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], "has common genes", 
+                    sum(Yjg[, i] != 0), "..."))
+            }
+            lm.D1.weighted = music.iter(Yjg.temp, D1.temp, M.S, 
+                Sigma.temp)
+            Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+            Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+            weight.gene.temp = rep(NA, nrow(Yjg))
+            weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+            Weight.gene = cbind(Weight.gene, weight.gene.temp)
+            r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+            Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+        }
 
-if(sum(Yjg[, i] == 0) > 0){
-      D1.temp = D1[Yjg[, i]!=0, ];
-      Yjg.temp = Yjg[Yjg[, i]!=0, i];
-      Sigma.ct.temp = Sigma.ct[, Yjg[,i]!=0];
-      if(verbose) message(paste(colnames(Yjg)[i], 'has common genes', sum(Yjg[, i] != 0), '...') )
-    }else{
-      D1.temp = D1;
-      Yjg.temp = Yjg[, i];
-      Sigma.ct.temp = Sigma.ct;
-      if(verbose) message(paste(colnames(Yjg)[i], 'has common genes', sum(Yjg[, i] != 0), '...'))
-    }
+        colnames(Est.prop.weighted) = colnames(D1)
+    rownames(Est.prop.weighted) = colnames(Yjg)
+    colnames(Est.prop.allgene) = colnames(D1)
+    rownames(Est.prop.allgene) = colnames(Yjg)
+    names(r.squared.full) = colnames(Yjg)
+    colnames(Weight.gene) = colnames(Yjg)
+    rownames(Weight.gene) = cm.gene
+    colnames(Var.prop) = colnames(D1)
+    rownames(Var.prop) = colnames(Yjg)
+Est.prop.Xin = list(Est.prop.weighted = Est.prop.weighted, Est.prop.allgene = Est.prop.allgene, Weight.gene = Weight.gene, r.squared.full = r.squared.full, 
+        Var.prop = Var.prop)
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(Est.prop.Xin$Est.prop.weighted), 
+                           data.matrix(Est.prop.Xin$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
 ```
 
 Then Yjg.temp, D1.temp, M.S, Sigma.ct.temp are passed to function `music.iter.ct`. In this function there is a line. So I guess in order to avoid numerical issue, they multiply Y by 100. 
@@ -213,5 +427,104 @@ MuSiC estimates the variance $v_{gk} = Var(\hat{\mathbf{x}}_{gk})$ as sample var
 
 Or, it estimates the covariance matrix $V_{g} = Var(\hat{\mathbf{x}}_{g\cdot})\in R_+^{K\times K}$ as sample covariance matrix of $\hat{\mathbf{x}}_{ig\cdot}$, $i=1,2,...,I$.
 
+Note: MuSiC first remove genes that have no expression in all samples in bulk data, then remove genes that have no expression in all cells in reference data, and formulate reference matrix. Then use common genes of bulk and reference data to perform regression for each bulk sample, in which it also removes genes with 0 expression in that specific bulk sample.
 
 
+Does filter out common gene then build reference matrix work?
+
+```{r}
+cm.gene = intersect(rownames(EMTAB.eset),rownames(XinT2D.construct.full$Bulk.counts))
+g.bulk = match(cm.gene,rownames(XinT2D.construct.full$Bulk.counts))
+g.ref = match(cm.gene,rownames(EMTAB.eset))
+fit = music_prop(XinT2D.construct.full$Bulk.counts[g.bulk,],EMTAB.eset[g.ref,],clusters = 'cellType', samples = 'sampleID', select.ct = c('alpha', 'beta', 'delta', 'gamma'))
+
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(fit$Est.prop.weighted), 
+                           data.matrix(fit$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+
+set.seed(12345)
+#cell_size = data.frame(type = c('alpha', 'beta', 'delta', 'gamma'), size=c(1,1,1,1))
+cell_size = NULL
+cm.gene = intersect(rownames(EMTAB.eset),rownames(XinT2D.construct.full$Bulk.counts))
+cm.gene = cm.gene[sample(1:length(cm.gene),10000)]
+g.bulk = match(cm.gene,rownames(XinT2D.construct.full$Bulk.counts))
+g.ref = match(cm.gene,rownames(EMTAB.eset))
+fit = music_prop(XinT2D.construct.full$Bulk.counts[g.bulk,],EMTAB.eset[g.ref,],clusters = 'cellType', samples = 'sampleID', 
+                 select.ct = c('alpha', 'beta', 'delta', 'gamma'),
+                 verbose = F,cell_size = cell_size)
+
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(fit$Est.prop.weighted), 
+                           data.matrix(fit$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+
+fit2 = music_prop(XinT2D.construct.full$Bulk.counts,EMTAB.eset,clusters = 'cellType', samples = 'sampleID', select.ct = c('alpha', 'beta', 'delta', 'gamma'),markers = cm.gene,
+                  verbose = F,cell_size = cell_size)
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(fit2$Est.prop.weighted), 
+                           data.matrix(fit2$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+
+
+library(cowplot)
+
+prop.comp.fig = Prop_comp_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real),
+                                prop.est = list(data.matrix(fit$Est.prop.weighted),
+                                                data.matrix(fit$Est.prop.allgene)),
+                                method.name = c('MuSiC', 'NNLS'), 
+                                title = 'Heatmap of Real and Est. Prop' )
+
+abs.diff.fig = Abs_diff_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real),
+                              prop.est = list(data.matrix(fit$Est.prop.weighted),
+                                              data.matrix(fit$Est.prop.allgene)),
+                              method.name = c('MuSiC', 'NNLS'), 
+                              title = 'Abs.Diff between Real and Est. Prop' )
+
+plot_grid(prop.comp.fig, abs.diff.fig, labels = "auto", rel_widths = c(4,3))
+
+
+```
+
+how about using Xin to infer seger pseudo-bulk data?
+```{r}
+seger.bulk = bulk_construct(EMTAB.eset, clusters = 'cellType', samples = 'SubjectName',
+                            select.ct = c('alpha', 'beta', 'delta', 'gamma'))
+seger.bulk$prop.real = relative.ab(seger.bulk$num.real, by.col = FALSE)
+
+Est.prop.seger = music_prop(bulk.eset = seger.bulk$Bulk.counts, sc.eset = XinT2D.eset,clusters = 'cellType', samples = 'sampleID', select.ct = c('alpha', 'beta', 'delta', 'gamma'))
+Eval_multi(prop.real = data.matrix(seger.bulk$prop.real), 
+           prop.est = list(data.matrix(Est.prop.seger$Est.prop.weighted), 
+                           data.matrix(Est.prop.seger$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+```
+
+how about using enge to infer seger pseduo-bulk?
+
+```{r}
+enge = readRDS("data/pancreas/enge_raw.rds")
+pheno_Data = data.frame(cellType = enge$cell_type,SubjectName = enge$individual)
+rownames(pheno_Data) = colnames(enge)
+enge.set = ExpressionSet(assayData = counts(enge),phenoData = AnnotatedDataFrame(pheno_Data))
+
+seger.bulk = bulk_construct(EMTAB.eset, clusters = 'cellType', samples = 'SubjectName',
+                            select.ct = c('alpha', 'beta', 'delta', 'acinar','ductal'))
+seger.bulk$prop.real = relative.ab(seger.bulk$num.real, by.col = FALSE)
+
+Est.prop.seger = music_prop(bulk.eset = seger.bulk$Bulk.counts, sc.eset = enge.set,clusters = 'cellType', samples = 'SubjectName', select.ct = c('alpha', 'beta', 'delta', 'acinar','ductal'))
+Eval_multi(prop.real = data.matrix(seger.bulk$prop.real), 
+           prop.est = list(data.matrix(Est.prop.seger$Est.prop.weighted), 
+                           data.matrix(Est.prop.seger$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+```
+
+```{r}
+cm.gene = intersect(rownames(seger.bulk$Bulk.counts),rownames(enge.set))
+g.bulk = match(cm.gene,rownames(seger.bulk$Bulk.counts))
+g.ref = match(cm.gene,rownames(enge.set))
+Est.prop.seger2 = music_prop(bulk.eset = seger.bulk$Bulk.counts[g.bulk,], sc.eset = enge.set[g.ref,],clusters = 'cellType', samples = 'SubjectName', select.ct = c('alpha', 'beta', 'delta', 'acinar','ductal'))
+Eval_multi(prop.real = data.matrix(seger.bulk$prop.real), 
+           prop.est = list(data.matrix(Est.prop.seger2$Est.prop.weighted), 
+                           data.matrix(Est.prop.seger2$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+```

@@ -1,0 +1,5621 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="DongyueXie" />
+
+<meta name="date" content="2020-09-12" />
+
+<title>music_weights</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/sandstone.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">deconference</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+<li>
+  <a href="about.html">Data</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/DongyueXie/deconference">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">music_weights</h1>
+<h4 class="author"><em>DongyueXie</em></h4>
+<h4 class="date"><em>2020-09-12</em></h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-09-17
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>deconference/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20200403code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20200403)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20200403code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20200403)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongabsolute"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>File paths:</strong> absolute </a>
+</p>
+</div>
+<div id="strongFilepathsstrongabsolute" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Using absolute paths to the files within your workflowr project makes it difficult for you and others to run your code on a different machine. Change the absolute path(s) below to the suggested relative path(s) to make your code more reproducible.
+</p>
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th style="text-align:left;">
+absolute
+</th>
+<th style="text-align:left;">
+relative
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+~/deconference/data/pancreas/segerstolpe_raw.rds
+</td>
+<td style="text-align:left;">
+data/pancreas/segerstolpe_raw.rds
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreeb005457d7bdb1fe2324e23d2ee5a19673893ddc8targetblankb005457a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/b005457d7bdb1fe2324e23d2ee5a19673893ddc8" target="_blank">b005457</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreeb005457d7bdb1fe2324e23d2ee5a19673893ddc8targetblankb005457a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/b005457d7bdb1fe2324e23d2ee5a19673893ddc8" target="_blank">b005457</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  analysis/multiIndNormal.Rmd
+    Untracked:  analysis/multiref_seger.Rmd
+    Untracked:  analysis/plotGeneVar.Rmd
+    Untracked:  data/EMTAB5061Segerstolpe/
+    Untracked:  data/GSE129788/
+    Untracked:  data/GSE141115/
+    Untracked:  data/GSE81547Enge/
+    Untracked:  data/GSE81608Xin/
+    Untracked:  data/GSE84133Baron/
+    Untracked:  data/GSE85241Muraro/
+    Untracked:  data/MuSiC/
+    Untracked:  data/cibersort/
+    Untracked:  data/pancreas/
+    Untracked:  data/pbmc3k/
+    Untracked:  data/robots.txt
+    Untracked:  data/toSCE.R
+    Untracked:  output/Xin_bycelltype_hc2.RData
+    Untracked:  output/Xin_bycelltype_hc3.RData
+    Untracked:  output/Xin_sampleM_hc2.RData
+    Untracked:  output/Xin_sampleM_hc3.RData
+    Untracked:  output/Xin_sampleM_unadj.RData
+    Untracked:  output/Xin_universal_hc0.RData
+    Untracked:  output/Xin_universal_hc2.RData
+    Untracked:  output/Xin_universal_hc3.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls05_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls10_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls1_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls3_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls50_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_allgene_refls5_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls05_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls10_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls1_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls3_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls50_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_fewgene_refls5_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls05_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls10_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls1_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls3_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls50_bulkls50.RData
+    Untracked:  output/bulkref_pbmc_markergene_refls5_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls05_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls10_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls1_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls50_bulkls50.RData
+    Untracked:  output/bulkref_simu_G1000_K4_refls5_bulkls50.RData
+    Untracked:  output/bulkref_simu_addw_G1000_K4_refls10_bulkls50.RData
+    Untracked:  output/bulkref_simu_addw_G1000_K4_refls1_bulkls50.RData
+    Untracked:  output/bulkref_simu_addw_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/bulkref_simu_addw_G1000_K4_refls5_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_G1000_K4_refls05_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_G1000_K4_refls1_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_addw_G1000_K4_refls1_bulkls50.RData
+    Untracked:  output/bulkref_simu_correction_addw_G1000_K4_refls3_bulkls50.RData
+    Untracked:  output/multiref_all.RData
+    Untracked:  output/multiref_baron.RData
+    Untracked:  output/multiref_enge.RData
+    Untracked:  output/multiref_muraro.RData
+    Untracked:  output/multiref_seger.RData
+    Untracked:  output/results_nsclc.RData
+    Untracked:  output/scref_multiInd100_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_multiInd100_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown_Nosigma2.RData
+    Untracked:  output/scref_multiInd10_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_multiInd10_simu_G500_K4_scls02_scN100_bulkls50_addw_tauunknown_Nosigma2.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN10_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN10_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN300_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN30_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls01_scN30_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN10_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN10_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN300_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN30_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls02_scN30_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN10_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN10_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN300_bulkls50_addw_tauunknown.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN30_bulkls50.RData
+    Untracked:  output/scref_simu_G1000_K4_scls05_scN30_bulkls50_addw_tauunknown.RData
+    Untracked:  output/twoBulk_bulkref_simu_G1000_K4_refls30.RData
+    Untracked:  output/twoBulk_bulkref_simu_G500_K4_refls30.RData
+    Untracked:  output/twoBulk_multiscref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_null_bulkref_simu_G1000_K4_refls30.RData
+    Untracked:  output/twoBulk_null_multiscref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_null_scref_simu_G1000_K4.RData
+    Untracked:  output/twoBulk_scref_simu_G1000_K4.RData
+
+Unstaged changes:
+    Modified:   analysis/cellsize.Rmd
+    Modified:   analysis/cellsize2.Rmd
+    Modified:   analysis/real_data_simu.Rmd
+    Modified:   code/deconference_estfunc.R
+    Modified:   code/deconference_main.R
+    Modified:   code/deconference_setdata.R
+    Deleted:    data/pbmc.rds
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/music_weights.Rmd</code>) and HTML (<code>docs/music_weights.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/b005457d7bdb1fe2324e23d2ee5a19673893ddc8/analysis/music_weights.Rmd" target="_blank">b005457</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-09-17
+</td>
+<td>
+wflow_publish(“analysis/music_weights.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<pre class="r"><code>library(MuSiC)
+library(Biobase)
+library(xbioc)
+library(SingleCellExperiment)
+library(scater)
+library(GEOquery)</code></pre>
+<pre class="r"><code>seger &lt;- readRDS(&quot;~/deconference/data/pancreas/segerstolpe_raw.rds&quot;)
+enge = readRDS(&quot;data/pancreas/enge_raw.rds&quot;)
+
+create_sce_from_counts = function(counts, colData, rowData = NULL) {
+  if(is.null(rowData)) {
+    sceset &lt;- SingleCellExperiment(assays = list(counts = as.matrix(counts)),
+                                   colData = colData)
+  } else {
+    sceset &lt;- SingleCellExperiment(assays = list(counts = as.matrix(counts)),
+                                   colData = colData,
+                                   rowData = rowData)
+  }
+  # use gene names as feature symbols
+  rowData(sceset)$feature_symbol &lt;- rownames(sceset)
+  # remove features with duplicated names
+  if(is.null(rowData)) {
+    sceset &lt;- sceset[!duplicated(rowData(sceset)$feature_symbol), ]
+  }
+  # QC
+  isSpike(sceset, &quot;ERCC&quot;) &lt;- grepl(&quot;^ERCC-&quot;, rownames(sceset))
+  sceset &lt;- calculateQCMetrics(sceset, feature_controls = list(&quot;ERCC&quot; = isSpike(sceset, &quot;ERCC&quot;)))
+  return(sceset)
+}
+
+create_bulk = function(data.obj,indis,cell_types,min_prop=0.15){
+  G = nrow(data.obj)
+  bulk_counts = matrix(nrow=G,ncol=length(indis))
+  col_condition = c()
+  bulk_prop = c()
+  bulk_ncell = c()
+  #bulk_prop = matrix(nrow=length(indis),ncol = length(cell_types))
+  for(i in 1:length(indis)){
+    idx.temp = which(data.obj$individual==indis[i]&amp;data.obj$cell_type%in%cell_types)
+    cell_counts = table(data.obj$cell_type[idx.temp])
+    
+    if(!is.null(min_prop)){
+      
+      min_count = min(cell_counts)
+    max_cell = floor(min(cell_counts)/min_prop)
+    if(max_cell&lt;sum(cell_counts)){
+      
+      to_rm = sum(cell_counts) - max_cell
+      for(j in 1:length(cell_counts)){
+        rm.celltype = names(cell_counts)[which.max(cell_counts)]
+        candidate.rm.idx = which(data.obj[,idx.temp]$cell_type==rm.celltype)
+        if(to_rm&gt;(max(cell_counts)-min_count)){
+          idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),max(cell_counts)-min_count)]]
+          to_rm = to_rm - max(cell_counts) + min_count
+          cell_counts = table(data.obj$cell_type[idx.temp])
+        }else{
+          idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),to_rm)]]
+          cell_counts = table(data.obj$cell_type[idx.temp])
+          break
+        }
+        
+      }
+      # while (to_rm&gt;0&amp;max(cell_counts)&gt;(max_cell*min_prop)) {
+      #   rm.celltype = names(cell_counts)[which.max(cell_counts)]
+      #   candidate.rm.idx = which(data.obj[,idx.temp]$cell_type==rm.celltype)
+      #   idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),1)]]
+      #   cell_counts = table(data.obj$cell_type[idx.temp])
+      #   to_rm = to_rm - 1
+      # }
+    }
+    
+    }
+    
+    
+    cell_prop = cell_counts/sum(cell_counts)
+    bulk_prop = rbind(bulk_prop,cell_prop)
+    bulk_ncell = rbind(bulk_ncell,cell_counts)
+    bulk_counts[,i] = rowSums(counts(data.obj)[,idx.temp])
+    #col_condition[i] = (data.obj$disease[which(data.obj$individual==indis[i])])[1]
+    # bulk_prop[i,] = 
+  }
+  colnames(bulk_counts) = indis
+  rownames(bulk_counts) = rownames(data.obj)
+  rownames(bulk_ncell) = indis
+  rownames(bulk_prop) = indis
+  #ii = which(data.obj$individual%in%indis&amp;data.obj$cell_type%in%cell_types)
+  #bulk_prop = table(data.obj$individual[ii],data.obj$cell_type[ii])
+  #bulk_prop = bulk_prop/rowSums(bulk_prop)
+  coldata = DataFrame(individual = indis)
+  out = create_sce_from_counts(bulk_counts,coldata)
+  return(list(bulk = out,bulk_prop = bulk_prop,bulk_ncell=bulk_ncell))
+}
+
+summary_real = function(out,true_b){
+  
+  # compare fitted vs true
+  b_hat = t(out$beta_hat)
+  rownames(b_hat) = rownames(true_b)
+  colnames(b_hat) = colnames(true_b)
+  print(knitr::kable(
+  list(t0 = round(b_hat,2), t1 = round(true_b,2)),
+  caption = &#39;estimated vs true beta&#39;,
+  booktabs = TRUE, valign = &#39;t&#39;))
+  
+  
+  ci_length = t(round(out$beta_se,2))
+  colnames(ci_length) = colnames(true_b)
+  rownames(ci_length) = rownames(true_b)
+  print(knitr::kable(ci_length,caption = &#39;beta hat se&#39;))
+  
+  # summary statistics
+  rmse = sqrt(mean((t(out$beta_hat)-true_b)^2))
+  mad = mean(abs(t(out$beta_hat)-true_b))
+  r2 = cor(c(t(out$beta_hat)),c(true_b))
+  ss = rbind(c(rmse,mad,r2))
+  colnames(ss) = c(&#39;rmse&#39;,&#39;mad&#39;,&#39;r2&#39;)
+  rownames(ss) = NULL
+  
+  print(knitr::kable(ss,caption=&#39;error measure&#39;))
+  
+  # coverage, length of CI
+  ci = build_ci(out)
+  coverage = c(true_b&gt;=t(ci$ci_l))&amp;(true_b&lt;=t(ci$ci_r))
+  
+  print(knitr::kable(coverage,caption=&#39;coverage&#39;))
+
+  # two group test
+  
+  # groups = c(rep(1,3),rep(2,6))
+  # g1 = which(groups==1)
+  # g2 = which(groups==2)
+  # test2 = two_group_test(out,groups)
+  # 
+  # test_out = rbind(round(colMeans(true_b[g1,]) - colMeans(true_b[g2,]),3),
+  #                  round(test2$diff_group,3),
+  #                  round(sqrt(diag(test2$V_tilde)),3),
+  #                  round(test2$p_value,3))
+  # rownames(test_out) = c(&#39;true diff&#39;,&#39;estimated diff&#39;,&#39;se&#39;,&#39;p value&#39;)
+  # print(knitr::kable(test_out,caption= &#39; two group test&#39;))
+  
+}
+
+music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples, 
+    select.ct = NULL, cell_size = NULL, ct.cov = FALSE, verbose = TRUE, 
+    iter.max = 1000, nu = 1e-04, eps = 0.01, centered = FALSE, 
+    normalize = FALSE, ...) 
+{
+    bulk.gene = rownames(bulk.eset)[rowMeans(exprs(bulk.eset)) != 
+        0]
+    bulk.eset = bulk.eset[bulk.gene, , drop = FALSE]
+    if (is.null(markers)) {
+        sc.markers = bulk.gene
+    }
+    else {
+        sc.markers = intersect(bulk.gene, unlist(markers))
+    }
+    sc.basis = music_basis(sc.eset, non.zero = TRUE, markers = sc.markers, 
+        clusters = clusters, samples = samples, select.ct = select.ct, 
+        cell_size = cell_size, ct.cov = ct.cov, verbose = verbose)
+    cm.gene = intersect(rownames(sc.basis$Disgn.mtx), bulk.gene)
+    if (is.null(markers)) {
+        if (length(cm.gene) &lt; 0.2 * min(length(bulk.gene), nrow(sc.eset))) 
+            stop(&quot;Too few common genes!&quot;)
+    }
+    else {
+        if (length(cm.gene) &lt; 0.2 * length(unlist(markers))) 
+            stop(&quot;Too few common genes!&quot;)
+    }
+    if (verbose) {
+        message(paste(&quot;Used&quot;, length(cm.gene), &quot;common genes...&quot;))
+    }
+    m.sc = match(cm.gene, rownames(sc.basis$Disgn.mtx))
+    m.bulk = match(cm.gene, bulk.gene)
+    D1 = sc.basis$Disgn.mtx[m.sc, ]
+    M.S = colMeans(sc.basis$S, na.rm = T)
+    if (!is.null(cell_size)) {
+        if (!is.data.frame(cell_size)) {
+            stop(&quot;cell_size paramter should be a data.frame with 1st column for cell type names and 2nd column for cell sizes&quot;)
+        }
+        else if (sum(names(M.S) %in% cell_size[, 1]) != length(names(M.S))) {
+            stop(&quot;Cell type names in cell_size must match clusters&quot;)
+        }
+        else if (any(is.na(as.numeric(cell_size[, 2])))) {
+            stop(&quot;Cell sizes should all be numeric&quot;)
+        }
+        my_ms_names &lt;- names(M.S)
+        cell_size &lt;- cell_size[my_ms_names %in% cell_size[, 1], 
+            ]
+        M.S &lt;- cell_size[match(my_ms_names, cell_size[, 1]), 
+            ]
+        M.S &lt;- M.S[, 2]
+        names(M.S) &lt;- my_ms_names
+    }
+    Yjg = relative.ab(exprs(bulk.eset)[m.bulk, ])
+    N.bulk = ncol(bulk.eset)
+    if (ct.cov) {
+        Sigma.ct = sc.basis$Sigma.ct[, m.sc]
+        if (sum(Yjg[, i] == 0) &gt; 0) {
+            D1.temp = D1[Yjg[, i] != 0, ]
+            Yjg.temp = Yjg[Yjg[, i] != 0, i]
+            Sigma.ct.temp = Sigma.ct[, Yjg[, i] != 0]
+            if (verbose) 
+                message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                  sum(Yjg[, i] != 0), &quot;...&quot;))
+        }
+        else {
+            D1.temp = D1
+            Yjg.temp = Yjg[, i]
+            Sigma.ct.temp = Sigma.ct
+            if (verbose) 
+                message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                  sum(Yjg[, i] != 0), &quot;...&quot;))
+        }
+        lm.D1.weighted = music.iter.ct(Yjg.temp, D1.temp, M.S, 
+            Sigma.ct.temp, iter.max = iter.max, nu = nu, eps = eps, 
+            centered = centered, normalize = normalize)
+        Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+        Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+        weight.gene.temp = rep(NA, nrow(Yjg))
+        weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+        Weight.gene = cbind(Weight.gene, weight.gene.temp)
+        r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+        Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+    }
+    else {
+        Sigma = sc.basis$Sigma[m.sc, ]
+        valid.ct = (colSums(is.na(Sigma)) == 0) &amp; (colSums(is.na(D1)) == 
+            0) &amp; (!is.na(M.S))
+        if (sum(valid.ct) &lt;= 1) {
+            stop(&quot;Not enough valid cell type!&quot;)
+        }
+        if (verbose) {
+            message(paste(&quot;Used&quot;, sum(valid.ct), &quot;cell types in deconvolution...&quot;))
+        }
+        D1 = D1[, valid.ct]
+        M.S = M.S[valid.ct]
+        D1 = D1/M.S[1]
+        M.S = M.S/M.S[1]
+        
+        Sigma = Sigma[, valid.ct]
+        Est.prop.allgene = NULL
+        Est.prop.weighted = NULL
+        Weight.gene = NULL
+        r.squared.full = NULL
+        Var.prop = NULL
+        for (i in 1:N.bulk) {
+            if (sum(Yjg[, i] == 0) &gt; 0) {
+                D1.temp = D1[Yjg[, i] != 0, ]
+                Yjg.temp = Yjg[Yjg[, i] != 0, i]
+                Sigma.temp = Sigma[Yjg[, i] != 0, ]
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                    sum(Yjg[, i] != 0), &quot;...&quot;))
+            }
+            else {
+                D1.temp = D1
+                Yjg.temp = Yjg[, i]
+                Sigma.temp = Sigma
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], &quot;has common genes&quot;, 
+                    sum(Yjg[, i] != 0), &quot;...&quot;))
+            }
+            lm.D1.weighted = music.iter(Yjg.temp, D1.temp, M.S, 
+                Sigma.temp, iter.max = iter.max, nu = nu, eps = eps, 
+                centered = centered, normalize = normalize)
+            Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+            Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+            weight.gene.temp = rep(NA, nrow(Yjg))
+            weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+            Weight.gene = cbind(Weight.gene, weight.gene.temp)
+            r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+            Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+        }
+    }
+    colnames(Est.prop.weighted) = colnames(D1)
+    rownames(Est.prop.weighted) = colnames(Yjg)
+    colnames(Est.prop.allgene) = colnames(D1)
+    rownames(Est.prop.allgene) = colnames(Yjg)
+    names(r.squared.full) = colnames(Yjg)
+    colnames(Weight.gene) = colnames(Yjg)
+    rownames(Weight.gene) = cm.gene
+    colnames(Var.prop) = colnames(D1)
+    rownames(Var.prop) = colnames(Yjg)
+    return(list(Est.prop.weighted = Est.prop.weighted, Est.prop.allgene = Est.prop.allgene, 
+        Weight.gene = Weight.gene, r.squared.full = r.squared.full, 
+        Var.prop = Var.prop,X=D1,S=M.S))
+}</code></pre>
+</div>
+<div id="xin-as-bulk-seger-as-reference" class="section level2">
+<h2>Xin as bulk, Seger as reference</h2>
+<p>run music</p>
+<p>randomly select 3000 common genes, mainly for speed purpose</p>
+<pre class="r"><code>XinT2D.eset &lt;- readRDS(&quot;data/MuSiC/XinT2Deset.rds&quot;)
+XinT2D.construct.full = bulk_construct(XinT2D.eset, clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;)
+XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+pheno_Data = data.frame(cellType = seger$cell_type,SubjectName = seger$individual)
+rownames(pheno_Data) = colnames(seger)
+seger.ref = ExpressionSet(assayData = counts(seger),phenoData = AnnotatedDataFrame(pheno_Data))
+
+round(XinT2D.construct.full$prop.real,2)</code></pre>
+<pre><code>           alpha beta delta gamma
+Non T2D 1   0.72 0.18  0.07  0.04
+Non T2D 2   0.17 0.54  0.08  0.21
+Non T2D 3   0.64 0.24  0.07  0.05
+Non T2D 4   0.52 0.37  0.00  0.11
+Non T2D 5   0.44 0.42  0.10  0.04
+Non T2D 6   0.75 0.15  0.08  0.02
+Non T2D 7   0.30 0.56  0.00  0.15
+Non T2D 8   0.33 0.38  0.07  0.21
+Non T2D 9   0.70 0.19  0.03  0.08
+Non T2D 10  0.42 0.53  0.05  0.00
+Non T2D 11  0.80 0.17  0.02  0.02
+Non T2D 12  0.63 0.36  0.01  0.00
+T2D 1       0.43 0.14  0.03  0.40
+T2D 2       0.60 0.22  0.06  0.12
+T2D 3       0.48 0.43  0.03  0.05
+T2D 4       0.49 0.48  0.02  0.01
+T2D 5       0.92 0.07  0.01  0.01
+T2D 6       0.60 0.37  0.02  0.00</code></pre>
+<pre class="r"><code>set.seed(12)
+cm.gene = intersect(rownames(seger.ref),rownames(XinT2D.construct.full$Bulk.counts))
+cm.gene = cm.gene[sample(1:length(cm.gene),3000)]
+g.bulk = match(cm.gene,rownames(XinT2D.construct.full$Bulk.counts))
+g.ref = match(cm.gene,rownames(seger.ref))
+Est.prop.xin = music_prop(XinT2D.construct.full$Bulk.counts[g.bulk,],seger.ref[g.ref,],clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;, 
+                          select.ct =  c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;))</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 2307 common genes...</code></pre>
+<pre><code>Used 4 cell types in deconvolution...</code></pre>
+<pre><code>Non T2D 1 has common genes 1887 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 1610 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 1705 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 1685 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 1833 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 1750 ...</code></pre>
+<pre><code>Non T2D 7 has common genes 1640 ...</code></pre>
+<pre><code>Non T2D 8 has common genes 1726 ...</code></pre>
+<pre><code>Non T2D 9 has common genes 1747 ...</code></pre>
+<pre><code>Non T2D 10 has common genes 1843 ...</code></pre>
+<pre><code>Non T2D 11 has common genes 1772 ...</code></pre>
+<pre><code>Non T2D 12 has common genes 1967 ...</code></pre>
+<pre><code>T2D 1 has common genes 1881 ...</code></pre>
+<pre><code>T2D 2 has common genes 1917 ...</code></pre>
+<pre><code>T2D 3 has common genes 1777 ...</code></pre>
+<pre><code>T2D 4 has common genes 2049 ...</code></pre>
+<pre><code>T2D 5 has common genes 2001 ...</code></pre>
+<pre><code>T2D 6 has common genes 1978 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(Est.prop.xin$Est.prop.weighted), 
+                           data.matrix(Est.prop.xin$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD       R
+MuSiC 0.39404 0.29105 -0.1299
+NNLS  0.51275 0.39661 -0.2262</code></pre>
+<pre class="r"><code>round(Est.prop.xin$Est.prop.weighted,2)</code></pre>
+<pre><code>           alpha beta delta gamma
+Non T2D 1   0.02 0.45  0.00  0.54
+Non T2D 2   0.00 0.67  0.00  0.33
+Non T2D 3   0.06 0.22  0.00  0.72
+Non T2D 4   0.11 0.66  0.00  0.24
+Non T2D 5   0.19 0.68  0.14  0.00
+Non T2D 6   0.13 0.23  0.01  0.62
+Non T2D 7   0.04 0.65  0.00  0.31
+Non T2D 8   0.00 0.25  0.00  0.75
+Non T2D 9   0.00 0.18  0.00  0.82
+Non T2D 10  0.03 0.30  0.00  0.67
+Non T2D 11  0.05 0.13  0.00  0.82
+Non T2D 12  0.00 0.46  0.00  0.54
+T2D 1       0.02 0.14  0.00  0.84
+T2D 2       0.08 0.25  0.00  0.68
+T2D 3       0.14 0.19  0.00  0.67
+T2D 4       0.00 0.39  0.00  0.61
+T2D 5       0.10 0.12  0.00  0.79
+T2D 6       0.00 0.33  0.00  0.67</code></pre>
+<pre class="r"><code>set.seed(2)
+cm.gene = intersect(rownames(seger.ref),rownames(XinT2D.construct.full$Bulk.counts))
+cm.gene = cm.gene[sample(1:length(cm.gene),3000)]
+g.bulk = match(cm.gene,rownames(XinT2D.construct.full$Bulk.counts))
+g.ref = match(cm.gene,rownames(seger.ref))
+Est.prop.xin = music_prop(XinT2D.construct.full$Bulk.counts[g.bulk,],seger.ref[g.ref,],clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;, 
+                          select.ct =  c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;))</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 2322 common genes...</code></pre>
+<pre><code>Used 4 cell types in deconvolution...</code></pre>
+<pre><code>Non T2D 1 has common genes 1939 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 1631 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 1740 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 1715 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 1866 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 1787 ...</code></pre>
+<pre><code>Non T2D 7 has common genes 1660 ...</code></pre>
+<pre><code>Non T2D 8 has common genes 1748 ...</code></pre>
+<pre><code>Non T2D 9 has common genes 1770 ...</code></pre>
+<pre><code>Non T2D 10 has common genes 1854 ...</code></pre>
+<pre><code>Non T2D 11 has common genes 1819 ...</code></pre>
+<pre><code>Non T2D 12 has common genes 1963 ...</code></pre>
+<pre><code>T2D 1 has common genes 1892 ...</code></pre>
+<pre><code>T2D 2 has common genes 1917 ...</code></pre>
+<pre><code>T2D 3 has common genes 1839 ...</code></pre>
+<pre><code>T2D 4 has common genes 2077 ...</code></pre>
+<pre><code>T2D 5 has common genes 2042 ...</code></pre>
+<pre><code>T2D 6 has common genes 2001 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(Est.prop.xin$Est.prop.weighted), 
+                           data.matrix(Est.prop.xin$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD      R
+MuSiC 0.13304 0.10341 0.8387
+NNLS  0.22125 0.16702 0.6464</code></pre>
+<pre class="r"><code>rmse = function(x,y){sqrt(mean((x-y)^2))}
+
+round(Est.prop.xin$Est.prop.weighted,2)</code></pre>
+<pre><code>           alpha beta delta gamma
+Non T2D 1   0.56 0.29  0.14  0.01
+Non T2D 2   0.16 0.43  0.37  0.03
+Non T2D 3   0.57 0.25  0.16  0.02
+Non T2D 4   0.35 0.40  0.15  0.10
+Non T2D 5   0.15 0.53  0.30  0.02
+Non T2D 6   0.63 0.19  0.17  0.00
+Non T2D 7   0.19 0.48  0.22  0.11
+Non T2D 8   0.17 0.37  0.40  0.07
+Non T2D 9   0.58 0.14  0.20  0.08
+Non T2D 10  0.33 0.51  0.16  0.00
+Non T2D 11  0.56 0.20  0.24  0.00
+Non T2D 12  0.44 0.45  0.10  0.00
+T2D 1       0.29 0.30  0.23  0.18
+T2D 2       0.58 0.24  0.15  0.03
+T2D 3       0.43 0.25  0.29  0.03
+T2D 4       0.31 0.45  0.24  0.00
+T2D 5       0.86 0.03  0.11  0.00
+T2D 6       0.41 0.36  0.23  0.00</code></pre>
+<p>run deconference</p>
+<p>weight = 1</p>
+<pre class="r"><code>source(&#39;code/deconference_main.R&#39;)
+datax = set_data_decon(exprs(XinT2D.construct.full$Bulk.counts),seger,marker_gene = rownames(Est.prop.xin$Weight.gene),cell_types = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;), gene_thresh = 0,max_count_quantile = 1,w=1)
+out1 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;smooth&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 18</code></pre>
+<pre><code>covaraince 2 to 18</code></pre>
+<pre><code>covaraince 3 to 18</code></pre>
+<pre><code>covaraince 4 to 18</code></pre>
+<pre><code>covaraince 5 to 18</code></pre>
+<pre><code>covaraince 6 to 18</code></pre>
+<pre><code>covaraince 7 to 18</code></pre>
+<pre><code>covaraince 8 to 18</code></pre>
+<pre><code>covaraince 9 to 18</code></pre>
+<pre><code>covaraince 10 to 18</code></pre>
+<pre><code>covaraince 11 to 18</code></pre>
+<pre><code>covaraince 12 to 18</code></pre>
+<pre><code>covaraince 13 to 18</code></pre>
+<pre><code>covaraince 14 to 18</code></pre>
+<pre><code>covaraince 15 to 18</code></pre>
+<pre><code>covaraince 16 to 18</code></pre>
+<pre><code>covaraince 17 to 18</code></pre>
+<pre><code>covaraince 18 to 18</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out1,as.matrix(XinT2D.construct.full$prop.real))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.89</td>
+<td align="right">0.10</td>
+<td align="right">0.00</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.48</td>
+<td align="right">0.23</td>
+<td align="right">0.26</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.85</td>
+<td align="right">0.00</td>
+<td align="right">0.13</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.71</td>
+<td align="right">0.00</td>
+<td align="right">0.20</td>
+<td align="right">0.09</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.04</td>
+<td align="right">0.27</td>
+<td align="right">0.66</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.66</td>
+<td align="right">0.00</td>
+<td align="right">0.34</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.29</td>
+<td align="right">0.41</td>
+<td align="right">0.19</td>
+<td align="right">0.12</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.40</td>
+<td align="right">0.02</td>
+<td align="right">0.52</td>
+<td align="right">0.06</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.78</td>
+<td align="right">0.00</td>
+<td align="right">0.15</td>
+<td align="right">0.06</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.41</td>
+<td align="right">0.32</td>
+<td align="right">0.27</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.61</td>
+<td align="right">0.00</td>
+<td align="right">0.39</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.55</td>
+<td align="right">0.32</td>
+<td align="right">0.13</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.42</td>
+<td align="right">0.00</td>
+<td align="right">0.41</td>
+<td align="right">0.17</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.80</td>
+<td align="right">0.00</td>
+<td align="right">0.18</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.46</td>
+<td align="right">0.13</td>
+<td align="right">0.38</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.56</td>
+<td align="right">0.13</td>
+<td align="right">0.30</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.76</td>
+<td align="right">0.00</td>
+<td align="right">0.24</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.69</td>
+<td align="right">0.18</td>
+<td align="right">0.13</td>
+<td align="right">0.00</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.72</td>
+<td align="right">0.18</td>
+<td align="right">0.07</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.17</td>
+<td align="right">0.54</td>
+<td align="right">0.08</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.64</td>
+<td align="right">0.24</td>
+<td align="right">0.07</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.52</td>
+<td align="right">0.37</td>
+<td align="right">0.00</td>
+<td align="right">0.11</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.44</td>
+<td align="right">0.42</td>
+<td align="right">0.10</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.75</td>
+<td align="right">0.15</td>
+<td align="right">0.08</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.30</td>
+<td align="right">0.56</td>
+<td align="right">0.00</td>
+<td align="right">0.15</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.33</td>
+<td align="right">0.38</td>
+<td align="right">0.07</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.70</td>
+<td align="right">0.19</td>
+<td align="right">0.03</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.42</td>
+<td align="right">0.53</td>
+<td align="right">0.05</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.80</td>
+<td align="right">0.17</td>
+<td align="right">0.02</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.63</td>
+<td align="right">0.36</td>
+<td align="right">0.01</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.43</td>
+<td align="right">0.14</td>
+<td align="right">0.03</td>
+<td align="right">0.40</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.60</td>
+<td align="right">0.22</td>
+<td align="right">0.06</td>
+<td align="right">0.12</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.48</td>
+<td align="right">0.43</td>
+<td align="right">0.03</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.49</td>
+<td align="right">0.48</td>
+<td align="right">0.02</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.92</td>
+<td align="right">0.07</td>
+<td align="right">0.01</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.60</td>
+<td align="right">0.37</td>
+<td align="right">0.02</td>
+<td align="right">0.00</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.70</td>
+<td align="right">2.22</td>
+<td align="right">2.73</td>
+<td align="right">0.06</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.75</td>
+<td align="right">2.29</td>
+<td align="right">2.82</td>
+<td align="right">0.44</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.78</td>
+<td align="right">2.53</td>
+<td align="right">3.10</td>
+<td align="right">0.27</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.84</td>
+<td align="right">2.37</td>
+<td align="right">2.89</td>
+<td align="right">1.17</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.59</td>
+<td align="right">2.57</td>
+<td align="right">3.12</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.52</td>
+<td align="right">1.32</td>
+<td align="right">1.65</td>
+<td align="right">0.09</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.98</td>
+<td align="right">4.16</td>
+<td align="right">5.00</td>
+<td align="right">1.49</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.68</td>
+<td align="right">2.22</td>
+<td align="right">2.72</td>
+<td align="right">0.84</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.70</td>
+<td align="right">1.65</td>
+<td align="right">2.05</td>
+<td align="right">0.80</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.89</td>
+<td align="right">3.75</td>
+<td align="right">4.56</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.57</td>
+<td align="right">0.94</td>
+<td align="right">1.26</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.71</td>
+<td align="right">2.96</td>
+<td align="right">3.59</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.80</td>
+<td align="right">2.09</td>
+<td align="right">2.47</td>
+<td align="right">2.27</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.59</td>
+<td align="right">1.31</td>
+<td align="right">1.67</td>
+<td align="right">0.28</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.82</td>
+<td align="right">3.18</td>
+<td align="right">3.87</td>
+<td align="right">0.36</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.68</td>
+<td align="right">2.39</td>
+<td align="right">2.90</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.44</td>
+<td align="right">0.71</td>
+<td align="right">0.97</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.82</td>
+<td align="right">3.32</td>
+<td align="right">4.02</td>
+<td align="right">0.03</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.2011243</td>
+<td align="right">0.155381</td>
+<td align="right">0.6747292</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">delta</th>
+<th align="left">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>out2 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;local&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 18</code></pre>
+<pre><code>covaraince 2 to 18</code></pre>
+<pre><code>covaraince 3 to 18</code></pre>
+<pre><code>covaraince 4 to 18</code></pre>
+<pre><code>covaraince 5 to 18</code></pre>
+<pre><code>covaraince 6 to 18</code></pre>
+<pre><code>covaraince 7 to 18</code></pre>
+<pre><code>covaraince 8 to 18</code></pre>
+<pre><code>covaraince 9 to 18</code></pre>
+<pre><code>covaraince 10 to 18</code></pre>
+<pre><code>covaraince 11 to 18</code></pre>
+<pre><code>covaraince 12 to 18</code></pre>
+<pre><code>covaraince 13 to 18</code></pre>
+<pre><code>covaraince 14 to 18</code></pre>
+<pre><code>covaraince 15 to 18</code></pre>
+<pre><code>covaraince 16 to 18</code></pre>
+<pre><code>covaraince 17 to 18</code></pre>
+<pre><code>covaraince 18 to 18</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out2,as.matrix(XinT2D.construct.full$prop.real))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.86</td>
+<td align="right">0.13</td>
+<td align="right">0.00</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.51</td>
+<td align="right">0.32</td>
+<td align="right">0.14</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.91</td>
+<td align="right">0.01</td>
+<td align="right">0.06</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.75</td>
+<td align="right">0.00</td>
+<td align="right">0.16</td>
+<td align="right">0.10</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.06</td>
+<td align="right">0.31</td>
+<td align="right">0.60</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.71</td>
+<td align="right">0.00</td>
+<td align="right">0.29</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.31</td>
+<td align="right">0.49</td>
+<td align="right">0.08</td>
+<td align="right">0.12</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.42</td>
+<td align="right">0.11</td>
+<td align="right">0.41</td>
+<td align="right">0.06</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.85</td>
+<td align="right">0.00</td>
+<td align="right">0.08</td>
+<td align="right">0.07</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.44</td>
+<td align="right">0.44</td>
+<td align="right">0.12</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.68</td>
+<td align="right">0.00</td>
+<td align="right">0.31</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.57</td>
+<td align="right">0.43</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.46</td>
+<td align="right">0.00</td>
+<td align="right">0.36</td>
+<td align="right">0.18</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.85</td>
+<td align="right">0.00</td>
+<td align="right">0.13</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.50</td>
+<td align="right">0.30</td>
+<td align="right">0.17</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.59</td>
+<td align="right">0.24</td>
+<td align="right">0.16</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.82</td>
+<td align="right">0.00</td>
+<td align="right">0.18</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.71</td>
+<td align="right">0.29</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.72</td>
+<td align="right">0.18</td>
+<td align="right">0.07</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.17</td>
+<td align="right">0.54</td>
+<td align="right">0.08</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.64</td>
+<td align="right">0.24</td>
+<td align="right">0.07</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.52</td>
+<td align="right">0.37</td>
+<td align="right">0.00</td>
+<td align="right">0.11</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.44</td>
+<td align="right">0.42</td>
+<td align="right">0.10</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.75</td>
+<td align="right">0.15</td>
+<td align="right">0.08</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.30</td>
+<td align="right">0.56</td>
+<td align="right">0.00</td>
+<td align="right">0.15</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.33</td>
+<td align="right">0.38</td>
+<td align="right">0.07</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.70</td>
+<td align="right">0.19</td>
+<td align="right">0.03</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.42</td>
+<td align="right">0.53</td>
+<td align="right">0.05</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.80</td>
+<td align="right">0.17</td>
+<td align="right">0.02</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.63</td>
+<td align="right">0.36</td>
+<td align="right">0.01</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.43</td>
+<td align="right">0.14</td>
+<td align="right">0.03</td>
+<td align="right">0.40</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.60</td>
+<td align="right">0.22</td>
+<td align="right">0.06</td>
+<td align="right">0.12</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.48</td>
+<td align="right">0.43</td>
+<td align="right">0.03</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.49</td>
+<td align="right">0.48</td>
+<td align="right">0.02</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.92</td>
+<td align="right">0.07</td>
+<td align="right">0.01</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.60</td>
+<td align="right">0.37</td>
+<td align="right">0.02</td>
+<td align="right">0.00</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.68</td>
+<td align="right">2.38</td>
+<td align="right">2.88</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.81</td>
+<td align="right">2.76</td>
+<td align="right">3.36</td>
+<td align="right">0.42</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.86</td>
+<td align="right">3.02</td>
+<td align="right">3.65</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.91</td>
+<td align="right">2.73</td>
+<td align="right">3.28</td>
+<td align="right">1.19</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.64</td>
+<td align="right">2.89</td>
+<td align="right">3.49</td>
+<td align="right">0.18</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.58</td>
+<td align="right">1.63</td>
+<td align="right">2.01</td>
+<td align="right">0.11</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">1.09</td>
+<td align="right">4.74</td>
+<td align="right">5.67</td>
+<td align="right">1.48</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.75</td>
+<td align="right">2.71</td>
+<td align="right">3.28</td>
+<td align="right">0.83</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.78</td>
+<td align="right">2.10</td>
+<td align="right">2.55</td>
+<td align="right">0.84</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.98</td>
+<td align="right">4.42</td>
+<td align="right">5.34</td>
+<td align="right">0.12</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.66</td>
+<td align="right">1.38</td>
+<td align="right">1.75</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.79</td>
+<td align="right">3.55</td>
+<td align="right">4.26</td>
+<td align="right">0.07</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.95</td>
+<td align="right">2.58</td>
+<td align="right">2.99</td>
+<td align="right">2.44</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.63</td>
+<td align="right">1.59</td>
+<td align="right">1.98</td>
+<td align="right">0.27</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.94</td>
+<td align="right">4.05</td>
+<td align="right">4.88</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.76</td>
+<td align="right">2.96</td>
+<td align="right">3.56</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.50</td>
+<td align="right">1.02</td>
+<td align="right">1.31</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.89</td>
+<td align="right">3.89</td>
+<td align="right">4.66</td>
+<td align="right">0.07</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.1659854</td>
+<td align="right">0.1237385</td>
+<td align="right">0.7958798</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">delta</th>
+<th align="left">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<p>compare estimated cell size</p>
+<pre class="r"><code>round(Est.prop.xin$S,2)</code></pre>
+<pre><code>alpha  beta delta gamma 
+ 1.00  0.87  0.80  2.32 </code></pre>
+<pre class="r"><code>round(out1$input$S,2)</code></pre>
+<pre><code>alpha  beta delta gamma 
+ 1.00  0.87  0.84  2.47 </code></pre>
+<p>now try use weights from music. note that music uses different weights for each individual in bulk sample, so we take the mean of all weights for each gene.</p>
+<pre class="r"><code>w = Est.prop.xin$Weight.gene
+w = apply(w,2,function(z){z/sum(z,na.rm = T)})
+w = rowMeans(w,na.rm = T)
+datax = set_data_decon(exprs(XinT2D.construct.full$Bulk.counts),seger,marker_gene = rownames(Est.prop.xin$Weight.gene),cell_types = c(&#39;alpha&#39;, &#39;beta&#39;, &#39;delta&#39;, &#39;gamma&#39;), gene_thresh = 0,max_count_quantile = 1,w=w)
+out3 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;smooth&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 18</code></pre>
+<pre><code>covaraince 2 to 18</code></pre>
+<pre><code>covaraince 3 to 18</code></pre>
+<pre><code>covaraince 4 to 18</code></pre>
+<pre><code>covaraince 5 to 18</code></pre>
+<pre><code>covaraince 6 to 18</code></pre>
+<pre><code>covaraince 7 to 18</code></pre>
+<pre><code>covaraince 8 to 18</code></pre>
+<pre><code>covaraince 9 to 18</code></pre>
+<pre><code>covaraince 10 to 18</code></pre>
+<pre><code>covaraince 11 to 18</code></pre>
+<pre><code>covaraince 12 to 18</code></pre>
+<pre><code>covaraince 13 to 18</code></pre>
+<pre><code>covaraince 14 to 18</code></pre>
+<pre><code>covaraince 15 to 18</code></pre>
+<pre><code>covaraince 16 to 18</code></pre>
+<pre><code>covaraince 17 to 18</code></pre>
+<pre><code>covaraince 18 to 18</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out3,as.matrix(XinT2D.construct.full$prop.real))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.49</td>
+<td align="right">0.43</td>
+<td align="right">0.07</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.10</td>
+<td align="right">0.45</td>
+<td align="right">0.43</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.47</td>
+<td align="right">0.35</td>
+<td align="right">0.16</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.28</td>
+<td align="right">0.64</td>
+<td align="right">0.00</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.15</td>
+<td align="right">0.56</td>
+<td align="right">0.27</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.55</td>
+<td align="right">0.21</td>
+<td align="right">0.24</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.13</td>
+<td align="right">0.65</td>
+<td align="right">0.12</td>
+<td align="right">0.09</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.14</td>
+<td align="right">0.33</td>
+<td align="right">0.47</td>
+<td align="right">0.06</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.52</td>
+<td align="right">0.21</td>
+<td align="right">0.19</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.26</td>
+<td align="right">0.43</td>
+<td align="right">0.31</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.47</td>
+<td align="right">0.20</td>
+<td align="right">0.32</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.37</td>
+<td align="right">0.51</td>
+<td align="right">0.12</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.25</td>
+<td align="right">0.24</td>
+<td align="right">0.35</td>
+<td align="right">0.16</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.48</td>
+<td align="right">0.26</td>
+<td align="right">0.23</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.36</td>
+<td align="right">0.30</td>
+<td align="right">0.31</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.28</td>
+<td align="right">0.55</td>
+<td align="right">0.17</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.76</td>
+<td align="right">0.02</td>
+<td align="right">0.23</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.39</td>
+<td align="right">0.52</td>
+<td align="right">0.09</td>
+<td align="right">0.00</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.72</td>
+<td align="right">0.18</td>
+<td align="right">0.07</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.17</td>
+<td align="right">0.54</td>
+<td align="right">0.08</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.64</td>
+<td align="right">0.24</td>
+<td align="right">0.07</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.52</td>
+<td align="right">0.37</td>
+<td align="right">0.00</td>
+<td align="right">0.11</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.44</td>
+<td align="right">0.42</td>
+<td align="right">0.10</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.75</td>
+<td align="right">0.15</td>
+<td align="right">0.08</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.30</td>
+<td align="right">0.56</td>
+<td align="right">0.00</td>
+<td align="right">0.15</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.33</td>
+<td align="right">0.38</td>
+<td align="right">0.07</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.70</td>
+<td align="right">0.19</td>
+<td align="right">0.03</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.42</td>
+<td align="right">0.53</td>
+<td align="right">0.05</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.80</td>
+<td align="right">0.17</td>
+<td align="right">0.02</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.63</td>
+<td align="right">0.36</td>
+<td align="right">0.01</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.43</td>
+<td align="right">0.14</td>
+<td align="right">0.03</td>
+<td align="right">0.40</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.60</td>
+<td align="right">0.22</td>
+<td align="right">0.06</td>
+<td align="right">0.12</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.48</td>
+<td align="right">0.43</td>
+<td align="right">0.03</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.49</td>
+<td align="right">0.48</td>
+<td align="right">0.02</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.92</td>
+<td align="right">0.07</td>
+<td align="right">0.01</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.60</td>
+<td align="right">0.37</td>
+<td align="right">0.02</td>
+<td align="right">0.00</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.41</td>
+<td align="right">0.15</td>
+<td align="right">0.82</td>
+<td align="right">1.23</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">1.09</td>
+<td align="right">0.16</td>
+<td align="right">2.09</td>
+<td align="right">3.29</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.27</td>
+<td align="right">0.10</td>
+<td align="right">0.57</td>
+<td align="right">0.86</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.41</td>
+<td align="right">0.13</td>
+<td align="right">0.85</td>
+<td align="right">1.27</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.12</td>
+<td align="right">0.08</td>
+<td align="right">0.24</td>
+<td align="right">0.35</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.11</td>
+<td align="right">0.12</td>
+<td align="right">0.20</td>
+<td align="right">0.28</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.54</td>
+<td align="right">0.10</td>
+<td align="right">1.08</td>
+<td align="right">1.66</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">1.12</td>
+<td align="right">0.17</td>
+<td align="right">2.16</td>
+<td align="right">3.42</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.59</td>
+<td align="right">0.15</td>
+<td align="right">1.25</td>
+<td align="right">1.93</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.36</td>
+<td align="right">0.12</td>
+<td align="right">0.71</td>
+<td align="right">1.08</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.40</td>
+<td align="right">0.16</td>
+<td align="right">0.79</td>
+<td align="right">1.21</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.42</td>
+<td align="right">0.09</td>
+<td align="right">0.88</td>
+<td align="right">1.34</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">1.84</td>
+<td align="right">0.29</td>
+<td align="right">3.67</td>
+<td align="right">5.78</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.68</td>
+<td align="right">0.14</td>
+<td align="right">1.42</td>
+<td align="right">2.18</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.63</td>
+<td align="right">0.14</td>
+<td align="right">1.28</td>
+<td align="right">1.99</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.46</td>
+<td align="right">0.11</td>
+<td align="right">0.93</td>
+<td align="right">1.42</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.38</td>
+<td align="right">0.13</td>
+<td align="right">0.83</td>
+<td align="right">1.27</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.28</td>
+<td align="right">0.10</td>
+<td align="right">0.59</td>
+<td align="right">0.88</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.1663925</td>
+<td align="right">0.1340092</td>
+<td align="right">0.7317788</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">delta</th>
+<th align="left">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>out4 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;local&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 18</code></pre>
+<pre><code>covaraince 2 to 18</code></pre>
+<pre><code>covaraince 3 to 18</code></pre>
+<pre><code>covaraince 4 to 18</code></pre>
+<pre><code>covaraince 5 to 18</code></pre>
+<pre><code>covaraince 6 to 18</code></pre>
+<pre><code>covaraince 7 to 18</code></pre>
+<pre><code>covaraince 8 to 18</code></pre>
+<pre><code>covaraince 9 to 18</code></pre>
+<pre><code>covaraince 10 to 18</code></pre>
+<pre><code>covaraince 11 to 18</code></pre>
+<pre><code>covaraince 12 to 18</code></pre>
+<pre><code>covaraince 13 to 18</code></pre>
+<pre><code>covaraince 14 to 18</code></pre>
+<pre><code>covaraince 15 to 18</code></pre>
+<pre><code>covaraince 16 to 18</code></pre>
+<pre><code>covaraince 17 to 18</code></pre>
+<pre><code>covaraince 18 to 18</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out4,as.matrix(XinT2D.construct.full$prop.real))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.49</td>
+<td align="right">0.43</td>
+<td align="right">0.07</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.10</td>
+<td align="right">0.48</td>
+<td align="right">0.39</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.47</td>
+<td align="right">0.35</td>
+<td align="right">0.16</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.28</td>
+<td align="right">0.64</td>
+<td align="right">0.00</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.16</td>
+<td align="right">0.58</td>
+<td align="right">0.24</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.56</td>
+<td align="right">0.21</td>
+<td align="right">0.23</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.13</td>
+<td align="right">0.68</td>
+<td align="right">0.09</td>
+<td align="right">0.09</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.14</td>
+<td align="right">0.35</td>
+<td align="right">0.45</td>
+<td align="right">0.06</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.52</td>
+<td align="right">0.22</td>
+<td align="right">0.18</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.26</td>
+<td align="right">0.45</td>
+<td align="right">0.29</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.47</td>
+<td align="right">0.22</td>
+<td align="right">0.31</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.37</td>
+<td align="right">0.52</td>
+<td align="right">0.12</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.26</td>
+<td align="right">0.27</td>
+<td align="right">0.32</td>
+<td align="right">0.16</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.49</td>
+<td align="right">0.27</td>
+<td align="right">0.22</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.35</td>
+<td align="right">0.31</td>
+<td align="right">0.31</td>
+<td align="right">0.03</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.28</td>
+<td align="right">0.57</td>
+<td align="right">0.15</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.76</td>
+<td align="right">0.02</td>
+<td align="right">0.22</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.39</td>
+<td align="right">0.53</td>
+<td align="right">0.08</td>
+<td align="right">0.00</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.72</td>
+<td align="right">0.18</td>
+<td align="right">0.07</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">0.17</td>
+<td align="right">0.54</td>
+<td align="right">0.08</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.64</td>
+<td align="right">0.24</td>
+<td align="right">0.07</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.52</td>
+<td align="right">0.37</td>
+<td align="right">0.00</td>
+<td align="right">0.11</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.44</td>
+<td align="right">0.42</td>
+<td align="right">0.10</td>
+<td align="right">0.04</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.75</td>
+<td align="right">0.15</td>
+<td align="right">0.08</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.30</td>
+<td align="right">0.56</td>
+<td align="right">0.00</td>
+<td align="right">0.15</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">0.33</td>
+<td align="right">0.38</td>
+<td align="right">0.07</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.70</td>
+<td align="right">0.19</td>
+<td align="right">0.03</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.42</td>
+<td align="right">0.53</td>
+<td align="right">0.05</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.80</td>
+<td align="right">0.17</td>
+<td align="right">0.02</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.63</td>
+<td align="right">0.36</td>
+<td align="right">0.01</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">0.43</td>
+<td align="right">0.14</td>
+<td align="right">0.03</td>
+<td align="right">0.40</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.60</td>
+<td align="right">0.22</td>
+<td align="right">0.06</td>
+<td align="right">0.12</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.48</td>
+<td align="right">0.43</td>
+<td align="right">0.03</td>
+<td align="right">0.05</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.49</td>
+<td align="right">0.48</td>
+<td align="right">0.02</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.92</td>
+<td align="right">0.07</td>
+<td align="right">0.01</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.60</td>
+<td align="right">0.37</td>
+<td align="right">0.02</td>
+<td align="right">0.00</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">delta</th>
+<th align="right">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="right">0.46</td>
+<td align="right">0.14</td>
+<td align="right">0.82</td>
+<td align="right">1.27</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="right">1.31</td>
+<td align="right">0.12</td>
+<td align="right">2.15</td>
+<td align="right">3.52</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="right">0.31</td>
+<td align="right">0.10</td>
+<td align="right">0.57</td>
+<td align="right">0.90</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="right">0.43</td>
+<td align="right">0.12</td>
+<td align="right">0.75</td>
+<td align="right">1.17</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="right">0.16</td>
+<td align="right">0.08</td>
+<td align="right">0.26</td>
+<td align="right">0.40</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="right">0.15</td>
+<td align="right">0.12</td>
+<td align="right">0.26</td>
+<td align="right">0.39</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="right">0.62</td>
+<td align="right">0.09</td>
+<td align="right">1.06</td>
+<td align="right">1.68</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="right">1.36</td>
+<td align="right">0.13</td>
+<td align="right">2.24</td>
+<td align="right">3.69</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="right">0.68</td>
+<td align="right">0.13</td>
+<td align="right">1.24</td>
+<td align="right">1.98</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="right">0.47</td>
+<td align="right">0.12</td>
+<td align="right">0.80</td>
+<td align="right">1.28</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="right">0.48</td>
+<td align="right">0.15</td>
+<td align="right">0.83</td>
+<td align="right">1.32</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="right">0.52</td>
+<td align="right">0.08</td>
+<td align="right">0.92</td>
+<td align="right">1.45</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="right">2.15</td>
+<td align="right">0.22</td>
+<td align="right">3.67</td>
+<td align="right">6.00</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="right">0.84</td>
+<td align="right">0.13</td>
+<td align="right">1.51</td>
+<td align="right">2.43</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="right">0.74</td>
+<td align="right">0.12</td>
+<td align="right">1.29</td>
+<td align="right">2.08</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="right">0.55</td>
+<td align="right">0.11</td>
+<td align="right">0.97</td>
+<td align="right">1.53</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="right">0.47</td>
+<td align="right">0.12</td>
+<td align="right">0.89</td>
+<td align="right">1.42</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="right">0.33</td>
+<td align="right">0.10</td>
+<td align="right">0.59</td>
+<td align="right">0.92</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.1621252</td>
+<td align="right">0.1313086</td>
+<td align="right">0.7473759</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">delta</th>
+<th align="left">gamma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Non T2D 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 2</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 3</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 4</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 6</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 7</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 8</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 9</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 10</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">Non T2D 11</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">Non T2D 12</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 2</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 3</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 4</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">T2D 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">T2D 6</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(Est.prop.xin$Est.prop.weighted), 
+                           data.matrix(Est.prop.xin$Est.prop.allgene),
+                           t(out1$beta_hat),
+                           t(out2$beta_hat),
+                           t(out3$beta_hat),
+                           t(out4$beta_hat)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;, &#39;equal-weight-smooth&#39;,&#39;equal-weight-local&#39;,&#39;music-weight-smooth&#39;,&#39;music-weight-local&#39;))</code></pre>
+<pre><code>                       RMSD     mAD      R
+MuSiC               0.13304 0.10341 0.8387
+NNLS                0.22125 0.16702 0.6464
+equal-weight-smooth 0.20112 0.15538 0.6747
+equal-weight-local  0.16599 0.12374 0.7959
+music-weight-smooth 0.16639 0.13401 0.7318
+music-weight-local  0.16213 0.13131 0.7474</code></pre>
+</div>
+<div id="enge-as-bulk-seger-as-reference" class="section level2">
+<h2>Enge as bulk, Seger as reference</h2>
+<p>create pseudo-bulk data using Enge dataset such that minimum prop is 0.2</p>
+<pre class="r"><code>enge_bulk = create_bulk(enge,indis = levels(factor(enge$individual))[-8],cell_types =  c(&quot;acinar&quot;,&#39;alpha&#39;,&#39;beta&#39;,&#39;ductal&#39;),min_prop = 0.2)</code></pre>
+<pre><code>Warning in calculateQCMetrics(sceset, feature_controls = list(ERCC =
+isSpike(sceset, : spike-in set &#39;ERCC&#39; overwritten by feature_controls set
+of the same name</code></pre>
+<pre class="r"><code>enge_bulk</code></pre>
+<pre><code>$bulk
+class: SingleCellExperiment 
+dim: 23465 7 
+metadata(0):
+assays(1): counts
+rownames(23465): 1/2-SBSRNA4 A1BG ... not_aligned
+  alignment_not_unique
+rowData names(9): feature_symbol is_feature_control ...
+  total_counts log10_total_counts
+colnames(7): donor_age: 1 donor_age: 21 ... donor_age: 5
+  donor_age: 54
+colData names(37): individual is_cell_control ...
+  pct_counts_in_top_200_features_ERCC
+  pct_counts_in_top_500_features_ERCC
+reducedDimNames(0):
+spikeNames(1): ERCC
+
+$bulk_prop
+                 acinar     alpha      beta    ductal
+donor_age: 1  0.2950820 0.2076503 0.2622951 0.2349727
+donor_age: 21 0.4000000 0.2000000 0.2000000 0.2000000
+donor_age: 22 0.4000000 0.2000000 0.2000000 0.2000000
+donor_age: 38 0.2202899 0.3304348 0.2000000 0.2492754
+donor_age: 44 0.2000000 0.2000000 0.2666667 0.3333333
+donor_age: 5  0.2000000 0.3485714 0.2000000 0.2514286
+donor_age: 54 0.2000000 0.2000000 0.4000000 0.2000000
+
+$bulk_ncell
+              acinar alpha beta ductal
+donor_age: 1      54    38   48     43
+donor_age: 21      8     4    4      4
+donor_age: 22     10     5    5      5
+donor_age: 38     76   114   69     86
+donor_age: 44     18    18   24     30
+donor_age: 5      35    61   35     44
+donor_age: 54     10    10   20     10</code></pre>
+<p>try music using enge dataset</p>
+<pre class="r"><code>bulk.data = ExpressionSet(assayData = counts(enge_bulk$bulk))
+#pheno_Data = data.frame(cellType = seger$cell_type,SubjectName = seger$individual)
+#rownames(pheno_Data) = colnames(seger)
+#ref.data = ExpressionSet(assayData = counts(seger),phenoData = AnnotatedDataFrame(pheno_Data))
+
+Est.prop.enge = music_prop(bulk.eset = bulk.data, sc.eset = seger.ref,
+                           clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;, select.ct = c(&quot;acinar&quot;,&#39;alpha&#39;,&#39;beta&#39;,&#39;ductal&#39;))</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 18074 common genes...</code></pre>
+<pre><code>Used 4 cell types in deconvolution...</code></pre>
+<pre><code>donor_age: 1 has common genes 14663 ...</code></pre>
+<pre><code>donor_age: 21 has common genes 12395 ...</code></pre>
+<pre><code>donor_age: 22 has common genes 12187 ...</code></pre>
+<pre><code>donor_age: 38 has common genes 16838 ...</code></pre>
+<pre><code>donor_age: 44 has common genes 14818 ...</code></pre>
+<pre><code>donor_age: 5 has common genes 16156 ...</code></pre>
+<pre><code>donor_age: 54 has common genes 13505 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(enge_bulk$bulk_prop), 
+           prop.est = list(data.matrix(Est.prop.enge$Est.prop.weighted), 
+                           data.matrix(Est.prop.enge$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD       R
+MuSiC 0.15626 0.12890 -0.0921
+NNLS  0.17177 0.13274  0.0513</code></pre>
+<pre class="r"><code>round(enge_bulk$bulk_prop,2)</code></pre>
+<pre><code>              acinar alpha beta ductal
+donor_age: 1    0.30  0.21 0.26   0.23
+donor_age: 21   0.40  0.20 0.20   0.20
+donor_age: 22   0.40  0.20 0.20   0.20
+donor_age: 38   0.22  0.33 0.20   0.25
+donor_age: 44   0.20  0.20 0.27   0.33
+donor_age: 5    0.20  0.35 0.20   0.25
+donor_age: 54   0.20  0.20 0.40   0.20</code></pre>
+<pre class="r"><code>round(Est.prop.enge$Est.prop.weighted,2)</code></pre>
+<pre><code>              acinar alpha beta ductal
+donor_age: 1    0.24  0.20 0.54   0.02
+donor_age: 21   0.05  0.16 0.27   0.53
+donor_age: 22   0.19  0.16 0.33   0.32
+donor_age: 38   0.12  0.17 0.27   0.44
+donor_age: 44   0.09  0.12 0.43   0.36
+donor_age: 5    0.10  0.16 0.37   0.37
+donor_age: 54   0.22  0.28 0.27   0.24</code></pre>
+<p>Not very precise estimation when using all common genes. Now try to random select some genes to create a “good case”.</p>
+<pre class="r"><code>set.seed(01)
+cm.gene = intersect(rownames(seger.ref),rownames(bulk.data))
+cm.gene = cm.gene[sample(1:length(cm.gene),3000)]
+g.bulk = match(cm.gene,rownames(bulk.data))
+g.ref = match(cm.gene,rownames(seger.ref))
+
+Est.prop.enge = music_prop(bulk.eset = bulk.data[g.bulk,], sc.eset = seger.ref[g.ref,],
+                           clusters = &#39;cellType&#39;, samples = &#39;SubjectName&#39;, select.ct = c(&quot;acinar&quot;,&#39;alpha&#39;,&#39;beta&#39;,&#39;ductal&#39;))</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 2489 common genes...</code></pre>
+<pre><code>Used 4 cell types in deconvolution...</code></pre>
+<pre><code>donor_age: 1 has common genes 2001 ...</code></pre>
+<pre><code>donor_age: 21 has common genes 1699 ...</code></pre>
+<pre><code>donor_age: 22 has common genes 1682 ...</code></pre>
+<pre><code>donor_age: 38 has common genes 2333 ...</code></pre>
+<pre><code>donor_age: 44 has common genes 2036 ...</code></pre>
+<pre><code>donor_age: 5 has common genes 2221 ...</code></pre>
+<pre><code>donor_age: 54 has common genes 1834 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(enge_bulk$bulk_prop), 
+           prop.est = list(data.matrix(Est.prop.enge$Est.prop.weighted), 
+                           data.matrix(Est.prop.enge$Est.prop.allgene)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;))</code></pre>
+<pre><code>         RMSD     mAD      R
+MuSiC 0.11959 0.09717 0.2740
+NNLS  0.28184 0.23382 0.3659</code></pre>
+<pre class="r"><code>round(Est.prop.enge$Est.prop.weighted,2)</code></pre>
+<pre><code>              acinar alpha beta ductal
+donor_age: 1    0.41  0.18 0.41   0.00
+donor_age: 21   0.20  0.09 0.24   0.48
+donor_age: 22   0.48  0.10 0.30   0.13
+donor_age: 38   0.31  0.36 0.05   0.27
+donor_age: 44   0.16  0.34 0.25   0.26
+donor_age: 5    0.21  0.23 0.29   0.28
+donor_age: 54   0.22  0.39 0.23   0.17</code></pre>
+<pre class="r"><code>round(Est.prop.enge$Est.prop.allgene,2)</code></pre>
+<pre><code>              acinar alpha beta ductal
+donor_age: 1    1.00  0.00 0.00   0.00
+donor_age: 21   0.51  0.00 0.00   0.49
+donor_age: 22   1.00  0.00 0.00   0.00
+donor_age: 38   0.63  0.20 0.00   0.17
+donor_age: 44   0.16  0.50 0.00   0.35
+donor_age: 5    0.74  0.26 0.00   0.00
+donor_age: 54   0.33  0.38 0.15   0.13</code></pre>
+<p>run deconference</p>
+<pre class="r"><code>datax = set_data_decon(exprs(bulk.data),seger,marker_gene = rownames(Est.prop.enge$Weight.gene),
+                       cell_types = c(&quot;acinar&quot;,&#39;alpha&#39;,&#39;beta&#39;,&#39;ductal&#39;), gene_thresh = 0,max_count_quantile = 1,w=1)
+out5 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;smooth&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 7</code></pre>
+<pre><code>covaraince 2 to 7</code></pre>
+<pre><code>covaraince 3 to 7</code></pre>
+<pre><code>covaraince 4 to 7</code></pre>
+<pre><code>covaraince 5 to 7</code></pre>
+<pre><code>covaraince 6 to 7</code></pre>
+<pre><code>covaraince 7 to 7</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out5,as.matrix(enge_bulk$bulk_prop))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.81</td>
+<td align="right">0.19</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.39</td>
+<td align="right">0.05</td>
+<td align="right">0.00</td>
+<td align="right">0.56</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.85</td>
+<td align="right">0.15</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.58</td>
+<td align="right">0.42</td>
+<td align="right">0.00</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.21</td>
+<td align="right">0.49</td>
+<td align="right">0.00</td>
+<td align="right">0.30</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.59</td>
+<td align="right">0.41</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.43</td>
+<td align="right">0.43</td>
+<td align="right">0.04</td>
+<td align="right">0.10</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.30</td>
+<td align="right">0.21</td>
+<td align="right">0.26</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.22</td>
+<td align="right">0.33</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.27</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.20</td>
+<td align="right">0.35</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.74</td>
+<td align="right">0.45</td>
+<td align="right">1.02</td>
+<td align="right">0.30</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.96</td>
+<td align="right">0.95</td>
+<td align="right">1.33</td>
+<td align="right">0.90</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.80</td>
+<td align="right">0.39</td>
+<td align="right">1.04</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.74</td>
+<td align="right">0.50</td>
+<td align="right">1.14</td>
+<td align="right">0.31</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.51</td>
+<td align="right">1.26</td>
+<td align="right">1.22</td>
+<td align="right">0.48</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.66</td>
+<td align="right">1.00</td>
+<td align="right">1.23</td>
+<td align="right">0.37</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.50</td>
+<td align="right">0.83</td>
+<td align="right">0.97</td>
+<td align="right">0.37</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.2512445</td>
+<td align="right">0.2131528</td>
+<td align="right">0.300694</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">acinar</th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>out6 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;local&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 7</code></pre>
+<pre><code>covaraince 2 to 7</code></pre>
+<pre><code>covaraince 3 to 7</code></pre>
+<pre><code>covaraince 4 to 7</code></pre>
+<pre><code>covaraince 5 to 7</code></pre>
+<pre><code>covaraince 6 to 7</code></pre>
+<pre><code>covaraince 7 to 7</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out6,as.matrix(enge_bulk$bulk_prop))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.81</td>
+<td align="right">0.19</td>
+<td align="right">0.0</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.39</td>
+<td align="right">0.00</td>
+<td align="right">0.0</td>
+<td align="right">0.61</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.86</td>
+<td align="right">0.14</td>
+<td align="right">0.0</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.57</td>
+<td align="right">0.41</td>
+<td align="right">0.0</td>
+<td align="right">0.02</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.21</td>
+<td align="right">0.49</td>
+<td align="right">0.0</td>
+<td align="right">0.30</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.60</td>
+<td align="right">0.40</td>
+<td align="right">0.0</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.41</td>
+<td align="right">0.38</td>
+<td align="right">0.1</td>
+<td align="right">0.11</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.30</td>
+<td align="right">0.21</td>
+<td align="right">0.26</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.22</td>
+<td align="right">0.33</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.27</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.20</td>
+<td align="right">0.35</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.64</td>
+<td align="right">0.30</td>
+<td align="right">0.85</td>
+<td align="right">0.30</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.99</td>
+<td align="right">1.75</td>
+<td align="right">1.67</td>
+<td align="right">1.04</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.69</td>
+<td align="right">0.25</td>
+<td align="right">0.88</td>
+<td align="right">0.32</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.63</td>
+<td align="right">0.64</td>
+<td align="right">1.03</td>
+<td align="right">0.34</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.47</td>
+<td align="right">1.21</td>
+<td align="right">1.14</td>
+<td align="right">0.46</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.57</td>
+<td align="right">1.37</td>
+<td align="right">1.34</td>
+<td align="right">0.45</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.43</td>
+<td align="right">1.11</td>
+<td align="right">1.03</td>
+<td align="right">0.41</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.2500412</td>
+<td align="right">0.2115357</td>
+<td align="right">0.3254855</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">acinar</th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>round(Est.prop.enge$S,2)</code></pre>
+<pre><code>acinar  alpha   beta ductal 
+  1.00   0.77   0.70   1.06 </code></pre>
+<pre class="r"><code>round(out5$input$S,2)</code></pre>
+<pre><code>acinar  alpha   beta ductal 
+  1.00   0.84   0.75   1.18 </code></pre>
+<pre class="r"><code>w = Est.prop.enge$Weight.gene
+w = apply(w,2,function(z){z/sum(z,na.rm = T)})
+w = rowMeans(w,na.rm = T)
+datax = set_data_decon(exprs(bulk.data),seger,marker_gene = rownames(Est.prop.enge$Weight.gene),
+                       cell_types = c(&quot;acinar&quot;,&#39;alpha&#39;,&#39;beta&#39;,&#39;ductal&#39;), gene_thresh = 0,max_count_quantile = 1,w=w)
+out7 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;smooth&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 7</code></pre>
+<pre><code>covaraince 2 to 7</code></pre>
+<pre><code>covaraince 3 to 7</code></pre>
+<pre><code>covaraince 4 to 7</code></pre>
+<pre><code>covaraince 5 to 7</code></pre>
+<pre><code>covaraince 6 to 7</code></pre>
+<pre><code>covaraince 7 to 7</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out7,as.matrix(enge_bulk$bulk_prop))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.88</td>
+<td align="right">0.06</td>
+<td align="right">0.06</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.22</td>
+<td align="right">0.00</td>
+<td align="right">0.45</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.98</td>
+<td align="right">0.02</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.74</td>
+<td align="right">0.25</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.37</td>
+<td align="right">0.30</td>
+<td align="right">0.20</td>
+<td align="right">0.13</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.71</td>
+<td align="right">0.29</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.34</td>
+<td align="right">0.32</td>
+<td align="right">0.25</td>
+<td align="right">0.09</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.30</td>
+<td align="right">0.21</td>
+<td align="right">0.26</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.22</td>
+<td align="right">0.33</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.27</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.20</td>
+<td align="right">0.35</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.62</td>
+<td align="right">0.09</td>
+<td align="right">0.16</td>
+<td align="right">0.43</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.10</td>
+<td align="right">0.08</td>
+<td align="right">0.13</td>
+<td align="right">0.09</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.59</td>
+<td align="right">0.07</td>
+<td align="right">0.15</td>
+<td align="right">0.42</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.55</td>
+<td align="right">0.32</td>
+<td align="right">0.30</td>
+<td align="right">0.38</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.36</td>
+<td align="right">0.13</td>
+<td align="right">0.15</td>
+<td align="right">0.24</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.54</td>
+<td align="right">0.41</td>
+<td align="right">0.36</td>
+<td align="right">0.36</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.23</td>
+<td align="right">0.13</td>
+<td align="right">0.13</td>
+<td align="right">0.15</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.2645558</td>
+<td align="right">0.2215953</td>
+<td align="right">0.2863</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">acinar</th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>out8 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;local&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 7</code></pre>
+<pre><code>covaraince 2 to 7</code></pre>
+<pre><code>covaraince 3 to 7</code></pre>
+<pre><code>covaraince 4 to 7</code></pre>
+<pre><code>covaraince 5 to 7</code></pre>
+<pre><code>covaraince 6 to 7</code></pre>
+<pre><code>covaraince 7 to 7</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out8,as.matrix(enge_bulk$bulk_prop))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.89</td>
+<td align="right">0.06</td>
+<td align="right">0.04</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.26</td>
+<td align="right">0.00</td>
+<td align="right">0.43</td>
+<td align="right">0.32</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.99</td>
+<td align="right">0.01</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.75</td>
+<td align="right">0.25</td>
+<td align="right">0.00</td>
+<td align="right">0.01</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.39</td>
+<td align="right">0.31</td>
+<td align="right">0.17</td>
+<td align="right">0.13</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.72</td>
+<td align="right">0.28</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.35</td>
+<td align="right">0.35</td>
+<td align="right">0.19</td>
+<td align="right">0.11</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.30</td>
+<td align="right">0.21</td>
+<td align="right">0.26</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.22</td>
+<td align="right">0.33</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.27</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.20</td>
+<td align="right">0.35</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.60</td>
+<td align="right">0.09</td>
+<td align="right">0.13</td>
+<td align="right">0.42</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.11</td>
+<td align="right">0.07</td>
+<td align="right">0.10</td>
+<td align="right">0.09</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.56</td>
+<td align="right">0.08</td>
+<td align="right">0.13</td>
+<td align="right">0.41</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.53</td>
+<td align="right">0.31</td>
+<td align="right">0.25</td>
+<td align="right">0.36</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.34</td>
+<td align="right">0.12</td>
+<td align="right">0.13</td>
+<td align="right">0.22</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.52</td>
+<td align="right">0.40</td>
+<td align="right">0.31</td>
+<td align="right">0.34</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.22</td>
+<td align="right">0.10</td>
+<td align="right">0.10</td>
+<td align="right">0.15</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.2686006</td>
+<td align="right">0.22664</td>
+<td align="right">0.2693539</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">acinar</th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>datax = set_data_decon(exprs(bulk.data),seger,marker_gene = rownames(Est.prop.enge$Weight.gene),
+                       cell_types = c(&quot;acinar&quot;,&#39;alpha&#39;,&#39;beta&#39;,&#39;ductal&#39;), gene_thresh = 0,max_count_quantile = 1,w=NULL)
+out9 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;smooth&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 7</code></pre>
+<pre><code>covaraince 2 to 7</code></pre>
+<pre><code>covaraince 3 to 7</code></pre>
+<pre><code>covaraince 4 to 7</code></pre>
+<pre><code>covaraince 5 to 7</code></pre>
+<pre><code>covaraince 6 to 7</code></pre>
+<pre><code>covaraince 7 to 7</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out9,as.matrix(enge_bulk$bulk_prop))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.96</td>
+<td align="right">0.02</td>
+<td align="right">0.02</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.31</td>
+<td align="right">0.00</td>
+<td align="right">0.46</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">1.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.71</td>
+<td align="right">0.08</td>
+<td align="right">0.00</td>
+<td align="right">0.22</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.32</td>
+<td align="right">0.30</td>
+<td align="right">0.16</td>
+<td align="right">0.21</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.86</td>
+<td align="right">0.14</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.35</td>
+<td align="right">0.23</td>
+<td align="right">0.23</td>
+<td align="right">0.19</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.30</td>
+<td align="right">0.21</td>
+<td align="right">0.26</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.22</td>
+<td align="right">0.33</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.27</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.20</td>
+<td align="right">0.35</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.35</td>
+<td align="right">0.09</td>
+<td align="right">0.17</td>
+<td align="right">0.24</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.27</td>
+<td align="right">0.06</td>
+<td align="right">0.14</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.35</td>
+<td align="right">0.08</td>
+<td align="right">0.16</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.33</td>
+<td align="right">0.19</td>
+<td align="right">0.22</td>
+<td align="right">0.29</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.21</td>
+<td align="right">0.18</td>
+<td align="right">0.21</td>
+<td align="right">0.16</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.32</td>
+<td align="right">0.25</td>
+<td align="right">0.26</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.18</td>
+<td align="right">0.08</td>
+<td align="right">0.09</td>
+<td align="right">0.17</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.2809776</td>
+<td align="right">0.2218214</td>
+<td align="right">0.2592569</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">acinar</th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>out10 = deconference(datax,est_pop_var = TRUE,meta_mode = &#39;local&#39;,correction = T,verbose = TRUE,hc.type = &#39;hc3&#39;)</code></pre>
+<pre><code>estimating proportions</code></pre>
+<pre><code>performing fuller&#39;s correction</code></pre>
+<pre><code>calculating covariance matrix</code></pre>
+<pre><code>covaraince 1 to 7</code></pre>
+<pre><code>covaraince 2 to 7</code></pre>
+<pre><code>covaraince 3 to 7</code></pre>
+<pre><code>covaraince 4 to 7</code></pre>
+<pre><code>covaraince 5 to 7</code></pre>
+<pre><code>covaraince 6 to 7</code></pre>
+<pre><code>covaraince 7 to 7</code></pre>
+<pre><code>performing delta method</code></pre>
+<pre><code>done</code></pre>
+<pre class="r"><code>summary_real(out10,as.matrix(enge_bulk$bulk_prop))</code></pre>
+<table class="kable_wrapper">
+<caption>
+estimated vs true beta
+</caption>
+<tbody>
+<tr>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.96</td>
+<td align="right">0.02</td>
+<td align="right">0.02</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.33</td>
+<td align="right">0.00</td>
+<td align="right">0.42</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">1.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.70</td>
+<td align="right">0.07</td>
+<td align="right">0.00</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.32</td>
+<td align="right">0.32</td>
+<td align="right">0.14</td>
+<td align="right">0.22</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.89</td>
+<td align="right">0.11</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.35</td>
+<td align="right">0.25</td>
+<td align="right">0.20</td>
+<td align="right">0.21</td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.30</td>
+<td align="right">0.21</td>
+<td align="right">0.26</td>
+<td align="right">0.23</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.22</td>
+<td align="right">0.33</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.27</td>
+<td align="right">0.33</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.20</td>
+<td align="right">0.35</td>
+<td align="right">0.20</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.40</td>
+<td align="right">0.20</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>beta hat se</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">acinar</th>
+<th align="right">alpha</th>
+<th align="right">beta</th>
+<th align="right">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="right">0.34</td>
+<td align="right">0.09</td>
+<td align="right">0.15</td>
+<td align="right">0.24</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="right">0.29</td>
+<td align="right">0.06</td>
+<td align="right">0.13</td>
+<td align="right">0.20</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="right">0.34</td>
+<td align="right">0.08</td>
+<td align="right">0.14</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="right">0.33</td>
+<td align="right">0.20</td>
+<td align="right">0.20</td>
+<td align="right">0.29</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="right">0.22</td>
+<td align="right">0.19</td>
+<td align="right">0.20</td>
+<td align="right">0.16</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="right">0.33</td>
+<td align="right">0.28</td>
+<td align="right">0.25</td>
+<td align="right">0.24</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="right">0.18</td>
+<td align="right">0.09</td>
+<td align="right">0.09</td>
+<td align="right">0.17</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>error measure</caption>
+<thead>
+<tr class="header">
+<th align="right">rmse</th>
+<th align="right">mad</th>
+<th align="right">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.2837375</td>
+<td align="right">0.224417</td>
+<td align="right">0.2469985</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>coverage</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">acinar</th>
+<th align="left">alpha</th>
+<th align="left">beta</th>
+<th align="left">ductal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">donor_age: 1</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 21</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 22</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 38</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 44</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">donor_age: 5</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">donor_age: 54</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(enge_bulk$bulk_prop), 
+           prop.est = list(data.matrix(Est.prop.enge$Est.prop.weighted), 
+                           data.matrix(Est.prop.enge$Est.prop.allgene),
+                           t(out5$beta_hat),
+                           t(out6$beta_hat),
+                           t(out7$beta_hat),
+                           t(out8$beta_hat),
+                           t(out9$beta_hat),
+                           t(out10$beta_hat)), 
+           method.name = c(&#39;MuSiC&#39;, &#39;NNLS&#39;, &#39;equal-weight-smooth&#39;,&#39;equal-weight-local&#39;,&#39;music-weight-smooth&#39;,
+                           &#39;music-weight-local&#39;,&#39;default-weight-smooth&#39;,&#39;default-weight-local&#39;))</code></pre>
+<pre><code>                         RMSD     mAD      R
+MuSiC                 0.11959 0.09717 0.2740
+NNLS                  0.28184 0.23382 0.3659
+equal-weight-smooth   0.25124 0.21315 0.3007
+equal-weight-local    0.25004 0.21154 0.3255
+music-weight-smooth   0.26456 0.22160 0.2863
+music-weight-local    0.26860 0.22664 0.2694
+default-weight-smooth 0.28098 0.22182 0.2593
+default-weight-local  0.28374 0.22442 0.2470</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.1 (2018-07-02)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+[1] C
+
+attached base packages:
+[1] stats4    parallel  stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+ [1] GEOquery_2.50.5             scater_1.10.1              
+ [3] SingleCellExperiment_1.4.0  SummarizedExperiment_1.12.0
+ [5] DelayedArray_0.8.0          BiocParallel_1.16.0        
+ [7] matrixStats_0.54.0          GenomicRanges_1.34.0       
+ [9] GenomeInfoDb_1.18.1         xbioc_0.1.18               
+[11] AnnotationDbi_1.44.0        IRanges_2.16.0             
+[13] S4Vectors_0.20.1            Biobase_2.42.0             
+[15] BiocGenerics_0.28.0         MuSiC_0.1.1                
+[17] ggplot2_3.1.1               nnls_1.4                   
+
+loaded via a namespace (and not attached):
+ [1] mcmc_0.9-7               bitops_1.0-6            
+ [3] fs_1.3.1                 bit64_0.9-7             
+ [5] rprojroot_1.3-2          tools_3.5.1             
+ [7] backports_1.1.2          R6_2.3.0                
+ [9] HDF5Array_1.10.1         vipor_0.4.5             
+[11] DBI_1.0.0                lazyeval_0.2.1          
+[13] colorspace_1.3-2         withr_2.1.2             
+[15] tidyselect_0.2.5         gridExtra_2.3           
+[17] bit_1.1-14               compiler_3.5.1          
+[19] git2r_0.26.1             quantreg_5.36           
+[21] SparseM_1.78             xml2_1.2.0              
+[23] pkgmaker_0.27            scales_1.0.0            
+[25] readr_1.3.1              stringr_1.3.1           
+[27] digest_0.6.18            rmarkdown_1.10          
+[29] MCMCpack_1.4-4           XVector_0.22.0          
+[31] pkgconfig_2.0.2          htmltools_0.3.6         
+[33] bibtex_0.4.2             limma_3.38.2            
+[35] highr_0.7                rlang_0.4.0             
+[37] RSQLite_2.1.1            DelayedMatrixStats_1.4.0
+[39] dplyr_0.8.0.1            RCurl_1.95-4.11         
+[41] magrittr_1.5             GenomeInfoDbData_1.2.0  
+[43] Matrix_1.2-15            Rcpp_1.0.4.6            
+[45] ggbeeswarm_0.6.0         munsell_0.5.0           
+[47] Rhdf5lib_1.4.3           viridis_0.5.1           
+[49] stringi_1.2.4            whisker_0.3-2           
+[51] yaml_2.2.0               MASS_7.3-51.1           
+[53] zlibbioc_1.28.0          rhdf5_2.26.2            
+[55] plyr_1.8.4               grid_3.5.1              
+[57] blob_1.1.1               promises_1.0.1          
+[59] crayon_1.3.4             lattice_0.20-38         
+[61] hms_0.4.2                knitr_1.20              
+[63] pillar_1.3.1             reshape2_1.4.3          
+[65] codetools_0.2-15         glue_1.3.0              
+[67] evaluate_0.12            BiocManager_1.30.10     
+[69] httpuv_1.4.5             MatrixModels_0.4-1      
+[71] tidyr_0.8.3              gtable_0.2.0            
+[73] purrr_0.3.2              assertthat_0.2.0        
+[75] xtable_1.8-3             coda_0.19-2             
+[77] later_0.7.5              viridisLite_0.3.0       
+[79] tibble_2.1.1             registry_0.5            
+[81] beeswarm_0.2.3           memoise_1.1.0           
+[83] workflowr_1.6.2         </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

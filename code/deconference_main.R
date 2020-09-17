@@ -36,10 +36,10 @@ deconference = function(data.obj,
                         marker_gene = NULL,
                         hc.type = 'hc3',
                         x_estimator = 'separate',
-                        est_pop_var = FALSE,
+                        est_pop_var = TRUE,
                         meta_var = 'adjust',
-                        meta_mode = 'universal',
-                        correction=FALSE,eps=0,cellsize_est='glm'){
+                        meta_mode = 'smooth',
+                        correction=TRUE,eps=0,cellsize_est='glm'){
 
   ref_type = data.obj$ref_type
   w = data.obj$w

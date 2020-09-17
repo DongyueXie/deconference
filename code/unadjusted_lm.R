@@ -80,6 +80,7 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
 
   }else{
 
+    diff_group = NULL
     ols.out = list(cov_beta_tilde_hat = covb,
                    beta_se = beta_se,
                    cov_beta_hat = asyV

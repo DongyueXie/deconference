@@ -3,7 +3,8 @@
 
 #'@param datax a list of singlecellexperiment objects.
 deconference_multi_ref = function(ref.obj,bulk.obj,tau2=NULL,cell_types=NULL,sigma2=NULL,
-                          est_sigma2=TRUE,meta_var='adjust',meta_mode='smooth',correction=FALSE,cellsize_est='glm',
+                          est_sigma2=TRUE,meta_var='adjust',meta_mode='smooth',genes = NULL,
+                          correction=TRUE,cellsize_est='glm',
                           marker_gene = NULL,
                           hc.type = 'hc3',w = 1){
 
@@ -27,13 +28,17 @@ deconference_multi_ref = function(ref.obj,bulk.obj,tau2=NULL,cell_types=NULL,sig
   design.mat = getXV(all_X_array,all_Vg_array,S_olss=S_olss,S_glms=S_glms,sigma2=sigma2,
                    est_sigma2=est_sigma2,meta_var=meta_var,meta_mode=meta_mode,cell_types=cell_types)
 
+  if(!is.null(genes)){
+    gene_length = (genes$featureend-genes$featurestart)[match(rownames(bulk.obj),genes$featurename)]
+    bulk_counts = counts(bulk.obj)/gene_length*1e3
+  }
 
   if(cellsize_est=='ols'){
-    out = estimation_func(y=counts(bulk.obj),X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
+    out = estimation_func(y=bulk_counts,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
                           w=w,hc.type=hc.type,correction=correction,S=design.mat$S_ols)
   }
   if(cellsize_est=='glm'){
-    out = estimation_func(y=counts(bulk.obj),X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
+    out = estimation_func(y=bulk_counts,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
                           w=w,hc.type=hc.type,correction=correction,S=design.mat$S_glm)
   }
 
@@ -168,11 +173,11 @@ getXV_array = function(Y,cell_type_idx=NULL,indi_idx=NULL,estimator='separate',e
                                type = factor(rep(cell_types,each = nrow(S_mat)),levels = cell_types))
   suppressWarnings({fit = try(MASS::glm.nb(y~.,S_mat_dataframe),silent = TRUE)})
 
-  suppressWarnings({if(class(fit)=='try-error'){
+  if(class(fit)[1]=='try-error'){
 
     fit = glm(y~.,S_mat_dataframe,family = 'poisson')
 
-  }})
+  }
 
   S_glm = S
   S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))

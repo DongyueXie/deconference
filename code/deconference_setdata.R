@@ -1,39 +1,42 @@
 set_data_decon = function(y=NULL,Y,
                           ref_type = 'multi_sc',
-                          #marker_gene = NULL,
+                          marker_gene = NULL,
                           cell_type_idx=NULL,indi_idx = NULL,cell_types=NULL,
                           tau2 = NULL,sigma2 = NULL,
                           w=NULL,gene_thresh=0.05,max_count_quantile=0.99){
 
   if(!is.null(y)){
     y = cbind(y)
+    common_genes = intersect(rownames(y),rownames(Y))
+    y_geneidx = match(common_genes,rownames(y))
+    Y_geneidx = match(common_genes,rownames(Y))
+    y = y[y_geneidx,]
+    Y = Y[Y_geneidx,]
   }
 
 
-  # if(!is.null(marker_gene)){
-  #   gene_idx = match(marker_gene,rownames(Y))
-  #   omit.idx = which(is.na(gene_idx))
-  #   if(length(omit.idx)>0){
-  #     gene_idx = gene_idx[-omit.idx]
-  #   }
-  #
-  #   #browser()
-  #
-  #   Y = Y[gene_idx,]
-  #   if(!is.null(w)){
-  #     w = w[gene_idx]
-  #   }
-  #   y = y[gene_idx,]
-  #
-  #   if(!is.null(sigma2)){
-  #     sigma2 = sigma2[gene_idx,]
-  #   }
-  #   if(!is.null(tau2)){
-  #     tau2  = tau2[gene_idx,]
-  #   }
-  # }
+  if(!is.null(marker_gene)){
+    if(!is.null(y)){
+      marker_gene = intersect(marker_gene,common_genes)
+      gene_idx = match(marker_gene,rownames(y))
+      y = y[gene_idx,]
+    }
+    gene_idx = match(marker_gene,rownames(Y))
+    # omit.idx = which(is.na(gene_idx))
+    # if(length(omit.idx)>0){
+    #   gene_idx = gene_idx[-omit.idx]
+    # }
+
+    #browser()
+
+    Y = Y[gene_idx,]
+
+  }
 
 
+  if(length(w)==1){
+    w = rep(nrow(Y),w)
+  }
 
 
   if(ref_type == 'bulk'){

@@ -1,0 +1,76 @@
+---
+title: "check gene length"
+author: "DongyueXie"
+date: "2020-09-23"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+I obtained gene length info from 2 resources: [gencode](https://www.gencodegenes.org/), and [HCA](https://data.humancellatlas.org/explore/projects/cddab57b-6868-4be4-806f-395ed9dd635a/expression-matrices).
+
+Now I want to check which one I should TRUST.
+
+```{r}
+library(readr)
+gene1 <- read_csv("data/GSE81547Enge/hca/genes.csv")
+gene2 = read.table('data/all_genes_location.txt')
+
+## first remove genes that are duplicated. 
+## these genes share the same gene name but different ensembly id and on different chromesomes.
+## in single cell data, we ususally only have gene name so to avoid using the wrong gene length, we remove these genes fisrt.
+
+gene1_name = gene1$featurename
+length(gene1_name)
+
+gene1_name_dup = unique(gene1_name[duplicated(gene1_name)])
+gene1_name = gene1_name[-which(gene1_name%in%gene1_name_dup)]
+gene2_name = gene2$V4
+length(gene2_name)
+gene2_name_dup = unique(gene2_name[duplicated(gene2_name)])
+gene2_name = gene2_name[-which(gene2_name%in%gene2_name_dup)]
+
+length(gene1_name)
+length(gene2_name)
+cm_gene = intersect(gene1_name,gene2_name)
+length(cm_gene)
+gene1_idx = match(cm_gene,gene1$featurename)
+gene2_idx = match(cm_gene,gene2$V4)
+
+gene1_length = gene1$featureend[gene1_idx] - gene1$featurestart[gene1_idx]
+gene2_length = gene2$V3[gene2_idx] - gene2$V2[gene2_idx]
+cor(gene1_length,gene2_length)
+gene_diff = abs(gene1_length-gene2_length)
+summary(gene_diff)
+```
+
+
+Let's look at some genes that have large difference in gene length.
+
+```{r}
+cm_gene[which.max(gene_diff)]
+gene1[which(gene1$featurename=="AC034268.2"),]
+gene2[which(gene2$V4=="AC034268.2"),]
+```
+
+Let's check this gene on [ensembl](https://uswest.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000285939;r=17:53276760-54365634), which shows that it's region is 53,276,760-54,365,634 on chr17.
+
+
+```{r}
+cm_gene[which.max(gene_diff[-which.max(gene_diff)])]
+gene1[which(gene1$featurename=="PTCHD1-AS"),]
+gene2[which(gene2$V4=="PTCHD1-AS"),]
+```
+
+Let's check this gene on [ensembl](https://uswest.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000233067;r=X:22191895-22235358;t=ENST00000669979), which shows that it's region is 22,191,895-22,235,358 on chrX.
+
+So it seems that the one from gencode is more reliable. 
+
+now generate gene length file 
+
+```{r,eval=FALSE}
+gene_idx = match(gene2_name,gene2$V4)
+gene_length = gene2$V3[gene_idx] - gene2$V2[gene_idx]
+names(gene_length) = gene2$V4[gene_idx]
+saveRDS(gene_length,file='data/gene_length.rds')
+```

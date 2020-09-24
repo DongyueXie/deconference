@@ -1,0 +1,178 @@
+---
+title: "multiple reference simulation"
+author: "DongyueXie"
+date: "2020-09-19"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+
+In this simulation, we generate both UMI and nonUMI data as reference, and examine the performance of the model.
+
+On generating nonUMI data: we include gene length bias and gene lengths are obtained from GENCODE.
+
+Let $\mu_{gk}$ be the true number of transcript of gene $g$ in cell type $k$. Then UMI counts are generated from $Poisson(S\frac{\mu_{gk}}{\sum_g\mu_{gk}})$, and nonUMI counts are generated from $Poisson(S\frac{\mu_{gk}l_g}{\sum_g\mu_{gk}l_g})$.
+
+For log-normal dsitribution, $\log(x)\sim N(\mu,\sigma^2)$. If we want $E(x) = m$ and $Var(x)=s^2$, then we need to set $\mu = \log(\frac{m^2}{\sqrt{m^2+s^2}})$ and $\sigma^2 = \log(\frac{s^2}{m^2}+1)$.
+
+```{r}
+library(SingleCellExperiment)
+source('code/deconference_main.R')
+source('code/simu_func_multibulk_multiref.R')
+gene_length=readRDS('data/gene_length.rds')
+get_coverage_beta = function(out,K,nbulk){
+  cov_adj = matrix(out$coverage_adj,ncol=nbulk)
+  cov_unadj = matrix(out$coverage_unadj,ncol=nbulk)
+  cov_unadj_hc3 = matrix(out$coverage_unadj_hc3,ncol=nbulk)
+  cov_unadj_cv = matrix(out$coverage_unadj_cv,ncol=nbulk)
+  rname = paste('cell',1:K,sep = '')
+  cname = paste('bulk',1:nbulk,sep = '')
+  rownames(cov_adj) = rname
+  colnames(cov_adj) = cname
+  rownames(cov_unadj) = rname
+  colnames(cov_unadj) = cname
+  rownames(cov_unadj_hc3) = rname
+  colnames(cov_unadj_hc3) = cname
+  rownames(cov_unadj_cv) = rname
+  colnames(cov_unadj_cv) = cname
+  
+  print(knitr::kable(cov_adj,caption = 'coverage adjusted'))
+  print(knitr::kable(cov_unadj,caption = 'coverage unadjusted hc0'))
+  print(knitr::kable(cov_unadj_hc3,caption = 'coverage unadjusted hc3'))
+  print(knitr::kable(cov_unadj_cv,caption = 'coverage unadjusted lm'))
+}
+
+get_se_beta = function(out,K,nbulk){
+  se_adj = round(matrix(colMeans(out$se_adj),ncol=nbulk),3)
+  se_unadj = round(matrix(colMeans(out$se_unadj),ncol=nbulk),3)
+  se_unadj_hc3 = round(matrix(colMeans(out$se_unadj_hc3),ncol=nbulk),3)
+  se_unadj_cv = round(matrix(colMeans(out$se_unadj_cv),ncol=nbulk),3)
+  rname = paste('cell',1:K,sep = '')
+  cname = paste('bulk',1:nbulk,sep = '')
+  rownames(se_adj) = rname
+  colnames(se_adj) = cname
+  rownames(se_unadj) = rname
+  colnames(se_unadj) = cname
+  rownames(se_unadj_hc3) = rname
+  colnames(se_unadj_hc3) = cname
+  rownames(se_unadj_cv) = rname
+  colnames(se_unadj_cv) = cname
+  
+  print(knitr::kable(se_adj,caption = 'mean se adjusted'))
+  print(knitr::kable(se_unadj,caption = 'mean se unadjusted hc0'))
+  print(knitr::kable(se_unadj_hc3,caption = 'mean se unadjusted hc3'))
+  print(knitr::kable(se_unadj_cv,caption = 'mean se unadjusted lm'))
+}
+
+get_coverage_diff = function(out,K,bulk){
+  cov_diff = cbind(out$coverage_diff_adj,out$coverage_diff_unadj,out$coverage_diff_unadj_cv,out$coverage_diff_unadj_hc3)
+  rname = paste('cell',1:K,sep = '')
+  cname = c('adj','unadj-hc0','unadj-hc3','unadj-lm')
+  rownames(cov_diff) = rname
+  colnames(cov_diff) = cname
+  print(knitr::kable(cov_diff,caption = 'coverage of group diff'))
+}
+
+get_se_diff = function(out,K,nbulk){
+  se_diff = cbind(colMeans(out$diff_adj_se),colMeans(out$diff_unadj_se),colMeans(out$diff_unadj_se_hc3),colMeans(out$diff_unadj_se_cv))
+  se_diff = round(se_diff,3)
+  rname = paste('cell',1:K,sep = '')
+  cname = c('adj','unadj-hc0','unadj-hc3','unadj-lm')
+  rownames(se_diff) = rname
+  colnames(se_diff) = cname
+  print(knitr::kable(se_diff,caption = 'mean se of group diff'))
+}
+
+get_est = function(out,K,nbulk){
+  mse_adj = round(matrix(out$mse_adj,ncol=nbulk),3)
+  mse_unadj = round(matrix(out$mse_unadj,ncol=nbulk),3)
+  rname = paste('cell',1:K,sep = '')
+  cname = paste('bulk',1:nbulk,sep = '')
+  rownames(mse_adj) = rname
+  colnames(mse_adj) = cname
+  rownames(mse_unadj) = rname
+  colnames(mse_unadj) = cname
+  print(knitr::kable(mse_adj,caption = 'mse adjusted'))
+  print(knitr::kable(mse_unadj,caption = 'mse unadjusted'))
+}
+```
+
+We graduately add reference dataset and see how the estimation changes.
+
+```{r}
+## set true coefficents 
+set.seed(12345)
+library(gtools)
+G=300
+K=4
+b1 = c(0.1,0.2,0.3,0.4)
+b2 = c(0.1,0.1,0.6,0.2)
+b = cbind(b1,b1,b1,b2,b2,b2)
+ref = t(rdirichlet(K,rep(1,G)))
+nk = c(100,40,60,80)
+s = c(1,1.2,1.3,0.8)
+gene_length = sample(gene_length,G)
+nindis = 6
+seed=54321
+```
+
+We start with one UMI data set
+
+```{r,results='asis'}
+set.seed(seed)
+# test1 = simu_study(ref,b,nreps = 100,printevery = 10,gene_length=gene_length,expr_dist = 'log-normal',nk=nk,s=s,
+#                   mean_to_var_sigma = 300,mean_to_var_tau_UMI = 50,mean_to_var_tau_nonUMI = 20,
+#                   n_ref_UMI = 1,n_ref_nonUMI = 0,n_indi = nindis)
+#save(test1,file='output/multiref_test1.RData')
+load('output/multiref_test1.RData')
+get_coverage_beta(test1,4,6)
+get_se_beta(test1,4,6)
+get_se_diff(test1,4,6)
+get_est(test1,4,6)
+```
+
+add another UMI dataset, total 2 UMI dataset
+
+```{r,results='asis'}
+set.seed(seed)
+# test2 = simu_study(ref,b,nreps = 100,printevery = 10,gene_length=gene_length,expr_dist = 'log-normal',nk=nk,s=s,
+#                   mean_to_var_sigma = 300,mean_to_var_tau_UMI = 50,mean_to_var_tau_nonUMI = 20,
+#                   n_ref_UMI = 2,n_ref_nonUMI = 0,n_indi = nindis)
+#save(test2,file='output/multiref_test2.RData')
+load('output/multiref_test2.RData')
+get_coverage_beta(test2,4,6)
+get_se_beta(test2,4,6)
+get_se_diff(test2,4,6)
+get_est(test2,4,6)
+```
+
+add another nonUMI dataset, total 2 UMI and 1 nonUMI
+
+```{r,results='asis'}
+set.seed(seed)
+# test21 = simu_study(ref,b,nreps = 100,printevery = 10,gene_length=gene_length,expr_dist = 'log-normal',nk=nk,s=s,
+#                   mean_to_var_sigma = 300,mean_to_var_tau_UMI = 50,mean_to_var_tau_nonUMI = 20,
+#                   n_ref_UMI = 2,n_ref_nonUMI = 1,n_indi = nindis)
+#save(test21,file='output/multiref_test21.RData')
+load('output/multiref_test21.RData')
+get_coverage_beta(test21,4,6)
+get_se_beta(test21,4,6)
+get_se_diff(test21,4,6)
+get_est(test21,4,6)
+```
+
+add another nonUMI dataset, total 2 UMI and 2 nonUMI
+
+```{r,results='asis'}
+set.seed(seed)
+# test22 = simu_study(ref,b,nreps = 100,printevery = 10,gene_length=gene_length,expr_dist = 'log-normal',nk=nk,s=s,
+#                   mean_to_var_sigma = 300,mean_to_var_tau_UMI = 50,mean_to_var_tau_nonUMI = 20,
+#                   n_ref_UMI = 2,n_ref_nonUMI = 2,n_indi = nindis)
+# save(test22,file='output/multiref_test22.RData')
+load('output/multiref_test22.RData')
+get_coverage_beta(test22,4,6)
+get_se_beta(test22,4,6)
+get_se_diff(test22,4,6)
+get_est(test22,4,6)
+```

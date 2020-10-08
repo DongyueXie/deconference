@@ -1,0 +1,42 @@
+---
+title: "check if V is diagonal"
+author: "DongyueXie"
+date: "2020-10-05"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Let $\boldsymbol x_g\in R^K$ denote the population level gene expression, and $\boldsymbol x_{ig}\in R^K$ be the individual level one, with $E(\boldsymbol x_{ig}|\boldsymbol x_{g}) = \boldsymbol x_g$ and $Var(\boldsymbol x_{ig}|\boldsymbol x_{g}) = \Sigma_g$.
+
+Previously, we have treated $\Sigma_g$ as a diagonal matrix. 
+
+Each $\boldsymbol x_{ig}$ is not observable and we have to estimate it. For each individual, we have unbiased estimator $\hat{\boldsymbol x}_{ig}$ available and its variance is $D_{ig}$, a diagonal matrix. It's diagonal because we estimate $\boldsymbol x_{ig}$ one cell type by one cell type. 
+
+Let $\hat{\boldsymbol x}_{g} = \sum_i \frac{1}{N_{indi}} \hat{\boldsymbol x}_{ig}$ then $Var(\hat{\boldsymbol x}_{g}) = \sum_i (\frac{1}{N_{indi}})^2(\Sigma_g+D_{ig})$. To check if $\Sigma_g$ is diagonal, we need to estimate $Var(\hat{\boldsymbol x}_{g})$ and see if it's close to a diagonal matrix. An estimate of $Var(\hat{\boldsymbol x}_{g})$ is $\frac{1}{N_{indi}}\frac{1}{N_{indi}-1}\sum_i(\hat{\boldsymbol x}_{ig} - \hat{\boldsymbol x}_{g})^2$.
+
+[If $\hat{\boldsymbol x}_{i}\sim [{\boldsymbol \mu},V_i]$, one estimator of $\boldsymbol \mu$ is $(\sum_iV_i^{-1/2})^{-1}(\sum_iV_i^{-1/2}\boldsymbol x_i)$. This is derived from scaling each $\boldsymbol x_i$ to have diagonal covariance matrix.]
+
+```{r}
+source('code/deconference_main.R')
+ref.obj = readRDS('data/pancreas/refs.rds')
+cell_types = c('acinar','alpha','beta','delta','ductal','gamma')
+temp = getXV_array_all(ref.obj=ref.obj,tau2 = NULL,cell_types=cell_types,
+                         indis = NULL,gene_length_adjust=F,gene_length = NULL,
+                         protocol = c('UMI','UMI','nonUMI','nonUMI','nonUMI'))
+
+design.mat = getXV(temp$all_X_array,temp$all_Vg_array,
+                     S_olss=temp$S_olss,S_glms=temp$S_glms,sigma2=NULL,
+                   est_sigma2=F,meta_var=meta_var,meta_mode=meta_mode,
+                   cell_types=cell_types,cellsize_est='glm')
+```
+
+Let's take a look at the covariance matrix
+
+```{r}
+round(cov2cor(matrix(colSums(design.mat$Vg),ncol=6)),3)
+```
+
+

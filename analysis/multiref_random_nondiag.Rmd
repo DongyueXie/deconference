@@ -356,6 +356,8 @@ music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individu
 # run deconference
 datax = set_data_decon(y=counts(refs$bulk.obj),Y=ref1,max_count_quantile = NULL,gene_thresh = 0,w=1,marker_gene = rownames(music_out1$Weight.gene))
 
+# dataxx = set_data_multiref(list(ref1=ref1),refs$bulk.obj,marker_gene = rownames(music_out1$Weight.gene),gene_thresh = 0,cell_thresh = 0,cell_types = cell_types,protocols = c('UMI','UMI'),max_count_quantile = 1)
+# out11 = deconference_multi_ref(dataxx$ref.obj,dataxx$bulk.obj,verbose = T)
 ## no fuller's correction
 out1 = deconference(datax,verbose = F,correction = F,calc_cov = F)
 summary_real(out1,bulk.obj$bulk_prop)
@@ -379,7 +381,7 @@ out1_v_a_default = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a
 summary_real(out1_v_a_default,bulk.obj$bulk_prop)
 
 ## large fuller's correction a
-out1_v_a_large = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a=100)
+out1_v_a_large = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a=1000)
 summary_real(out1_v_a_large,bulk.obj$bulk_prop)
 
 
@@ -394,10 +396,10 @@ summary_real(out1_v_a_large,bulk.obj$bulk_prop)
 
 
 # run ols using deconference's X
-out_unadj1 = unadjusted_lm(out1$input$y,out1$input$X)
+out_unadj1 = unadjusted_lm(out1$input$y,t(t(out1$input$X)*out1$input$S))
 
 # run ols using deconference's X
-out_unadj1_v = unadjusted_lm(out1_v$input$y,out1_v$input$X)
+out_unadj1_v = unadjusted_lm(out1_v$input$y,t(t(out1_v$input$X)*out1_v$input$S))
 
 # run ols using music's X
 out_unadj1_music = unadjusted_lm(out1$input$y,music_out1$X)

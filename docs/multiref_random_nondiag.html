@@ -345,7 +345,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2020-10-08
+<strong>Last updated:</strong> 2020-10-19
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -436,16 +436,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree54444c74e98f994dda3d4b7c6982ed914a09a421targetblank54444c7a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/54444c74e98f994dda3d4b7c6982ed914a09a421" target="_blank">54444c7</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree4c0c285d6c16b68ed07d2b1668c80a9aea7f9a9ctargetblank4c0c285a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/4c0c285d6c16b68ed07d2b1668c80a9aea7f9a9c" target="_blank">4c0c285</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree54444c74e98f994dda3d4b7c6982ed914a09a421targetblank54444c7a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree4c0c285d6c16b68ed07d2b1668c80a9aea7f9a9ctargetblank4c0c285a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/54444c74e98f994dda3d4b7c6982ed914a09a421" target="_blank">54444c7</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/4c0c285d6c16b68ed07d2b1668c80a9aea7f9a9c" target="_blank">4c0c285</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -457,11 +457,13 @@ Ignored files:
 
 Untracked files:
     Untracked:  analysis/check_est_simu.Rmd
+    Untracked:  analysis/compare_V_diag.Rmd
     Untracked:  analysis/multiIndNormal.Rmd
     Untracked:  analysis/multiref_random.Rmd
     Untracked:  analysis/multiref_seger.Rmd
     Untracked:  analysis/multiref_simu_zeroinf.Rmd
     Untracked:  analysis/plotGeneVar.Rmd
+    Untracked:  code/normal.R
     Untracked:  code/simu_func_multibulk_multiref.R
     Untracked:  data/EMTAB5061Segerstolpe/
     Untracked:  data/GSE129788/
@@ -567,6 +569,7 @@ Unstaged changes:
     Modified:   analysis/real_data_simu.Rmd
     Modified:   code/deconference_estfunc.R
     Modified:   code/deconference_main.R
+    Modified:   code/deconference_meta.R
     Modified:   code/deconference_multiref.R
     Modified:   code/deconference_setdata.R
     Modified:   code/deconference_summary.R
@@ -611,6 +614,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/4c0c285d6c16b68ed07d2b1668c80a9aea7f9a9c/analysis/multiref_random_nondiag.Rmd" target="_blank">4c0c285</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-10-19
+</td>
+<td>
+wflow_publish(“analysis/multiref_random_nondiag.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/9e40169c1b12c6cea3e77fe7f6c5d79f438f9cda/docs/multiref_random_nondiag.html" target="_blank">9e40169</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-10-08
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -975,6 +1012,8 @@ music_out1 = music_prop(m_bulk,m_ref1,clusters = &#39;cell_type&#39;,samples = &
 <pre class="r"><code># run deconference
 datax = set_data_decon(y=counts(refs$bulk.obj),Y=ref1,max_count_quantile = NULL,gene_thresh = 0,w=1,marker_gene = rownames(music_out1$Weight.gene))
 
+# dataxx = set_data_multiref(list(ref1=ref1),refs$bulk.obj,marker_gene = rownames(music_out1$Weight.gene),gene_thresh = 0,cell_thresh = 0,cell_types = cell_types,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),max_count_quantile = 1)
+# out11 = deconference_multi_ref(dataxx$ref.obj,dataxx$bulk.obj,verbose = T)
 ## no fuller&#39;s correction
 out1 = deconference(datax,verbose = F,correction = F,calc_cov = F)
 summary_real(out1,bulk.obj$bulk_prop)</code></pre>
@@ -1109,39 +1148,39 @@ estimated vs true beta
 <tbody>
 <tr class="odd">
 <td>25</td>
-<td align="right">1.18</td>
-<td align="right">4.17</td>
-<td align="right">3.67</td>
-<td align="right">1.80</td>
-<td align="right">1.58</td>
-<td align="right">6.48</td>
+<td align="right">1.17</td>
+<td align="right">4.11</td>
+<td align="right">3.63</td>
+<td align="right">1.76</td>
+<td align="right">1.56</td>
+<td align="right">6.41</td>
 </tr>
 <tr class="even">
 <td>37</td>
-<td align="right">1.21</td>
-<td align="right">4.35</td>
-<td align="right">3.77</td>
-<td align="right">1.92</td>
-<td align="right">1.67</td>
-<td align="right">6.69</td>
+<td align="right">1.20</td>
+<td align="right">4.28</td>
+<td align="right">3.72</td>
+<td align="right">1.88</td>
+<td align="right">1.65</td>
+<td align="right">6.60</td>
 </tr>
 <tr class="odd">
 <td>52</td>
-<td align="right">1.21</td>
-<td align="right">4.30</td>
-<td align="right">3.78</td>
-<td align="right">1.91</td>
-<td align="right">1.68</td>
-<td align="right">6.66</td>
+<td align="right">1.20</td>
+<td align="right">4.22</td>
+<td align="right">3.73</td>
+<td align="right">1.87</td>
+<td align="right">1.66</td>
+<td align="right">6.58</td>
 </tr>
 <tr class="even">
 <td>55</td>
-<td align="right">1.18</td>
-<td align="right">4.19</td>
-<td align="right">3.71</td>
-<td align="right">1.84</td>
-<td align="right">1.60</td>
-<td align="right">6.51</td>
+<td align="right">1.17</td>
+<td align="right">4.12</td>
+<td align="right">3.67</td>
+<td align="right">1.80</td>
+<td align="right">1.59</td>
+<td align="right">6.43</td>
 </tr>
 </tbody>
 </table>
@@ -1267,9 +1306,9 @@ estimated vs true beta
 <tr class="even">
 <td>55</td>
 <td align="right">0</td>
-<td align="right">0.14</td>
+<td align="right">0.16</td>
 <td align="right">0</td>
-<td align="right">0.85</td>
+<td align="right">0.83</td>
 <td align="right">0.01</td>
 <td align="right">0</td>
 </tr>
@@ -1348,39 +1387,39 @@ estimated vs true beta
 <tbody>
 <tr class="odd">
 <td>25</td>
-<td align="right">206.67</td>
-<td align="right">18243.05</td>
-<td align="right">71959.93</td>
-<td align="right">143924.7</td>
-<td align="right">1408.75</td>
-<td align="right">91588.64</td>
+<td align="right">207.36</td>
+<td align="right">19340.49</td>
+<td align="right">76296.70</td>
+<td align="right">152589.2</td>
+<td align="right">1495.18</td>
+<td align="right">97099.03</td>
 </tr>
 <tr class="even">
 <td>37</td>
-<td align="right">211.71</td>
-<td align="right">19895.99</td>
-<td align="right">78477.52</td>
-<td align="right">156937.2</td>
-<td align="right">1535.44</td>
-<td align="right">99859.47</td>
+<td align="right">207.45</td>
+<td align="right">19344.12</td>
+<td align="right">76310.12</td>
+<td align="right">152606.6</td>
+<td align="right">1490.81</td>
+<td align="right">97101.90</td>
 </tr>
 <tr class="odd">
 <td>52</td>
-<td align="right">206.08</td>
-<td align="right">18899.72</td>
-<td align="right">74525.84</td>
-<td align="right">149056.8</td>
-<td align="right">1453.09</td>
-<td align="right">94854.01</td>
+<td align="right">206.37</td>
+<td align="right">19339.16</td>
+<td align="right">76262.16</td>
+<td align="right">152525.8</td>
+<td align="right">1487.65</td>
+<td align="right">97060.15</td>
 </tr>
 <tr class="even">
 <td>55</td>
-<td align="right">232.12</td>
-<td align="right">29663.47</td>
-<td align="right">116998.08</td>
-<td align="right">233934.3</td>
-<td align="right">2312.07</td>
-<td align="right">148859.16</td>
+<td align="right">205.34</td>
+<td align="right">19291.04</td>
+<td align="right">76048.79</td>
+<td align="right">152130.9</td>
+<td align="right">1488.33</td>
+<td align="right">96830.88</td>
 </tr>
 </tbody>
 </table>
@@ -1395,9 +1434,9 @@ estimated vs true beta
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.3648876</td>
-<td align="right">0.2598705</td>
-<td align="right">-0.1891943</td>
+<td align="right">0.3635464</td>
+<td align="right">0.2587538</td>
+<td align="right">-0.1878656</td>
 </tr>
 </tbody>
 </table>
@@ -1588,38 +1627,38 @@ estimated vs true beta
 <tr class="odd">
 <td>25</td>
 <td align="right">0.04</td>
-<td align="right">0.38</td>
-<td align="right">0.25</td>
-<td align="right">0.47</td>
-<td align="right">0.04</td>
+<td align="right">0.40</td>
+<td align="right">0.26</td>
 <td align="right">0.48</td>
+<td align="right">0.04</td>
+<td align="right">0.50</td>
 </tr>
 <tr class="even">
 <td>37</td>
 <td align="right">0.04</td>
-<td align="right">0.22</td>
-<td align="right">0.24</td>
-<td align="right">0.45</td>
+<td align="right">0.23</td>
+<td align="right">0.25</td>
+<td align="right">0.46</td>
 <td align="right">0.04</td>
-<td align="right">0.40</td>
+<td align="right">0.41</td>
 </tr>
 <tr class="odd">
 <td>52</td>
 <td align="right">0.04</td>
-<td align="right">0.24</td>
 <td align="right">0.25</td>
+<td align="right">0.26</td>
 <td align="right">0.50</td>
 <td align="right">0.04</td>
-<td align="right">0.45</td>
+<td align="right">0.46</td>
 </tr>
 <tr class="even">
 <td>55</td>
 <td align="right">0.04</td>
-<td align="right">0.34</td>
+<td align="right">0.36</td>
 <td align="right">0.29</td>
-<td align="right">0.56</td>
+<td align="right">0.55</td>
 <td align="right">0.04</td>
-<td align="right">0.53</td>
+<td align="right">0.54</td>
 </tr>
 </tbody>
 </table>
@@ -1634,9 +1673,9 @@ estimated vs true beta
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.1792446</td>
-<td align="right">0.1497841</td>
-<td align="right">0.6670865</td>
+<td align="right">0.1791926</td>
+<td align="right">0.1496473</td>
+<td align="right">0.6672978</td>
 </tr>
 </tbody>
 </table>
@@ -1719,39 +1758,39 @@ estimated vs true beta
 <tbody>
 <tr class="odd">
 <td>25</td>
-<td align="right">0.01</td>
+<td align="right">0.07</td>
+<td align="right">0.78</td>
+<td align="right">0.03</td>
+<td align="right">0.12</td>
+<td align="right">0.00</td>
 <td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0.99</td>
 </tr>
 <tr class="even">
 <td>37</td>
-<td align="right">0.02</td>
+<td align="right">0.10</td>
+<td align="right">0.68</td>
+<td align="right">0.00</td>
+<td align="right">0.11</td>
+<td align="right">0.11</td>
 <td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0.98</td>
 </tr>
 <tr class="odd">
 <td>52</td>
-<td align="right">0.02</td>
+<td align="right">0.11</td>
+<td align="right">0.64</td>
+<td align="right">0.01</td>
+<td align="right">0.06</td>
+<td align="right">0.18</td>
 <td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0.98</td>
 </tr>
 <tr class="even">
 <td>55</td>
-<td align="right">0.02</td>
+<td align="right">0.09</td>
+<td align="right">0.63</td>
+<td align="right">0.15</td>
+<td align="right">0.13</td>
+<td align="right">0.01</td>
 <td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">0.98</td>
 </tr>
 </tbody>
 </table>
@@ -1829,38 +1868,38 @@ estimated vs true beta
 <tr class="odd">
 <td>25</td>
 <td align="right">0.04</td>
-<td align="right">1.81</td>
-<td align="right">0.96</td>
-<td align="right">1.98</td>
 <td align="right">0.41</td>
-<td align="right">5.12</td>
+<td align="right">0.10</td>
+<td align="right">0.14</td>
+<td align="right">0.05</td>
+<td align="right">0.28</td>
 </tr>
 <tr class="even">
 <td>37</td>
-<td align="right">0.03</td>
-<td align="right">1.80</td>
-<td align="right">0.95</td>
-<td align="right">1.97</td>
-<td align="right">0.41</td>
-<td align="right">5.11</td>
+<td align="right">0.06</td>
+<td align="right">0.22</td>
+<td align="right">0.10</td>
+<td align="right">0.11</td>
+<td align="right">0.06</td>
+<td align="right">0.22</td>
 </tr>
 <tr class="odd">
 <td>52</td>
-<td align="right">0.03</td>
-<td align="right">1.81</td>
-<td align="right">0.96</td>
-<td align="right">1.98</td>
-<td align="right">0.41</td>
-<td align="right">5.13</td>
+<td align="right">0.06</td>
+<td align="right">0.23</td>
+<td align="right">0.09</td>
+<td align="right">0.13</td>
+<td align="right">0.06</td>
+<td align="right">0.24</td>
 </tr>
 <tr class="even">
 <td>55</td>
-<td align="right">0.03</td>
-<td align="right">1.80</td>
-<td align="right">0.95</td>
-<td align="right">1.98</td>
-<td align="right">0.41</td>
-<td align="right">5.13</td>
+<td align="right">0.05</td>
+<td align="right">0.28</td>
+<td align="right">0.09</td>
+<td align="right">0.12</td>
+<td align="right">0.05</td>
+<td align="right">0.23</td>
 </tr>
 </tbody>
 </table>
@@ -1875,9 +1914,9 @@ estimated vs true beta
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.4346889</td>
-<td align="right">0.3058343</td>
-<td align="right">-0.3075195</td>
+<td align="right">0.149901</td>
+<td align="right">0.1112764</td>
+<td align="right">0.7940057</td>
 </tr>
 </tbody>
 </table>
@@ -1906,20 +1945,20 @@ estimated vs true beta
 </tr>
 <tr class="even">
 <td>37</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
 <td align="left">FALSE</td>
-<td align="left">TRUE</td>
-<td align="left">TRUE</td>
-<td align="left">TRUE</td>
-<td align="left">TRUE</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="odd">
 <td>52</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
 <td align="left">FALSE</td>
-<td align="left">TRUE</td>
-<td align="left">TRUE</td>
-<td align="left">TRUE</td>
-<td align="left">TRUE</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="even">
@@ -1928,7 +1967,7 @@ estimated vs true beta
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
-<td align="left">TRUE</td>
+<td align="left">FALSE</td>
 <td align="left">TRUE</td>
 </tr>
 </tbody>
@@ -1958,38 +1997,38 @@ estimated vs true beta
 <tbody>
 <tr class="odd">
 <td>25</td>
-<td align="right">0</td>
-<td align="right">0.36</td>
-<td align="right">0.2</td>
-<td align="right">0.36</td>
-<td align="right">0.08</td>
+<td align="right">0.07</td>
+<td align="right">0.78</td>
+<td align="right">0.03</td>
+<td align="right">0.12</td>
+<td align="right">0.00</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td>37</td>
-<td align="right">0</td>
-<td align="right">0.36</td>
-<td align="right">0.2</td>
-<td align="right">0.36</td>
-<td align="right">0.08</td>
+<td align="right">0.10</td>
+<td align="right">0.68</td>
+<td align="right">0.00</td>
+<td align="right">0.11</td>
+<td align="right">0.11</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
 <td>52</td>
-<td align="right">0</td>
-<td align="right">0.36</td>
-<td align="right">0.2</td>
-<td align="right">0.36</td>
-<td align="right">0.09</td>
+<td align="right">0.11</td>
+<td align="right">0.64</td>
+<td align="right">0.01</td>
+<td align="right">0.06</td>
+<td align="right">0.18</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td>55</td>
-<td align="right">0</td>
-<td align="right">0.36</td>
-<td align="right">0.2</td>
-<td align="right">0.36</td>
-<td align="right">0.08</td>
+<td align="right">0.09</td>
+<td align="right">0.63</td>
+<td align="right">0.15</td>
+<td align="right">0.13</td>
+<td align="right">0.01</td>
 <td align="right">0</td>
 </tr>
 </tbody>
@@ -2067,39 +2106,39 @@ estimated vs true beta
 <tbody>
 <tr class="odd">
 <td>25</td>
-<td align="right">1332.79</td>
-<td align="right">50687.63</td>
-<td align="right">27063.39</td>
-<td align="right">54109.75</td>
-<td align="right">11465.67</td>
-<td align="right">142097.0</td>
+<td align="right">0.04</td>
+<td align="right">0.41</td>
+<td align="right">0.10</td>
+<td align="right">0.14</td>
+<td align="right">0.05</td>
+<td align="right">0.28</td>
 </tr>
 <tr class="even">
 <td>37</td>
-<td align="right">1906.31</td>
-<td align="right">71913.35</td>
-<td align="right">38576.47</td>
-<td align="right">77042.91</td>
-<td align="right">16630.46</td>
-<td align="right">202406.8</td>
+<td align="right">0.06</td>
+<td align="right">0.22</td>
+<td align="right">0.10</td>
+<td align="right">0.11</td>
+<td align="right">0.06</td>
+<td align="right">0.22</td>
 </tr>
 <tr class="odd">
 <td>52</td>
-<td align="right">1654.26</td>
-<td align="right">62495.10</td>
-<td align="right">33530.65</td>
-<td align="right">66838.68</td>
-<td align="right">14546.02</td>
-<td align="right">175885.8</td>
+<td align="right">0.06</td>
+<td align="right">0.23</td>
+<td align="right">0.09</td>
+<td align="right">0.13</td>
+<td align="right">0.06</td>
+<td align="right">0.24</td>
 </tr>
 <tr class="even">
 <td>55</td>
-<td align="right">3083.58</td>
-<td align="right">115812.34</td>
-<td align="right">62607.28</td>
-<td align="right">124245.68</td>
-<td align="right">26600.32</td>
-<td align="right">326425.9</td>
+<td align="right">0.05</td>
+<td align="right">0.28</td>
+<td align="right">0.09</td>
+<td align="right">0.12</td>
+<td align="right">0.05</td>
+<td align="right">0.23</td>
 </tr>
 </tbody>
 </table>
@@ -2114,9 +2153,9 @@ estimated vs true beta
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.1698586</td>
-<td align="right">0.1282492</td>
-<td align="right">0.358165</td>
+<td align="right">0.1498956</td>
+<td align="right">0.1112663</td>
+<td align="right">0.7940763</td>
 </tr>
 </tbody>
 </table>
@@ -2149,7 +2188,7 @@ estimated vs true beta
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
-<td align="left">TRUE</td>
+<td align="left">FALSE</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="odd">
@@ -2158,7 +2197,7 @@ estimated vs true beta
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
-<td align="left">TRUE</td>
+<td align="left">FALSE</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="even">
@@ -2167,13 +2206,13 @@ estimated vs true beta
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
-<td align="left">TRUE</td>
+<td align="left">FALSE</td>
 <td align="left">TRUE</td>
 </tr>
 </tbody>
 </table>
 <pre class="r"><code>## large fuller&#39;s correction a
-out1_v_a_large = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a=100)
+out1_v_a_large = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a=1000)
 summary_real(out1_v_a_large,bulk.obj$bulk_prop)</code></pre>
 <table class="kable_wrapper">
 <caption>
@@ -2197,38 +2236,38 @@ estimated vs true beta
 <tbody>
 <tr class="odd">
 <td>25</td>
-<td align="right">0</td>
-<td align="right">0.39</td>
-<td align="right">0.19</td>
-<td align="right">0.35</td>
 <td align="right">0.07</td>
+<td align="right">0.79</td>
+<td align="right">0.02</td>
+<td align="right">0.12</td>
+<td align="right">0.00</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td>37</td>
-<td align="right">0</td>
-<td align="right">0.38</td>
-<td align="right">0.18</td>
-<td align="right">0.35</td>
-<td align="right">0.09</td>
+<td align="right">0.10</td>
+<td align="right">0.68</td>
+<td align="right">0.00</td>
+<td align="right">0.11</td>
+<td align="right">0.12</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
 <td>52</td>
-<td align="right">0</td>
-<td align="right">0.38</td>
-<td align="right">0.18</td>
-<td align="right">0.35</td>
-<td align="right">0.09</td>
+<td align="right">0.11</td>
+<td align="right">0.64</td>
+<td align="right">0.00</td>
+<td align="right">0.06</td>
+<td align="right">0.19</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td>55</td>
-<td align="right">0</td>
-<td align="right">0.38</td>
-<td align="right">0.19</td>
-<td align="right">0.35</td>
 <td align="right">0.08</td>
+<td align="right">0.63</td>
+<td align="right">0.15</td>
+<td align="right">0.12</td>
+<td align="right">0.02</td>
 <td align="right">0</td>
 </tr>
 </tbody>
@@ -2306,39 +2345,39 @@ estimated vs true beta
 <tbody>
 <tr class="odd">
 <td>25</td>
-<td align="right">399.98</td>
-<td align="right">16036.46</td>
-<td align="right">8156.04</td>
-<td align="right">16824.73</td>
-<td align="right">3442.32</td>
-<td align="right">44091.48</td>
+<td align="right">0.04</td>
+<td align="right">0.41</td>
+<td align="right">0.10</td>
+<td align="right">0.14</td>
+<td align="right">0.04</td>
+<td align="right">0.26</td>
 </tr>
 <tr class="even">
 <td>37</td>
-<td align="right">485.85</td>
-<td align="right">19077.21</td>
-<td align="right">9752.77</td>
-<td align="right">20106.99</td>
-<td align="right">4342.53</td>
-<td align="right">52831.38</td>
+<td align="right">0.05</td>
+<td align="right">0.21</td>
+<td align="right">0.10</td>
+<td align="right">0.11</td>
+<td align="right">0.05</td>
+<td align="right">0.20</td>
 </tr>
 <tr class="odd">
 <td>52</td>
-<td align="right">467.04</td>
-<td align="right">18374.72</td>
-<td align="right">9455.58</td>
-<td align="right">19319.66</td>
-<td align="right">4271.78</td>
-<td align="right">50990.93</td>
+<td align="right">0.06</td>
+<td align="right">0.23</td>
+<td align="right">0.09</td>
+<td align="right">0.12</td>
+<td align="right">0.05</td>
+<td align="right">0.22</td>
 </tr>
 <tr class="even">
 <td>55</td>
-<td align="right">549.36</td>
-<td align="right">21630.00</td>
-<td align="right">11199.97</td>
-<td align="right">22688.58</td>
-<td align="right">4721.58</td>
-<td align="right">59731.88</td>
+<td align="right">0.05</td>
+<td align="right">0.28</td>
+<td align="right">0.09</td>
+<td align="right">0.12</td>
+<td align="right">0.04</td>
+<td align="right">0.22</td>
 </tr>
 </tbody>
 </table>
@@ -2353,9 +2392,9 @@ estimated vs true beta
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.165351</td>
-<td align="right">0.1265754</td>
-<td align="right">0.4041227</td>
+<td align="right">0.1493428</td>
+<td align="right">0.1103113</td>
+<td align="right">0.8004611</td>
 </tr>
 </tbody>
 </table>
@@ -2388,7 +2427,7 @@ estimated vs true beta
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
-<td align="left">TRUE</td>
+<td align="left">FALSE</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="odd">
@@ -2397,7 +2436,7 @@ estimated vs true beta
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
-<td align="left">TRUE</td>
+<td align="left">FALSE</td>
 <td align="left">TRUE</td>
 </tr>
 <tr class="even">
@@ -2406,7 +2445,7 @@ estimated vs true beta
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
 <td align="left">TRUE</td>
-<td align="left">TRUE</td>
+<td align="left">FALSE</td>
 <td align="left">TRUE</td>
 </tr>
 </tbody>
@@ -2422,10 +2461,10 @@ estimated vs true beta
 
 
 # run ols using deconference&#39;s X
-out_unadj1 = unadjusted_lm(out1$input$y,out1$input$X)
+out_unadj1 = unadjusted_lm(out1$input$y,t(t(out1$input$X)*out1$input$S))
 
 # run ols using deconference&#39;s X
-out_unadj1_v = unadjusted_lm(out1_v$input$y,out1_v$input$X)
+out_unadj1_v = unadjusted_lm(out1_v$input$y,t(t(out1_v$input$X)*out1_v$input$S))
 
 # run ols using music&#39;s X
 out_unadj1_music = unadjusted_lm(out1$input$y,music_out1$X)</code></pre>
@@ -2447,14 +2486,14 @@ out_unadj1_music = unadjusted_lm(out1$input$y,music_out1$X)</code></pre>
 MuSiC                 0.13353 0.09351  0.8825
 nnls                  0.17519 0.12370  0.8452
 adj-diag              0.14365 0.10947  0.6583
-adj-diag-a default    0.36489 0.25987 -0.1892
-adj-diag-a large      0.17924 0.14978  0.6671
-adj-nondiag           0.43469 0.30583 -0.3075
-adj-nondiag-a default 0.16986 0.12825  0.3582
-adj-nondiag-a large   0.16535 0.12658  0.4041
-unadj-diag            0.09018 0.07097  0.9197
-unadj-nondiag         0.08904 0.06908  0.9090
-unadj-music X         0.12356 0.08942  0.8703</code></pre>
+adj-diag-a default    0.36355 0.25875 -0.1879
+adj-diag-a large      0.17919 0.14965  0.6673
+adj-nondiag           0.14990 0.11128  0.7940
+adj-nondiag-a default 0.14990 0.11127  0.7941
+adj-nondiag-a large   0.14934 0.11031  0.8005
+unadj-diag            0.15347 0.10874  0.8559
+unadj-nondiag         0.14310 0.10425  0.8290
+unadj-music X         0.15597 0.11188  0.8259</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

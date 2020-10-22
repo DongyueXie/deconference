@@ -1,0 +1,506 @@
+---
+title: "multiple reference, random select individuals"
+author: "DongyueXie"
+date: "2020-09-20"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r,message=FALSE,warning=FALSE}
+library(MuSiC)
+library(Biobase)
+library(xbioc)
+source('code/deconference_main.R')
+
+# 4
+baron <- readRDS("data/pancreas/baron.rds")
+
+# 4
+muraro <- readRDS("data/pancreas/muraro.rds")
+
+# 10
+seger <- readRDS("data/pancreas/segerstolpe_raw.rds")
+
+# 8
+#enge = readRDS("data/pancreas/enge_raw.rds")
+
+# 18
+#xin = readRDS('data/pancreas/xin_raw.rds')
+gene_length = readRDS('data/gene_length.rds')
+```
+
+```{r,eval=FALSE,}
+ref.obj = list(baron=baron,muraro=muraro,seger=seger,enge=enge,xin=xin)
+refs = set_data_multiref(ref.obj,gene_thresh = 0.1,gene_length = gene_length,protocols = c('UMI','UMI','nonUMI','nonUMI','nonUMI'))
+```
+
+we still use seger data creating bulk data, but using two UMI data as reference. each time we randomly select some individuals from the dataset.
+
+```{r}
+create_bulk = function(data.obj,indis,cell_types,min_prop=0.15){
+  G = nrow(data.obj)
+  bulk_counts = matrix(nrow=G,ncol=length(indis))
+  col_condition = c()
+  bulk_prop = c()
+  bulk_ncell = c()
+  #bulk_prop = matrix(nrow=length(indis),ncol = length(cell_types))
+  for(i in 1:length(indis)){
+    idx.temp = which(data.obj$individual==indis[i]&data.obj$cell_type%in%cell_types)
+    cell_counts = table(data.obj$cell_type[idx.temp])
+    
+    if(!is.null(min_prop)){
+      
+      min_count = min(cell_counts)
+    max_cell = floor(min(cell_counts)/min_prop)
+    if(max_cell<sum(cell_counts)){
+      
+      to_rm = sum(cell_counts) - max_cell
+      for(j in 1:length(cell_counts)){
+        rm.celltype = names(cell_counts)[which.max(cell_counts)]
+        candidate.rm.idx = which(data.obj[,idx.temp]$cell_type==rm.celltype)
+        if(to_rm>(max(cell_counts)-min_count)){
+          idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),max(cell_counts)-min_count)]]
+          to_rm = to_rm - max(cell_counts) + min_count
+          cell_counts = table(data.obj$cell_type[idx.temp])
+        }else{
+          idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),to_rm)]]
+          cell_counts = table(data.obj$cell_type[idx.temp])
+          break
+        }
+        
+      }
+      # while (to_rm>0&max(cell_counts)>(max_cell*min_prop)) {
+      #   rm.celltype = names(cell_counts)[which.max(cell_counts)]
+      #   candidate.rm.idx = which(data.obj[,idx.temp]$cell_type==rm.celltype)
+      #   idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),1)]]
+      #   cell_counts = table(data.obj$cell_type[idx.temp])
+      #   to_rm = to_rm - 1
+      # }
+    }
+    
+    }
+    
+    
+    cell_prop = cell_counts/sum(cell_counts)
+    bulk_prop = rbind(bulk_prop,cell_prop)
+    bulk_ncell = rbind(bulk_ncell,cell_counts)
+    bulk_counts[,i] = rowSums(counts(data.obj)[,idx.temp])
+    #col_condition[i] = (data.obj$disease[which(data.obj$individual==indis[i])])[1]
+    # bulk_prop[i,] = 
+  }
+  colnames(bulk_counts) = indis
+  rownames(bulk_counts) = rownames(data.obj)
+  rownames(bulk_ncell) = indis
+  rownames(bulk_prop) = indis
+  #ii = which(data.obj$individual%in%indis&data.obj$cell_type%in%cell_types)
+  #bulk_prop = table(data.obj$individual[ii],data.obj$cell_type[ii])
+  #bulk_prop = bulk_prop/rowSums(bulk_prop)
+  coldata = DataFrame(individual = indis)
+  #browser()
+  out = SingleCellExperiment(assays = list(counts = as.matrix(bulk_counts)),
+                                   colData = coldata)
+  return(list(bulk = out,bulk_prop = bulk_prop,bulk_ncell=bulk_ncell))
+}
+
+
+
+summary_real = function(out,true_b){
+  
+  # compare fitted vs true
+  b_hat = t(out$beta_hat)
+  rownames(b_hat) = rownames(true_b)
+  colnames(b_hat) = colnames(true_b)
+  print(knitr::kable(
+  list(t0 = round(b_hat,2), t1 = round(true_b,2)),
+  caption = 'estimated vs true beta',
+  booktabs = TRUE, valign = 't'))
+  
+  
+  ci_length = t(round(out$beta_se,2))
+  colnames(ci_length) = colnames(true_b)
+  rownames(ci_length) = rownames(true_b)
+  print(knitr::kable(ci_length,caption = 'beta hat se'))
+  
+  # summary statistics
+  rmse = sqrt(mean((t(out$beta_hat)-true_b)^2))
+  mad = mean(abs(t(out$beta_hat)-true_b))
+  r2 = cor(c(t(out$beta_hat)),c(true_b))
+  ss = rbind(c(rmse,mad,r2))
+  colnames(ss) = c('rmse','mad','r2')
+  rownames(ss) = NULL
+  
+  print(knitr::kable(ss,caption='error measure'))
+  
+  # coverage, length of CI
+  ci = build_ci(out)
+  coverage = c(true_b>=t(ci$ci_l))&(true_b<=t(ci$ci_r))
+  
+  print(knitr::kable(coverage,caption='coverage'))
+
+  # two group test
+  
+  # groups = c(rep(1,3),rep(2,6))
+  # g1 = which(groups==1)
+  # g2 = which(groups==2)
+  # test2 = two_group_test(out,groups)
+  # 
+  # test_out = rbind(round(colMeans(true_b[g1,]) - colMeans(true_b[g2,]),3),
+  #                  round(test2$diff_group,3),
+  #                  round(sqrt(diag(test2$V_tilde)),3),
+  #                  round(test2$p_value,3))
+  # rownames(test_out) = c('true diff','estimated diff','se','p value')
+  # print(knitr::kable(test_out,caption= ' two group test'))
+  
+}
+
+music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples, 
+    select.ct = NULL, cell_size = NULL, ct.cov = FALSE, verbose = TRUE, 
+    iter.max = 1000, nu = 1e-04, eps = 0.01, centered = FALSE, 
+    normalize = FALSE, ...) 
+{
+    bulk.gene = rownames(bulk.eset)[rowMeans(exprs(bulk.eset)) != 
+        0]
+    bulk.eset = bulk.eset[bulk.gene, , drop = FALSE]
+    if (is.null(markers)) {
+        sc.markers = bulk.gene
+    }
+    else {
+        sc.markers = intersect(bulk.gene, unlist(markers))
+    }
+    sc.basis = music_basis(sc.eset, non.zero = TRUE, markers = sc.markers, 
+        clusters = clusters, samples = samples, select.ct = select.ct, 
+        cell_size = cell_size, ct.cov = ct.cov, verbose = verbose)
+    cm.gene = intersect(rownames(sc.basis$Disgn.mtx), bulk.gene)
+    if (is.null(markers)) {
+        if (length(cm.gene) < 0.2 * min(length(bulk.gene), nrow(sc.eset))) 
+            stop("Too few common genes!")
+    }
+    else {
+        if (length(cm.gene) < 0.2 * length(unlist(markers))) 
+            stop("Too few common genes!")
+    }
+    if (verbose) {
+        message(paste("Used", length(cm.gene), "common genes..."))
+    }
+    m.sc = match(cm.gene, rownames(sc.basis$Disgn.mtx))
+    m.bulk = match(cm.gene, bulk.gene)
+    D1 = sc.basis$Disgn.mtx[m.sc, ]
+    M.S = colMeans(sc.basis$S, na.rm = T)
+    if (!is.null(cell_size)) {
+        if (!is.data.frame(cell_size)) {
+            stop("cell_size paramter should be a data.frame with 1st column for cell type names and 2nd column for cell sizes")
+        }
+        else if (sum(names(M.S) %in% cell_size[, 1]) != length(names(M.S))) {
+            stop("Cell type names in cell_size must match clusters")
+        }
+        else if (any(is.na(as.numeric(cell_size[, 2])))) {
+            stop("Cell sizes should all be numeric")
+        }
+        my_ms_names <- names(M.S)
+        cell_size <- cell_size[my_ms_names %in% cell_size[, 1], 
+            ]
+        M.S <- cell_size[match(my_ms_names, cell_size[, 1]), 
+            ]
+        M.S <- M.S[, 2]
+        names(M.S) <- my_ms_names
+    }
+    Yjg = relative.ab(exprs(bulk.eset)[m.bulk, ])
+    N.bulk = ncol(bulk.eset)
+    if (ct.cov) {
+        Sigma.ct = sc.basis$Sigma.ct[, m.sc]
+        if (sum(Yjg[, i] == 0) > 0) {
+            D1.temp = D1[Yjg[, i] != 0, ]
+            Yjg.temp = Yjg[Yjg[, i] != 0, i]
+            Sigma.ct.temp = Sigma.ct[, Yjg[, i] != 0]
+            if (verbose) 
+                message(paste(colnames(Yjg)[i], "has common genes", 
+                  sum(Yjg[, i] != 0), "..."))
+        }
+        else {
+            D1.temp = D1
+            Yjg.temp = Yjg[, i]
+            Sigma.ct.temp = Sigma.ct
+            if (verbose) 
+                message(paste(colnames(Yjg)[i], "has common genes", 
+                  sum(Yjg[, i] != 0), "..."))
+        }
+        lm.D1.weighted = music.iter.ct(Yjg.temp, D1.temp, M.S, 
+            Sigma.ct.temp, iter.max = iter.max, nu = nu, eps = eps, 
+            centered = centered, normalize = normalize)
+        Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+        Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+        weight.gene.temp = rep(NA, nrow(Yjg))
+        weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+        Weight.gene = cbind(Weight.gene, weight.gene.temp)
+        r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+        Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+    }
+    else {
+        Sigma = sc.basis$Sigma[m.sc, ]
+        valid.ct = (colSums(is.na(Sigma)) == 0) & (colSums(is.na(D1)) == 
+            0) & (!is.na(M.S))
+        if (sum(valid.ct) <= 1) {
+            stop("Not enough valid cell type!")
+        }
+        if (verbose) {
+            message(paste("Used", sum(valid.ct), "cell types in deconvolution..."))
+        }
+        D1 = D1[, valid.ct]
+        M.S = M.S[valid.ct]
+        D1 = D1/M.S[1]
+        M.S = M.S/M.S[1]
+        
+        Sigma = Sigma[, valid.ct]
+        Est.prop.allgene = NULL
+        Est.prop.weighted = NULL
+        Weight.gene = NULL
+        r.squared.full = NULL
+        Var.prop = NULL
+        for (i in 1:N.bulk) {
+            if (sum(Yjg[, i] == 0) > 0) {
+                D1.temp = D1[Yjg[, i] != 0, ]
+                Yjg.temp = Yjg[Yjg[, i] != 0, i]
+                Sigma.temp = Sigma[Yjg[, i] != 0, ]
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], "has common genes", 
+                    sum(Yjg[, i] != 0), "..."))
+            }
+            else {
+                D1.temp = D1
+                Yjg.temp = Yjg[, i]
+                Sigma.temp = Sigma
+                if (verbose) 
+                  message(paste(colnames(Yjg)[i], "has common genes", 
+                    sum(Yjg[, i] != 0), "..."))
+            }
+            lm.D1.weighted = music.iter(Yjg.temp, D1.temp, M.S, 
+                Sigma.temp, iter.max = iter.max, nu = nu, eps = eps, 
+                centered = centered, normalize = normalize)
+            Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
+            Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
+            weight.gene.temp = rep(NA, nrow(Yjg))
+            weight.gene.temp[Yjg[, i] != 0] = lm.D1.weighted$weight.gene
+            Weight.gene = cbind(Weight.gene, weight.gene.temp)
+            r.squared.full = c(r.squared.full, lm.D1.weighted$R.squared)
+            Var.prop = rbind(Var.prop, lm.D1.weighted$var.p)
+        }
+    }
+    colnames(Est.prop.weighted) = colnames(D1)
+    rownames(Est.prop.weighted) = colnames(Yjg)
+    colnames(Est.prop.allgene) = colnames(D1)
+    rownames(Est.prop.allgene) = colnames(Yjg)
+    names(r.squared.full) = colnames(Yjg)
+    colnames(Weight.gene) = colnames(Yjg)
+    rownames(Weight.gene) = cm.gene
+    colnames(Var.prop) = colnames(D1)
+    rownames(Var.prop) = colnames(Yjg)
+    return(list(Est.prop.weighted = Est.prop.weighted, Est.prop.allgene = Est.prop.allgene, 
+        Weight.gene = Weight.gene, r.squared.full = r.squared.full, 
+        Var.prop = Var.prop,X=D1,S=M.S))
+}
+
+
+sce_to_es = function(sce){
+  #bulk.data = ExpressionSet(assayData = counts(enge_bulk$bulk))
+  pheno_Data = data.frame(cell_type = sce$cell_type,individual = sce$individual)
+  rownames(pheno_Data) = colnames(sce)
+  ref.data = ExpressionSet(assayData = counts(sce),phenoData = AnnotatedDataFrame(pheno_Data))
+  ref.data
+}
+
+```
+
+```{r}
+cell_types = c('acinar','alpha','beta','delta','ductal','gamma')
+bulk.obj = create_bulk(seger,indis=c(25,37,52,55),cell_types = cell_types,min_prop = NULL)
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c('UMI','UMI'),cell_types = cell_types)
+```
+
+## select 2 from each dataset as reference
+
+another [version](multiref_random_nondiag.html).
+
+
+```{r,results='asis'}
+# select two from baron
+baron_indi = levels(factor(baron$individual))
+samples_baron_indi = c('1','4')
+baron1 = refs$ref.obj$baron[,which(refs$ref.obj$baron$individual%in%samples_baron_indi)]
+colData(baron1) = DataFrame(cell_type=baron1$cell_type,individual=baron1$individual)
+
+# select from muraro
+muraro_indi = levels(factor(muraro$individual))
+sampled_muraro_indi = c('D28','D31')
+muraro1 = refs$ref.obj$muraro[,which(refs$ref.obj$muraro$individual%in%sampled_muraro_indi)]
+colData(muraro1) = DataFrame(cell_type=muraro1$cell_type,individual=muraro1$individual)
+
+ref1 = cbind(baron1,muraro1)
+dim(ref1)
+
+
+
+# run music
+
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref1 = sce_to_es(ref1)
+music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+
+
+# run deconference
+datax = set_data_decon(y=counts(refs$bulk.obj),Y=ref1,max_count_quantile = NULL,gene_thresh = 0,w=1,marker_gene = rownames(music_out1$Weight.gene))
+
+# dataxx = set_data_multiref(list(ref1=ref1),refs$bulk.obj,marker_gene = rownames(music_out1$Weight.gene),gene_thresh = 0,cell_thresh = 0,cell_types = cell_types,protocols = c('UMI','UMI'),max_count_quantile = 1)
+# out11 = deconference_multi_ref(dataxx$ref.obj,dataxx$bulk.obj,verbose = T)
+## no fuller's correction
+out1 = deconference(datax,verbose = F,correction = F,calc_cov = F)
+summary_real(out1,bulk.obj$bulk_prop)
+
+## fuller's correction with default a
+out1_a_default = deconference(datax,verbose = F,calc_cov = F,a=10)
+summary_real(out1_a_default,bulk.obj$bulk_prop)
+
+# run deconference with large a in fuller's correction
+out1_a_large = deconference(datax,verbose = F,a=1000,calc_cov = F)
+summary_real(out1_a_large,bulk.obj$bulk_prop)
+
+# run deconference with non-diagonal covs 
+
+## no fuller's correction
+out1_v = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,correction = F)
+summary_real(out1_v,bulk.obj$bulk_prop)
+
+## default fuller's correction
+out1_v_a_default = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a=10)
+summary_real(out1_v_a_default,bulk.obj$bulk_prop)
+
+## large fuller's correction a
+out1_v_a_large = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a=1000)
+summary_real(out1_v_a_large,bulk.obj$bulk_prop)
+
+
+# run deconference with weights from music
+# w = music_out1$Weight.gene
+# w = apply(w,2,function(z){z/sum(z,na.rm = T)})
+# w = rowMeans(w,na.rm = T)
+# datax = set_data_decon(y=counts(refs$bulk.obj),Y=ref1,max_count_quantile = NULL,gene_thresh = 0,w=w,marker_gene = rownames(music_out1$Weight.gene))
+# out1_w = deconference(datax,verbose = F,calc_cov = F)
+# summary_real(out1_w,bulk.obj$bulk_prop) 
+
+
+
+# run ols using deconference's X
+out_unadj1 = unadjusted_lm(out1$input$y,t(t(out1$input$X)*out1$input$S))
+
+# run ols using deconference's X
+out_unadj1_v = unadjusted_lm(out1_v$input$y,t(t(out1_v$input$X)*out1_v$input$S))
+
+# run ols using music's X
+out_unadj1_music = unadjusted_lm(out1$input$y,music_out1$X)
+```
+
+```{r}
+Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
+                           data.matrix(music_out1$Est.prop.allgene),
+                           data.matrix(t(out1$beta_hat)),
+                           data.matrix(t(out1_a_default$beta_hat)),
+                           data.matrix(t(out1_a_large$beta_hat)),
+                           data.matrix(t(out1_v$beta_hat)),
+                           data.matrix(t(out1_v_a_default$beta_hat)),
+                           data.matrix(t(out1_v_a_large$beta_hat)),
+                           t(out_unadj1$beta_hat),
+                           t(out_unadj1_v$beta_hat),
+                           t(out_unadj1_music$beta_hat)), 
+           method.name = c('MuSiC','nnls','adj-diag','adj-diag-a default','adj-diag-a large',
+                           'adj-nondiag','adj-nondiag-a default','adj-nondiag-a large','unadj-diag','unadj-nondiag','unadj-music X'))
+```
+
+
+## use all indis
+
+use all individuals from baron and muraro
+
+```{r,results='asis'}
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+dim(ref2)
+
+# run music
+ref1 = ref2
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref1 = sce_to_es(ref1)
+music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+
+
+# run deconference
+datax = set_data_decon(y=counts(refs$bulk.obj),Y=ref1,max_count_quantile = NULL,gene_thresh = 0,w=1,marker_gene = rownames(music_out1$Weight.gene))
+
+# dataxx = set_data_multiref(list(ref1=ref1),refs$bulk.obj,marker_gene = rownames(music_out1$Weight.gene),gene_thresh = 0,cell_thresh = 0,cell_types = cell_types,protocols = c('UMI','UMI'),max_count_quantile = 1)
+# out11 = deconference_multi_ref(dataxx$ref.obj,dataxx$bulk.obj,verbose = T)
+## no fuller's correction
+out1 = deconference(datax,verbose = F,correction = F,calc_cov = F)
+summary_real(out1,bulk.obj$bulk_prop)
+
+## fuller's correction with default a
+out1_a_default = deconference(datax,verbose = F,calc_cov = F,a=10)
+summary_real(out1_a_default,bulk.obj$bulk_prop)
+
+# run deconference with large a in fuller's correction
+out1_a_large = deconference(datax,verbose = F,a=1000,calc_cov = F)
+summary_real(out1_a_large,bulk.obj$bulk_prop)
+
+# run deconference with non-diagonal covs 
+
+## no fuller's correction
+out1_v = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,correction = F)
+summary_real(out1_v,bulk.obj$bulk_prop)
+
+## default fuller's correction
+out1_v_a_default = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a=10)
+summary_real(out1_v_a_default,bulk.obj$bulk_prop)
+
+## large fuller's correction a
+out1_v_a_large = deconference(datax,verbose = F,est_pop_var = F,calc_cov = F,a=1000)
+summary_real(out1_v_a_large,bulk.obj$bulk_prop)
+
+
+# run deconference with weights from music
+# w = music_out1$Weight.gene
+# w = apply(w,2,function(z){z/sum(z,na.rm = T)})
+# w = rowMeans(w,na.rm = T)
+# datax = set_data_decon(y=counts(refs$bulk.obj),Y=ref1,max_count_quantile = NULL,gene_thresh = 0,w=w,marker_gene = rownames(music_out1$Weight.gene))
+# out1_w = deconference(datax,verbose = F,calc_cov = F)
+# summary_real(out1_w,bulk.obj$bulk_prop) 
+
+
+
+# run ols using deconference's X
+out_unadj1 = unadjusted_lm(out1$input$y,t(t(out1$input$X)*out1$input$S))
+
+# run ols using deconference's X
+out_unadj1_v = unadjusted_lm(out1_v$input$y,t(t(out1_v$input$X)*out1_v$input$S))
+
+# run ols using music's X
+out_unadj1_music = unadjusted_lm(out1$input$y,music_out1$X)
+```
+
+```{r}
+Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
+                           data.matrix(music_out1$Est.prop.allgene),
+                           data.matrix(t(out1$beta_hat)),
+                           data.matrix(t(out1_a_default$beta_hat)),
+                           data.matrix(t(out1_a_large$beta_hat)),
+                           data.matrix(t(out1_v$beta_hat)),
+                           data.matrix(t(out1_v_a_default$beta_hat)),
+                           data.matrix(t(out1_v_a_large$beta_hat)),
+                           t(out_unadj1$beta_hat),
+                           t(out_unadj1_v$beta_hat),
+                           t(out_unadj1_music$beta_hat)), 
+           method.name = c('MuSiC','nnls','adj-diag','adj-diag-a default','adj-diag-a large',
+                           'adj-nondiag','adj-nondiag-a default','adj-nondiag-a large','unadj-diag','unadj-nondiag','unadj-music X'))
+```

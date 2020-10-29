@@ -1,0 +1,154 @@
+---
+title: "music gene length"
+author: "DongyueXie"
+date: "2020-10-29"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Merge a non-UMI scRNA-seq dataset as bulk data, then use two UMI scRNA-seq dataset as reference data. 
+
+Compare input a. gene-length adjusted bulk; b. raw bulk
+
+```{r,message=FALSE,warning=FALSE}
+library(MuSiC)
+library(Biobase)
+library(xbioc)
+source('code/deconference_main.R')
+
+# 4
+baron <- readRDS("data/pancreas/baron.rds")
+
+# 4
+muraro <- readRDS("data/pancreas/muraro.rds")
+
+# 10
+seger <- readRDS("data/pancreas/segerstolpe_raw.rds")
+
+# 8
+#enge = readRDS("data/pancreas/enge_raw.rds")
+
+# 18
+#xin = readRDS('data/pancreas/xin_raw.rds')
+gene_length = readRDS('data/gene_length.rds')
+```
+
+
+
+```{r}
+create_bulk = function(data.obj,indis,cell_types,min_prop=0.15){
+  G = nrow(data.obj)
+  bulk_counts = matrix(nrow=G,ncol=length(indis))
+  col_condition = c()
+  bulk_prop = c()
+  bulk_ncell = c()
+  #bulk_prop = matrix(nrow=length(indis),ncol = length(cell_types))
+  for(i in 1:length(indis)){
+    idx.temp = which(data.obj$individual==indis[i]&data.obj$cell_type%in%cell_types)
+    cell_counts = table(data.obj$cell_type[idx.temp])
+    
+    if(!is.null(min_prop)){
+      
+      min_count = min(cell_counts)
+    max_cell = floor(min(cell_counts)/min_prop)
+    if(max_cell<sum(cell_counts)){
+      
+      to_rm = sum(cell_counts) - max_cell
+      for(j in 1:length(cell_counts)){
+        rm.celltype = names(cell_counts)[which.max(cell_counts)]
+        candidate.rm.idx = which(data.obj[,idx.temp]$cell_type==rm.celltype)
+        if(to_rm>(max(cell_counts)-min_count)){
+          idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),max(cell_counts)-min_count)]]
+          to_rm = to_rm - max(cell_counts) + min_count
+          cell_counts = table(data.obj$cell_type[idx.temp])
+        }else{
+          idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),to_rm)]]
+          cell_counts = table(data.obj$cell_type[idx.temp])
+          break
+        }
+        
+      }
+      # while (to_rm>0&max(cell_counts)>(max_cell*min_prop)) {
+      #   rm.celltype = names(cell_counts)[which.max(cell_counts)]
+      #   candidate.rm.idx = which(data.obj[,idx.temp]$cell_type==rm.celltype)
+      #   idx.temp = idx.temp[-candidate.rm.idx[sample(1:length(candidate.rm.idx),1)]]
+      #   cell_counts = table(data.obj$cell_type[idx.temp])
+      #   to_rm = to_rm - 1
+      # }
+    }
+    
+    }
+    
+    
+    cell_prop = cell_counts/sum(cell_counts)
+    bulk_prop = rbind(bulk_prop,cell_prop)
+    bulk_ncell = rbind(bulk_ncell,cell_counts)
+    bulk_counts[,i] = rowSums(counts(data.obj)[,idx.temp])
+    #col_condition[i] = (data.obj$disease[which(data.obj$individual==indis[i])])[1]
+    # bulk_prop[i,] = 
+  }
+  colnames(bulk_counts) = indis
+  rownames(bulk_counts) = rownames(data.obj)
+  rownames(bulk_ncell) = indis
+  rownames(bulk_prop) = indis
+  #ii = which(data.obj$individual%in%indis&data.obj$cell_type%in%cell_types)
+  #bulk_prop = table(data.obj$individual[ii],data.obj$cell_type[ii])
+  #bulk_prop = bulk_prop/rowSums(bulk_prop)
+  coldata = DataFrame(individual = indis)
+  #browser()
+  out = SingleCellExperiment(assays = list(counts = as.matrix(bulk_counts)),
+                                   colData = coldata)
+  return(list(bulk = out,bulk_prop = bulk_prop,bulk_ncell=bulk_ncell))
+}
+
+
+sce_to_es = function(sce){
+  #bulk.data = ExpressionSet(assayData = counts(enge_bulk$bulk))
+  pheno_Data = data.frame(cell_type = sce$cell_type,individual = sce$individual)
+  rownames(pheno_Data) = colnames(sce)
+  ref.data = ExpressionSet(assayData = counts(sce),phenoData = AnnotatedDataFrame(pheno_Data))
+  ref.data
+}
+```
+
+do not adjust gene length
+
+```{r}
+cell_types = c('acinar','alpha','beta','delta','ductal','gamma')
+bulk.obj = create_bulk(seger,indis=c(25,37,52,55),cell_types = cell_types,min_prop = NULL)
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = NULL,protocols = c('UMI','UMI'),cell_types = cell_types)
+```
+
+```{r}
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+dim(ref2)
+
+# run music
+ref1 = ref2
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref1 = sce_to_es(ref1)
+music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+```
+
+adjust gene length
+
+```{r}
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c('UMI','UMI'),cell_types = cell_types)
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+#m_ref1 = sce_to_es(ref1)
+music_out2 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+```
+
+```{r}
+Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
+                           data.matrix(music_out2$Est.prop.weighted)),
+           method.name = c('raw','gene-len-adj'))
+```

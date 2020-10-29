@@ -114,12 +114,36 @@ sce_to_es = function(sce){
 }
 ```
 
-do not adjust gene length
+# seger
 
 ```{r}
 cell_types = c('acinar','alpha','beta','delta','ductal','gamma')
-bulk.obj = create_bulk(seger,indis=c(25,37,52,55),cell_types = cell_types,min_prop = NULL)
-refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = NULL,protocols = c('UMI','UMI'),cell_types = cell_types)
+bulk.obj = create_bulk(seger,indis=unique(seger$individual),cell_types = cell_types,min_prop = NULL)
+```
+
+adjust gene length
+
+```{r}
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c('UMI','UMI'),cell_types = cell_types)
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref2 = sce_to_es(ref2)
+music_out2 = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual')
+```
+
+
+do not adjust gene length
+
+```{r}
+# make sure use the same set of genes.
+gene_length2 = gene_length
+gene_length2[gene_length2!=1] = 1
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length2,protocols = c('UMI','UMI'),cell_types = cell_types)
 ```
 
 ```{r}
@@ -128,7 +152,6 @@ muraro2 = refs$ref.obj$muraro
 colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
 colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
 ref2 = cbind(baron2,muraro2)
-dim(ref2)
 
 # run music
 ref1 = ref2
@@ -137,14 +160,118 @@ m_ref1 = sce_to_es(ref1)
 music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
 ```
 
+
+```{r}
+Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
+                           data.matrix(music_out2$Est.prop.weighted)),
+           method.name = c('raw','gene-len-adj'))
+```
+
+
+# Xin
+
+```{r}
+xin <- readRDS("data/pancreas/xin_raw.rds")
+```
+
+```{r}
+cell_types = c('alpha','beta','delta','gamma')
+bulk.obj = create_bulk(xin,indis=unique(xin$individual),cell_types = cell_types,min_prop = NULL)
+```
+
 adjust gene length
 
 ```{r}
 refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c('UMI','UMI'),cell_types = cell_types)
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
 m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
-#m_ref1 = sce_to_es(ref1)
-music_out2 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+m_ref2 = sce_to_es(ref2)
+music_out2 = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual')
 ```
+
+
+do not adjust gene length
+
+```{r}
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length2,protocols = c('UMI','UMI'),cell_types = cell_types)
+```
+
+```{r}
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+# run music
+ref1 = ref2
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref1 = sce_to_es(ref1)
+music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+```
+
+
+```{r}
+Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
+                           data.matrix(music_out2$Est.prop.weighted)),
+           method.name = c('raw','gene-len-adj'))
+```
+
+# enge
+
+
+```{r}
+enge <- readRDS("data/pancreas/enge_raw.rds")
+```
+
+```{r}
+cell_types = c('acinar','alpha','beta','delta','ductal')
+bulk.obj = create_bulk(enge,indis=unique(enge$individual)[-6],cell_types = cell_types,min_prop = NULL)
+```
+
+adjust gene length
+
+```{r}
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c('UMI','UMI'),cell_types = cell_types)
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref2 = sce_to_es(ref2)
+music_out2 = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual')
+```
+
+
+do not adjust gene length
+
+```{r}
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length2,protocols = c('UMI','UMI'),cell_types = cell_types)
+```
+
+```{r}
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+# run music
+ref1 = ref2
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref1 = sce_to_es(ref1)
+music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+```
+
 
 ```{r}
 Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 

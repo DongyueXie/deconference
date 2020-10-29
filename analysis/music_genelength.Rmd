@@ -7,7 +7,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Introduction
+# Simulation
 
 Merge a non-UMI scRNA-seq dataset as bulk data, then use two UMI scRNA-seq dataset as reference data. 
 
@@ -114,7 +114,7 @@ sce_to_es = function(sce){
 }
 ```
 
-# seger
+## seger
 
 ```{r}
 cell_types = c('acinar','alpha','beta','delta','ductal','gamma')
@@ -134,6 +134,7 @@ ref2 = cbind(baron2,muraro2)
 m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
 m_ref2 = sce_to_es(ref2)
 music_out2 = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual')
+music_out2_s = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual',cell_size = data.frame(cell_types=cell_types,cell_size=rep(1,length(cell_types))))
 ```
 
 
@@ -158,18 +159,21 @@ ref1 = ref2
 m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
 m_ref1 = sce_to_es(ref1)
 music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+music_out1_s = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual',cell_size = data.frame(cell_types=cell_types,cell_size=rep(1,length(cell_types))))
 ```
 
 
 ```{r}
 Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
            prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
-                           data.matrix(music_out2$Est.prop.weighted)),
-           method.name = c('raw','gene-len-adj'))
+                           data.matrix(music_out2$Est.prop.weighted),
+                           data.matrix(music_out1_s$Est.prop.weighted), 
+                           data.matrix(music_out2_s$Est.prop.weighted)),
+           method.name = c('raw','gene-len-adj','raw-fix S','gene-len-adj-fix S'))
 ```
 
 
-# Xin
+## Xin
 
 ```{r}
 xin <- readRDS("data/pancreas/xin_raw.rds")
@@ -193,6 +197,7 @@ ref2 = cbind(baron2,muraro2)
 m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
 m_ref2 = sce_to_es(ref2)
 music_out2 = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual')
+music_out2_s = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual',cell_size = data.frame(cell_types=cell_types,cell_size=rep(1,length(cell_types))))
 ```
 
 
@@ -214,17 +219,20 @@ ref1 = ref2
 m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
 m_ref1 = sce_to_es(ref1)
 music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+music_out1_s = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual',cell_size = data.frame(cell_types=cell_types,cell_size=rep(1,length(cell_types))))
 ```
 
 
 ```{r}
 Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
            prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
-                           data.matrix(music_out2$Est.prop.weighted)),
-           method.name = c('raw','gene-len-adj'))
+                           data.matrix(music_out2$Est.prop.weighted),
+                           data.matrix(music_out1_s$Est.prop.weighted), 
+                           data.matrix(music_out2_s$Est.prop.weighted)),
+           method.name = c('raw','gene-len-adj','raw-fix S','gene-len-adj-fix S'))
 ```
 
-# enge
+## enge
 
 
 ```{r}
@@ -249,6 +257,7 @@ ref2 = cbind(baron2,muraro2)
 m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
 m_ref2 = sce_to_es(ref2)
 music_out2 = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual')
+music_out2_s = music_prop(m_bulk,m_ref2,clusters = 'cell_type',samples = 'individual',cell_size = data.frame(cell_types=cell_types,cell_size=rep(1,length(cell_types))))
 ```
 
 
@@ -270,12 +279,16 @@ ref1 = ref2
 m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
 m_ref1 = sce_to_es(ref1)
 music_out1 = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual')
+music_out1_s = music_prop(m_bulk,m_ref1,clusters = 'cell_type',samples = 'individual',cell_size = data.frame(cell_types=cell_types,cell_size=rep(1,length(cell_types))))
 ```
 
 
 ```{r}
 Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
            prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
-                           data.matrix(music_out2$Est.prop.weighted)),
-           method.name = c('raw','gene-len-adj'))
+                           data.matrix(music_out2$Est.prop.weighted),
+                           data.matrix(music_out1_s$Est.prop.weighted), 
+                           data.matrix(music_out2_s$Est.prop.weighted)),
+           method.name = c('raw','gene-len-adj','raw-fix S','gene-len-adj-fix S'))
 ```
+

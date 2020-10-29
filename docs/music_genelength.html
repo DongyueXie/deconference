@@ -537,16 +537,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree966330d838128387e987ab7fc915b2a9234e1a38targetblank966330da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/966330d838128387e987ab7fc915b2a9234e1a38" target="_blank">966330d</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1d9a517ac50f9bb7fc7ac777fad53753ab012811targetblank1d9a517a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/1d9a517ac50f9bb7fc7ac777fad53753ab012811" target="_blank">1d9a517</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree966330d838128387e987ab7fc915b2a9234e1a38targetblank966330da" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1d9a517ac50f9bb7fc7ac777fad53753ab012811targetblank1d9a517a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/966330d838128387e987ab7fc915b2a9234e1a38" target="_blank">966330d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/1d9a517ac50f9bb7fc7ac777fad53753ab012811" target="_blank">1d9a517</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -722,6 +722,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/1d9a517ac50f9bb7fc7ac777fad53753ab012811/analysis/music_genelength.Rmd" target="_blank">1d9a517</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-10-29
+</td>
+<td>
+wflow_publish(“analysis/music_genelength.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/2d30de45993bdc419f620d27de04eef55c5bf81f/docs/music_genelength.html" target="_blank">2d30de4</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-10-29
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/966330d838128387e987ab7fc915b2a9234e1a38/analysis/music_genelength.Rmd" target="_blank">966330d</a>
 </td>
 <td>
@@ -838,18 +872,49 @@ sce_to_es = function(sce){
   ref.data = ExpressionSet(assayData = counts(sce),phenoData = AnnotatedDataFrame(pheno_Data))
   ref.data
 }</code></pre>
-<p>do not adjust gene length</p>
+</div>
+<div id="seger" class="section level1">
+<h1>seger</h1>
 <pre class="r"><code>cell_types = c(&#39;acinar&#39;,&#39;alpha&#39;,&#39;beta&#39;,&#39;delta&#39;,&#39;ductal&#39;,&#39;gamma&#39;)
-bulk.obj = create_bulk(seger,indis=c(25,37,52,55),cell_types = cell_types,min_prop = NULL)
-refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = NULL,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),cell_types = cell_types)</code></pre>
+bulk.obj = create_bulk(seger,indis=unique(seger$individual),cell_types = cell_types,min_prop = NULL)</code></pre>
+<p>adjust gene length</p>
+<pre class="r"><code>refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),cell_types = cell_types)
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref2 = sce_to_es(ref2)
+music_out2 = music_prop(m_bulk,m_ref2,clusters = &#39;cell_type&#39;,samples = &#39;individual&#39;)</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 9143 common genes...</code></pre>
+<pre><code>Used 6 cell types in deconvolution...</code></pre>
+<pre><code>43 has common genes 9059 ...</code></pre>
+<pre><code>25 has common genes 9126 ...</code></pre>
+<pre><code>57 has common genes 9129 ...</code></pre>
+<pre><code>23 has common genes 9102 ...</code></pre>
+<pre><code>48 has common genes 9123 ...</code></pre>
+<pre><code>22 has common genes 9121 ...</code></pre>
+<pre><code>37 has common genes 9136 ...</code></pre>
+<pre><code>27 has common genes 9106 ...</code></pre>
+<pre><code>52 has common genes 9122 ...</code></pre>
+<pre><code>55 has common genes 9124 ...</code></pre>
+<p>do not adjust gene length</p>
+<pre class="r"><code># make sure use the same set of genes.
+gene_length2 = gene_length
+gene_length2[gene_length2!=1] = 1
+refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length2,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),cell_types = cell_types)</code></pre>
 <pre class="r"><code>baron2 = refs$ref.obj$baron
 muraro2 = refs$ref.obj$muraro
 colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
 colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
 ref2 = cbind(baron2,muraro2)
-dim(ref2)</code></pre>
-<pre><code>[1] 9616 9760</code></pre>
-<pre class="r"><code># run music
+
+# run music
 ref1 = ref2
 m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
 m_ref1 = sce_to_es(ref1)
@@ -857,24 +922,16 @@ music_out1 = music_prop(m_bulk,m_ref1,clusters = &#39;cell_type&#39;,samples = &
 <pre><code>Creating Relative Abudance Matrix...</code></pre>
 <pre><code>Creating Variance Matrix...</code></pre>
 <pre><code>Creating Library Size Matrix...</code></pre>
-<pre><code>Used 9588 common genes...</code></pre>
+<pre><code>Used 9143 common genes...</code></pre>
 <pre><code>Used 6 cell types in deconvolution...</code></pre>
-<pre><code>25 has common genes 9573 ...</code></pre>
-<pre><code>37 has common genes 9583 ...</code></pre>
-<pre><code>52 has common genes 9569 ...</code></pre>
-<pre><code>55 has common genes 9571 ...</code></pre>
-<p>adjust gene length</p>
-<pre class="r"><code>refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),cell_types = cell_types)
-m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
-#m_ref1 = sce_to_es(ref1)
-music_out2 = music_prop(m_bulk,m_ref1,clusters = &#39;cell_type&#39;,samples = &#39;individual&#39;)</code></pre>
-<pre><code>Creating Relative Abudance Matrix...</code></pre>
-<pre><code>Creating Variance Matrix...</code></pre>
-<pre><code>Creating Library Size Matrix...</code></pre>
-<pre><code>Used 9141 common genes...</code></pre>
-<pre><code>Used 6 cell types in deconvolution...</code></pre>
+<pre><code>43 has common genes 9059 ...</code></pre>
 <pre><code>25 has common genes 9126 ...</code></pre>
+<pre><code>57 has common genes 9129 ...</code></pre>
+<pre><code>23 has common genes 9102 ...</code></pre>
+<pre><code>48 has common genes 9123 ...</code></pre>
+<pre><code>22 has common genes 9121 ...</code></pre>
 <pre><code>37 has common genes 9136 ...</code></pre>
+<pre><code>27 has common genes 9106 ...</code></pre>
 <pre><code>52 has common genes 9122 ...</code></pre>
 <pre><code>55 has common genes 9124 ...</code></pre>
 <pre class="r"><code>Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
@@ -882,8 +939,152 @@ music_out2 = music_prop(m_bulk,m_ref1,clusters = &#39;cell_type&#39;,samples = &
                            data.matrix(music_out2$Est.prop.weighted)),
            method.name = c(&#39;raw&#39;,&#39;gene-len-adj&#39;))</code></pre>
 <pre><code>                RMSD     mAD      R
-raw          0.06829 0.05250 0.9703
-gene-len-adj 0.14169 0.10758 0.8394</code></pre>
+raw          0.09535 0.06872 0.9404
+gene-len-adj 0.15885 0.11768 0.8729</code></pre>
+</div>
+<div id="xin" class="section level1">
+<h1>Xin</h1>
+<pre class="r"><code>xin &lt;- readRDS(&quot;data/pancreas/xin_raw.rds&quot;)</code></pre>
+<pre class="r"><code>cell_types = c(&#39;alpha&#39;,&#39;beta&#39;,&#39;delta&#39;,&#39;gamma&#39;)
+bulk.obj = create_bulk(xin,indis=unique(xin$individual),cell_types = cell_types,min_prop = NULL)</code></pre>
+<p>adjust gene length</p>
+<pre class="r"><code>refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),cell_types = cell_types)
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref2 = sce_to_es(ref2)
+music_out2 = music_prop(m_bulk,m_ref2,clusters = &#39;cell_type&#39;,samples = &#39;individual&#39;)</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 8832 common genes...</code></pre>
+<pre><code>Used 4 cell types in deconvolution...</code></pre>
+<pre><code>Non T2D 1 has common genes 8758 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 8410 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 8585 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 8730 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 8663 ...</code></pre>
+<pre><code>Non T2D 7 has common genes 8552 ...</code></pre>
+<pre><code>Non T2D 8 has common genes 8644 ...</code></pre>
+<pre><code>Non T2D 9 has common genes 8612 ...</code></pre>
+<pre><code>Non T2D 10 has common genes 8658 ...</code></pre>
+<pre><code>Non T2D 11 has common genes 8695 ...</code></pre>
+<pre><code>Non T2D 12 has common genes 8791 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 8588 ...</code></pre>
+<pre><code>T2D 2 has common genes 8745 ...</code></pre>
+<pre><code>T2D 3 has common genes 8669 ...</code></pre>
+<pre><code>T2D 1 has common genes 8756 ...</code></pre>
+<pre><code>T2D 4 has common genes 8808 ...</code></pre>
+<pre><code>T2D 5 has common genes 8788 ...</code></pre>
+<pre><code>T2D 6 has common genes 8791 ...</code></pre>
+<p>do not adjust gene length</p>
+<pre class="r"><code>refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length2,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),cell_types = cell_types)</code></pre>
+<pre class="r"><code>baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+# run music
+ref1 = ref2
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref1 = sce_to_es(ref1)
+music_out1 = music_prop(m_bulk,m_ref1,clusters = &#39;cell_type&#39;,samples = &#39;individual&#39;)</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 8832 common genes...</code></pre>
+<pre><code>Used 4 cell types in deconvolution...</code></pre>
+<pre><code>Non T2D 1 has common genes 8758 ...</code></pre>
+<pre><code>Non T2D 2 has common genes 8410 ...</code></pre>
+<pre><code>Non T2D 3 has common genes 8585 ...</code></pre>
+<pre><code>Non T2D 5 has common genes 8730 ...</code></pre>
+<pre><code>Non T2D 6 has common genes 8663 ...</code></pre>
+<pre><code>Non T2D 7 has common genes 8552 ...</code></pre>
+<pre><code>Non T2D 8 has common genes 8644 ...</code></pre>
+<pre><code>Non T2D 9 has common genes 8612 ...</code></pre>
+<pre><code>Non T2D 10 has common genes 8658 ...</code></pre>
+<pre><code>Non T2D 11 has common genes 8695 ...</code></pre>
+<pre><code>Non T2D 12 has common genes 8791 ...</code></pre>
+<pre><code>Non T2D 4 has common genes 8588 ...</code></pre>
+<pre><code>T2D 2 has common genes 8745 ...</code></pre>
+<pre><code>T2D 3 has common genes 8669 ...</code></pre>
+<pre><code>T2D 1 has common genes 8756 ...</code></pre>
+<pre><code>T2D 4 has common genes 8808 ...</code></pre>
+<pre><code>T2D 5 has common genes 8788 ...</code></pre>
+<pre><code>T2D 6 has common genes 8791 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
+                           data.matrix(music_out2$Est.prop.weighted)),
+           method.name = c(&#39;raw&#39;,&#39;gene-len-adj&#39;))</code></pre>
+<pre><code>                RMSD     mAD      R
+raw          0.16296 0.13693 0.7441
+gene-len-adj 0.12543 0.09872 0.8955</code></pre>
+</div>
+<div id="enge" class="section level1">
+<h1>enge</h1>
+<pre class="r"><code>enge &lt;- readRDS(&quot;data/pancreas/enge_raw.rds&quot;)</code></pre>
+<pre class="r"><code>cell_types = c(&#39;acinar&#39;,&#39;alpha&#39;,&#39;beta&#39;,&#39;delta&#39;,&#39;ductal&#39;)
+bulk.obj = create_bulk(enge,indis=unique(enge$individual)[-6],cell_types = cell_types,min_prop = NULL)</code></pre>
+<p>adjust gene length</p>
+<pre class="r"><code>refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),cell_types = cell_types)
+baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref2 = sce_to_es(ref2)
+music_out2 = music_prop(m_bulk,m_ref2,clusters = &#39;cell_type&#39;,samples = &#39;individual&#39;)</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 8964 common genes...</code></pre>
+<pre><code>Used 5 cell types in deconvolution...</code></pre>
+<pre><code>donor_age: 21 has common genes 8950 ...</code></pre>
+<pre><code>donor_age: 38 has common genes 8960 ...</code></pre>
+<pre><code>donor_age: 1 has common genes 8861 ...</code></pre>
+<pre><code>donor_age: 5 has common genes 8947 ...</code></pre>
+<pre><code>donor_age: 44 has common genes 8949 ...</code></pre>
+<pre><code>donor_age: 54 has common genes 8935 ...</code></pre>
+<pre><code>donor_age: 22 has common genes 8928 ...</code></pre>
+<p>do not adjust gene length</p>
+<pre class="r"><code>refs = set_data_multiref(list(baron=baron,muraro=muraro),bulk.obj$bulk,gene_length = gene_length2,protocols = c(&#39;UMI&#39;,&#39;UMI&#39;),cell_types = cell_types)</code></pre>
+<pre class="r"><code>baron2 = refs$ref.obj$baron
+muraro2 = refs$ref.obj$muraro
+colData(baron2) = DataFrame(cell_type=baron2$cell_type,individual=baron2$individual)
+colData(muraro2) = DataFrame(cell_type=muraro2$cell_type,individual=muraro2$individual)
+ref2 = cbind(baron2,muraro2)
+
+# run music
+ref1 = ref2
+m_bulk = ExpressionSet(assayData = counts(refs$bulk.obj))
+m_ref1 = sce_to_es(ref1)
+music_out1 = music_prop(m_bulk,m_ref1,clusters = &#39;cell_type&#39;,samples = &#39;individual&#39;)</code></pre>
+<pre><code>Creating Relative Abudance Matrix...</code></pre>
+<pre><code>Creating Variance Matrix...</code></pre>
+<pre><code>Creating Library Size Matrix...</code></pre>
+<pre><code>Used 8964 common genes...</code></pre>
+<pre><code>Used 5 cell types in deconvolution...</code></pre>
+<pre><code>donor_age: 21 has common genes 8950 ...</code></pre>
+<pre><code>donor_age: 38 has common genes 8960 ...</code></pre>
+<pre><code>donor_age: 1 has common genes 8861 ...</code></pre>
+<pre><code>donor_age: 5 has common genes 8947 ...</code></pre>
+<pre><code>donor_age: 44 has common genes 8949 ...</code></pre>
+<pre><code>donor_age: 54 has common genes 8935 ...</code></pre>
+<pre><code>donor_age: 22 has common genes 8928 ...</code></pre>
+<pre class="r"><code>Eval_multi(prop.real = data.matrix(bulk.obj$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted), 
+                           data.matrix(music_out2$Est.prop.weighted)),
+           method.name = c(&#39;raw&#39;,&#39;gene-len-adj&#39;))</code></pre>
+<pre><code>                RMSD     mAD      R
+raw          0.15370 0.11890 0.6585
+gene-len-adj 0.15276 0.11223 0.8238</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

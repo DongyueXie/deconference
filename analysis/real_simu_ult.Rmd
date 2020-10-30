@@ -1,0 +1,337 @@
+---
+title: "real data simulation"
+author: "DongyueXie"
+date: "2020-10-29"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Random select a half individuals from each dataset and create bulk datasets, half of wiich are assigned to healthy groups and the other half to disease group.
+
+For reference dataset, 1. random select a half of rest half data from each dataset as reference data; 2. use all of the rest dataset.
+
+issues: add cell size estimate? add gene length adjustment?
+
+
+
+```{r,message=FALSE,warning=FALSE}
+library(MuSiC)
+library(Biobase)
+library(xbioc)
+source('code/deconference_main.R')
+# #load datasets
+# # 4
+# baron <- readRDS("data/pancreas/baron.rds")
+# # 4
+# muraro <- readRDS("data/pancreas/muraro.rds")
+# # 10
+# seger <- readRDS("data/pancreas/segerstolpe_raw.rds")
+# # 8
+# enge = readRDS("data/pancreas/enge_raw.rds")
+# # 18
+# xin = readRDS('data/pancreas/xin_raw.rds')
+refs_raw = readRDS('data/pancreas/refs_raw.rds')
+```
+
+```{r}
+
+summary_real = function(out,true_b,groups){
+  
+  # compare fitted vs true
+  b_hat = t(out$beta_hat)
+  rownames(b_hat) = rownames(true_b)
+  colnames(b_hat) = colnames(true_b)
+  print(knitr::kable(
+  list(t0 = round(b_hat,2), t1 = round(true_b,2)),
+  caption = 'estimated vs true beta',
+  booktabs = TRUE, valign = 't'))
+  
+  
+  ci_length = t(round(out$beta_se,2))
+  colnames(ci_length) = colnames(true_b)
+  rownames(ci_length) = rownames(true_b)
+  print(knitr::kable(ci_length,caption = 'beta hat se'))
+  
+  # summary statistics
+  rmse = sqrt(mean((t(out$beta_hat)-true_b)^2))
+  mad = mean(abs(t(out$beta_hat)-true_b))
+  r2 = cor(c(t(out$beta_hat)),c(true_b))
+  ss = rbind(c(rmse,mad,r2))
+  colnames(ss) = c('rmse','mad','r2')
+  rownames(ss) = NULL
+  
+  print(knitr::kable(ss,caption='error measure'))
+  
+  # coverage, length of CI
+  ci = build_ci(out)
+  coverage = c(true_b>=t(ci$ci_l))&(true_b<=t(ci$ci_r))
+  
+  print(knitr::kable(coverage,caption='coverage'))
+
+  # two group test
+  group_name = levels(as.factor(groups))
+  g1 = which(groups==group_name[1])
+  g2 = which(groups==group_name[2])
+  test2 = two_group_test(out,groups)
+
+  test_out = rbind(round(colMeans(true_b[g1,]) - colMeans(true_b[g2,]),3),
+                   round(test2$diff_group,3),
+                   round(sqrt(diag(test2$V_tilde)),3),
+                   round(test2$p_value,3))
+  rownames(test_out) = c('true diff','estimated diff','se','p value')
+  print(knitr::kable(test_out,caption= ' two group test'))
+  
+}
+
+
+# data.obj is a list of single cell dataset
+create_realsimu_data = function(refs,cell_types,proph,propd,ncells = 1000,indis_ref = NULL){
+  G = nrow(refs[[1]])
+  bulk_counts = matrix(0,nrow=G,ncol=50)
+  bulk_prop = c()
+  all_indis = c()
+  condition = c()
+  indi_counter = 0
+  ref1 = list()
+  ref2 = list()
+  for(d in 1:length(refs)){
+    
+    # random sample two individuals
+    data.obj = refs[[d]]
+    
+    ## these indis are for bulk data
+    if(is.null(indis_ref)){
+      c.idx = which(data.obj$cell_type%in%cell_types)
+      temp = table(data.obj$individual[c.idx],data.obj$cell_type[c.idx])
+      temp = temp[,match(cell_types,colnames(temp))]
+      valid_indi = which(rowSums(temp==0)==0)
+      indis = sample(rownames(temp)[valid_indi],ceiling(length(valid_indi)/2/2)*2)
+    }else{
+      indis = indis_ref[[d]]
+    }
+    all_indis = c(all_indis,indis)
+    condition = c(condition,c(rep('health',length(indis)/2),rep('disease',length(indis)/2)))
+    #print(indis)
+    # first half health
+    # second half disease
+    for(i in 1:(length(indis)/2)){
+      idx.temp = which(data.obj$individual==indis[i]&data.obj$cell_type%in%cell_types)
+      cell_counts = table(data.obj$cell_type[idx.temp])
+      if(is.null(ncells)){
+      ncells = round(max(cell_counts/proph))
+      }
+      bcounts = 0
+      for(j in 1:length(cell_types)){
+        idx_ij = which(data.obj$individual==indis[i]&data.obj$cell_type==cell_types[j])
+        #print(idx_ij)
+        #print(data.obj[,sample(idx_ij,ncells*prop[j],replace = TRUE)])
+        bcounts = bcounts + rowSums(counts(data.obj[,sample(idx_ij,ncells*proph[j],replace = TRUE)]))
+      }
+      bulk_prop = rbind(bulk_prop,proph)
+      indi_counter = indi_counter + 1
+      bulk_counts[,indi_counter] = bcounts
+      
+    }
+    
+  
+  ## disease
+  for(i in (length(indis)/2+1):(length(indis))){
+      idx.temp = which(data.obj$individual==indis[i]&data.obj$cell_type%in%cell_types)
+      cell_counts = table(data.obj$cell_type[idx.temp])
+      if(is.null(ncells)){
+      ncells = round(max(cell_counts/propd))
+      }
+      bcounts = 0
+      for(j in 1:length(cell_types)){
+        idx_ij = which(data.obj$individual==indis[i]&data.obj$cell_type==cell_types[j])
+        #print(idx_ij)
+        #print(data.obj[,sample(idx_ij,ncells*prop[j],replace = TRUE)])
+        bcounts = bcounts + rowSums(counts(data.obj[,sample(idx_ij,ncells*propd[j],replace = TRUE)]))
+      }
+      bulk_prop = rbind(bulk_prop,propd)
+      indi_counter = indi_counter + 1
+      bulk_counts[,indi_counter] = bcounts
+  }
+    
+    
+    ## the rest indis are for reference data
+    
+    ### the first reference data uses half the rest data
+    rest_indis = unique(data.obj$individual)[-match(indis,unique(data.obj$individual))]
+    ref1_indis = sample(rest_indis,length(rest_indis)/2)
+    ref1_idx = which(data.obj$individual%in%ref1_indis&data.obj$cell_type%in%cell_types)
+    ref1[[d]] = data.obj[,ref1_idx]
+    
+    ### the second reference data uses all of the half dataset
+    ref2_idx = which(data.obj$individual%in%rest_indis&data.obj$cell_type%in%cell_types)
+    ref2[[d]] = data.obj[,ref2_idx]
+}
+
+  #browser()
+  bulk_counts = bulk_counts[,which(colSums(bulk_counts)!=0)]
+  colnames(bulk_counts) = all_indis
+  rownames(bulk_counts) = rownames(data.obj)
+  #rownames(bulk_ncell) = indis
+  rownames(bulk_prop) = all_indis
+  colnames(bulk_prop) = cell_types
+  #ii = which(data.obj$individual%in%indis&data.obj$cell_type%in%cell_types)
+  #bulk_prop = table(data.obj$individual[ii],data.obj$cell_type[ii])
+  #bulk_prop = bulk_prop/rowSums(bulk_prop)
+  coldata = DataFrame(individual = all_indis,condition=condition)
+  #browser()
+  out = SingleCellExperiment(assays = list(counts = as.matrix(bulk_counts)),
+                                   colData = coldata)
+  return(list(bulk = out,bulk_prop = bulk_prop,group = condition,ref1=ref1,ref2=ref2))
+}
+
+sce_to_es = function(sce){
+  #bulk.data = ExpressionSet(assayData = counts(enge_bulk$bulk))
+  pheno_Data = data.frame(cell_type = sce$cell_type,individual = sce$individual)
+  rownames(pheno_Data) = colnames(sce)
+  ref.data = ExpressionSet(assayData = counts(sce),phenoData = AnnotatedDataFrame(pheno_Data))
+  ref.data
+}
+```
+
+
+```{r}
+set.seed(12345)
+cell_types = c('alpha','beta','delta')
+datax = create_realsimu_data(refs_raw,cell_types,c(0.3,0.5,0.2),c(0.3,0.2,0.5))
+```
+
+now we have create bulk data belonging to two groups - health and disease, and the reference data set.
+
+## ref1
+
+```{r}
+
+out_ref1 = deconference_multi_ref(datax$ref1,datax$bulk,cell_types = cell_types,verbose = F,cellsize_est = 'ols')
+out_ref1_nondiag = deconference_multi_ref(datax$ref1,datax$bulk,cell_types = cell_types,verbose = F,cellsize_est = 'ols',est_sigma2 = F)
+
+merge_ref = function(refs){
+  
+  ref1_es = refs[[1]]
+colData(ref1_es) = DataFrame(cell_type = ref1_es$cell_type,individual = ref1_es$individual)
+rowData(ref1_es) = DataFrame(feature_symbol = rowData(ref1_es)$feature_symbol)
+#colnames(ref1_es) = ref1_es$cell_type
+reducedDims(ref1_es) = NULL
+assays(ref1_es)$logcounts = NULL
+for(i in 2:length(datax$ref1)){
+  temp = refs[[i]]
+  colData(temp) = DataFrame(cell_type = temp$cell_type,individual = temp$individual)
+  rowData(temp) = DataFrame(feature_symbol = rowData(temp)$feature_symbol)
+  #colnames(temp) = temp$cell_type
+  reducedDims(temp) = NULL
+  if(!is.null(assays(temp)$logcounts)){
+    assays(temp)$logcounts = NULL
+  }
+  ref1_es = cbind(ref1_es,temp)
+}
+ref1_es
+
+}
+
+ref1_es = merge_ref(datax$ref1)
+
+bulk_es = ExpressionSet(assayData = counts(datax$bulk))
+ref1_es = sce_to_es(ref1_es)
+music_out1 = music_prop(bulk_es,ref1_es,clusters = 'cell_type',samples = 'individual',verbose = F)
+Eval_multi(prop.real = data.matrix(datax$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted),
+                           t(out_ref1$beta_hat),
+                           t(out_ref1_nondiag$beta_hat)), 
+           method.name = c('MuSiC','deconinfer','deconinfer-nondiag'))
+
+```
+
+```{r,results='asis'}
+summary_real(out_ref1,datax$bulk_prop,datax$group)
+summary_real(out_ref1_nondiag,datax$bulk_prop,datax$group)
+```
+
+## ref2 
+
+```{r}
+out_ref2 = deconference_multi_ref(datax$ref2,datax$bulk,cell_types = cell_types,verbose = F,cellsize_est = 'ols')
+out_ref2_nondiag = deconference_multi_ref(datax$ref2,datax$bulk,cell_types = cell_types,verbose = F,cellsize_est = 'ols',est_sigma2 = F)
+ref2_es = merge_ref(datax$ref2)
+
+ref2_es = sce_to_es(ref2_es)
+music_out2 = music_prop(bulk_es,ref2_es,clusters = 'cell_type',samples = 'individual')
+Eval_multi(prop.real = data.matrix(datax$bulk_prop), 
+           prop.est = list(data.matrix(music_out2$Est.prop.weighted),t(out_ref2$beta_hat),
+                           t(out_ref1_nondiag$beta_hat)), 
+           method.name = c('MuSiC','deconinfer','deconinfer-nondiag'))
+```
+
+```{r,results='asis'}
+summary_real(out_ref2,datax$bulk_prop,datax$group)
+summary_real(out_ref2_nondiag,datax$bulk_prop,datax$group)
+```
+
+
+
+# adjust gene length
+
+```{r}
+refs = readRDS('data/pancreas/refs.rds')
+```
+
+```{r}
+set.seed(12345)
+cell_types = c('alpha','beta','delta')
+datax = create_realsimu_data(refs,cell_types,c(0.2,0.6,0.2),c(0.2,0.2,0.6))
+```
+
+now we have create bulk data belonging to two groups - health and disease, and the reference data set.
+
+## ref1
+
+```{r}
+out_ref1 = deconference_multi_ref(datax$ref1,datax$bulk,cell_types = cell_types,verbose = F,cellsize_est = 'ols')
+out_ref1_nondiag = deconference_multi_ref(datax$ref1,datax$bulk,cell_types = cell_types,verbose = F,cellsize_est = 'ols',est_sigma2 = F)
+
+
+
+ref1_es = merge_ref(datax$ref1)
+
+bulk_es = ExpressionSet(assayData = counts(datax$bulk))
+ref1_es = sce_to_es(ref1_es)
+music_out1 = music_prop(bulk_es,ref1_es,clusters = 'cell_type',samples = 'individual')
+Eval_multi(prop.real = data.matrix(datax$bulk_prop), 
+           prop.est = list(data.matrix(music_out1$Est.prop.weighted),
+                           t(out_ref1$beta_hat),
+                           t(out_ref1_nondiag$beta_hat)), 
+           method.name = c('MuSiC','deconinfer','deconinfer-nondiag'))
+```
+
+```{r,results='asis'}
+summary_real(out_ref1,datax$bulk_prop,datax$group)
+summary_real(out_ref1_nondiag,datax$bulk_prop,datax$group)
+```
+
+## ref2 
+
+```{r}
+out_ref2 = deconference_multi_ref(datax$ref2,datax$bulk,cell_types = cell_types,verbose = F,cellsize_est = 'ols')
+out_ref2_nondiag = deconference_multi_ref(datax$ref2,datax$bulk,cell_types = cell_types,verbose = F,cellsize_est = 'ols',est_sigma2 = F)
+ref2_es = merge_ref(datax$ref2)
+
+ref2_es = sce_to_es(ref2_es)
+music_out2 = music_prop(bulk_es,ref2_es,clusters = 'cell_type',samples = 'individual')
+Eval_multi(prop.real = data.matrix(datax$bulk_prop), 
+           prop.est = list(data.matrix(music_out2$Est.prop.weighted),t(out_ref2$beta_hat),
+                           t(out_ref1_nondiag$beta_hat)), 
+           method.name = c('MuSiC','deconinfer','deconinfer-nondiag'))
+
+```
+
+```{r,results='asis'}
+summary_real(out_ref2,datax$bulk_prop,datax$group)
+summary_real(out_ref2_nondiag,datax$bulk_prop,datax$group)
+```
+

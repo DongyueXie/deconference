@@ -1,93 +1,206 @@
 
 
-
-#'@param datax a list of singlecellexperiment objects.
+#'@param ref.obj either raw counts or the output by set_data_multiref; if raw, set gene-length_adjust to true and input gene length; otherwise set to false.
 deconference_multi_ref = function(ref.obj,bulk.obj,tau2=NULL,cell_types=NULL,sigma2=NULL,
-                          est_sigma2=TRUE,meta_var='adjust',meta_mode='smooth',genes = NULL,
-                          correction=TRUE,cellsize_est='glm',
-                          marker_gene = NULL,
-                          hc.type = 'hc3',w = 1){
+                          est_sigma2=TRUE,meta_var='adjust',meta_mode='smooth',
+                          gene_length_adjust = FALSE,
+                          gene_length=NULL,protocol=NULL,
+                          correction=FALSE,cellsize_est='glm',
+                          #marker_gene = NULL,
+                          a=length(cell_types)+4,
+                          calc_cov=TRUE,
+                          hc.type = 'hc3',w = 1,verbose=FALSE){
 
-  library(abind)
-  n_ref = length(ref.obj)
 
-  all_X_array = c()
-  all_Vg_array = c()
-
-  S_olss = c()
-  S_glms = c()
-  for(i in 1:n_ref){
-
-    out_array = getXV_array(ref.obj[[i]],tau2=tau2,cell_types = cell_types,indis=NULL)
-    all_X_array = abind(all_X_array,out_array$X_array)
-    all_Vg_array = abind(all_Vg_array,out_array$Vg_array)
-    S_olss = rbind(S_olss,out_array$S_ols)
-    S_glms = rbind(S_glms,out_array$S_glm)
+  if(verbose){
+    message('constructing reference matrix')
+    message('...going through individuals')
   }
 
-  design.mat = getXV(all_X_array,all_Vg_array,S_olss=S_olss,S_glms=S_glms,sigma2=sigma2,
-                   est_sigma2=est_sigma2,meta_var=meta_var,meta_mode=meta_mode,cell_types=cell_types)
+  temp = getXV_array_all(ref.obj=ref.obj,tau2=tau2,cell_types=cell_types,
+                         indis = NULL,gene_length_adjust=gene_length_adjust,
+                         gene_length=gene_length,protocol=protocol,cellsize_est=cellsize_est)
 
-  if(!is.null(genes)){
-    gene_length = (genes$featureend-genes$featurestart)[match(rownames(bulk.obj),genes$featurename)]
-    bulk_counts = counts(bulk.obj)/gene_length*1e3
+  if(verbose){
+    message('...merging individuals')
+  }
+  design.mat = getXV(temp$all_X_array,temp$all_Vg_array,
+                     S=temp$S,sigma2=sigma2,
+                   est_sigma2=est_sigma2,meta_var=meta_var,meta_mode=meta_mode,
+                   cell_types=cell_types)
+  #browser()
+
+  if(gene_length_adjust){
+    if(!is.null(gene_length)){
+      gene_length = gene_length/sum(gene_length)*length(gene_length)
+      bulk_counts = counts(bulk.obj)/gene_length
+    }
+  }else{
+    bulk_counts = counts(bulk.obj)
   }
 
-  if(cellsize_est=='ols'){
-    out = estimation_func(y=bulk_counts,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
-                          w=w,hc.type=hc.type,correction=correction,S=design.mat$S_ols)
-  }
-  if(cellsize_est=='glm'){
-    out = estimation_func(y=bulk_counts,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
-                          w=w,hc.type=hc.type,correction=correction,S=design.mat$S_glm)
-  }
 
+  out = estimation_func2(y=bulk_counts,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,
+                        w=w,hc.type=hc.type,correction=correction,S=design.mat$S,calc_cov=calc_cov,a=a,verbose=verbose)
+  rownames(out$beta_hat) = colnames(design.mat$X)
   return(out)
 
 }
 
 
+#'@param gene_thresh genes that appear less than ...
+#'@param cell_thresh cells that have too few expressed genes removed
+preprocess_sc = function(Y,
+                         gene_length=NULL,
+                         protocol = NULL,
+                         gene_thresh=0.05,
+                         max_count_quantile=0.99,
+                         cell_types=NULL){
+  temp_idx = which(Y$cell_type%in%cell_types)
+  Y = Y[,temp_idx]
+  K = length(cell_types)
 
+  if(protocol=='nonUMI'&(!is.null(gene_length))){
+    cm_gene = intersect(rownames(Y),names(gene_length))
+    gene_y_idx = match(cm_gene,rownames(Y))
+    gene_len_idx = match(cm_gene,names(gene_length))
+    Y = Y[gene_y_idx,]
+    gene_len = gene_length[gene_len_idx]
+    gene_len = gene_len/sum(gene_len)*length(gene_len)
+    counts(Y) = counts(Y)/gene_len
+  }
 
-#'@param ref.obj a list of singlecellexperiment object, each with cell_type and individual
-#'@param genes external gene annotation file
-multi_ref_proc = function(ref.obj,bulk.obj = NULL,genes=NULL,
-                          cell_types = c('alpha','acinar','beta','delta','ductal','gamma')){
+  if(gene_thresh<1){
+    gene_thresh = round(gene_thresh*ncol(Y))
+  }
 
-  n_study = length(ref.obj)
+  rm.gene.low = which(rowSums(counts(Y)>0)<gene_thresh)
 
-  common_genes = set_data_decon(Y = ref.obj[[1]],cell_types=cell_types)$genes
+  # remove union of genes that expressed more than max_count_quantle each cell type
 
-  for(i in 2:n_study){
-
-    datax = set_data_decon(Y = ref.obj[[i]],cell_types=cell_types)
-    common_genes = intersect(common_genes,set_data_decon(Y = ref.obj[[i]],cell_types=cell_types)$genes)
+  rm.gene.high = c()
+  for(k in 1:K){
+    cell_k_idx = which(Y$cell_type==cell_types[k])
+    if(length(cell_k_idx)!=0){
+      gene_counts = rowSums(counts(Y)[,cell_k_idx])
+      rm.gene.high = c(rm.gene.high,which(gene_counts>quantile(gene_counts,max_count_quantile)))
+    }
 
   }
 
+  rm.gene = unique(c(rm.gene.low,rm.gene.high))
 
+  if(length(rm.gene)!=0){
+    Y = Y[-rm.gene,]
+  }
+
+  rm.cell = which(colSums(counts(Y))==0)
+  if(length(rm.cell)!=0){
+    Y = Y[,-rm.cell]
+  }
+
+  if(is.factor(Y$cell_type)){
+    Y$cell_type = droplevels(Y$cell_type)
+  }
+
+  Y
+
+}
+
+# Y is a combination of all indis/studies expressions
+filter_gene_all = function(Y,gene_thresh){
+  if(gene_thresh<1){
+    gene_thresh = round(gene_thresh*ncol(Y))
+  }
+
+  rm.gene.low = which(rowSums(Y>0)<gene_thresh)
+  rm.gene.low
+}
+
+# Y is a sce obj
+filter_cell = function(Y,cell_thresh){
+  if(cell_thresh<1){
+    cell_thresh = round(cell_thresh*nrow(Y))
+  }
+  rm.cell = which(colSums(counts(Y)>0)<cell_thresh)
+  if(length(rm.cell)!=0){
+    Y = Y[,-rm.cell]
+  }
+  Y
+}
+
+# input raw ref and bulk dataset, return them with common genes.
+# note for full length dataset, adjusted for gene length
+set_data_multiref = function(ref.obj,bulk.obj = NULL,
+                             gene_length=NULL,protocols=NULL,
+                             marker_gene=NULL,
+                             gene_thresh=0.05,
+                             cell_thresh = 0.01,
+                             max_count_quantile=0.99,
+                             cell_types = c('acinar','alpha','beta','delta','ductal','gamma')){
+  n_study = length(ref.obj)
+
+  # pre-process each data set(remove too high expressed genes), and get common genes among reference dataset
+  n_indis_all = 0
+  if(!is.null(gene_length)){
+    common_genes = names(gene_length)
+  }else{
+    common_genes = rownames(ref.obj[[1]])
+  }
+
+  for(i in 1:n_study){
+    temp = preprocess_sc(ref.obj[[i]],
+                         gene_length=gene_length,
+                         protocol = protocols[i],
+                         gene_thresh=0,
+                         max_count_quantile=max_count_quantile,
+                         cell_types=cell_types)
+
+    ref.obj[[i]] = temp
+    n_indis_all = n_indis_all + ncol(temp)
+    common_genes = intersect(common_genes,rownames(temp))
+  }
+
+  #browser()
+
+  # get common genes among ref and bulk data
   if(!is.null(bulk.obj)){
     common_genes = intersect(common_genes,rownames(bulk.obj))
   }
 
-  if(!is.null(genes)){
-    common_genes = intersect(common_genes,genes$featurename)
-    gene_length = (genes$featureend-genes$featurestart)[match(common_genes,genes$featurename)]
+  # get marker genes
+  if(!is.null(marker_gene)){
+    common_genes = intersect(common_genes,marker_gene)
   }
 
 
+  # remove cells with no gene expressed and genes with little expression
+  all_counts = c()
   for(i in 1:n_study){
     gene_idx = match(common_genes,rownames(ref.obj[[i]]))
-    ref.obj[[i]] = (ref.obj[[i]])[gene_idx,]
+    ref.obj[[i]] = filter_cell((ref.obj[[i]])[gene_idx,],cell_thresh)
+    all_counts = cbind(all_counts,counts(ref.obj[[i]]))
+  }
+  rm.gene = filter_gene_all(all_counts,gene_thresh)
+  if(length(rm.gene)!=0){
+    for(i in 1:n_study){
+      ref.obj[[i]] = (ref.obj[[i]])[-rm.gene,]
+    }
+    common_genes = common_genes[-rm.gene]
   }
 
+  # now finally we have genes to use and we can output ref and bulk data
   if(!is.null(bulk.obj)){
     gene_idx = match(common_genes,rownames(bulk.obj))
     bulk.obj = (bulk.obj)[gene_idx,]
-    if(!is.null(genes)){
-      counts(bulk.obj) = counts(bulk.obj)/gene_length*1e3
+    #browser()
+    if(!is.null(gene_length)){
+      gene_len = gene_length[match(common_genes,names(gene_length))]
+      gene_len = gene_len/sum(gene_len)*length(gene_len)
+      counts(bulk.obj) = counts(bulk.obj)/gene_len
     }
-    return(list(ref.obj = ref.obj,bulk.obj = bulk.obj,common_genes = common_genes))
+
+    return(list(ref.obj = ref.obj,bulk.obj = bulk.obj))
   }else{
     return(ref.obj)
   }
@@ -95,9 +208,45 @@ multi_ref_proc = function(ref.obj,bulk.obj = NULL,genes=NULL,
 }
 
 
+# input reference data object
+# output arrays of all individuals' X and V, and estimate of cell size.
+getXV_array_all = function(ref.obj,tau2,cell_types,indis,gene_length_adjust,gene_length,protocol,cellsize_est=NULL){
 
-getXV_array = function(Y,cell_type_idx=NULL,indi_idx=NULL,estimator='separate',eps=0,
-                       tau2=NULL,cell_types = NULL,indis=NULL){
+  library(abind)
+  n_ref = length(ref.obj)
+
+  all_X_array = c()
+  all_Vg_array = c()
+
+  S = c()
+
+
+
+  for(i in 1:n_ref){
+    out_array = getXV_array(ref.obj[[i]],tau2=tau2,cell_types = cell_types,indis=NULL,
+                            gene_length_adjust=gene_length_adjust,
+                            gene_length = gene_length,protocol = protocol[i],cellsize_est=cellsize_est)
+    all_X_array = abind(all_X_array,out_array$X_array)
+    all_Vg_array = abind(all_Vg_array,out_array$Vg_array)
+    S = rbind(S,out_array$S)
+    #S_glms = rbind(S_glms,out_array$S_glm)
+  }
+
+  return(list(all_X_array=all_X_array,
+              all_Vg_array=all_Vg_array,
+              S=S))
+
+}
+
+# input one reference dataset
+# output X,V,S
+getXV_array = function(Y,cell_type_idx=NULL,indi_idx=NULL,
+                       estimator='separate',eps=0,
+                       tau2=NULL,cell_types = NULL,indis=NULL,
+                       gene_length_adjust = FALSE,
+                       gene_length=NULL,
+                       protocol=NULL,
+                       cellsize_est=NULL){
 
   #browser()
 
@@ -106,6 +255,15 @@ getXV_array = function(Y,cell_type_idx=NULL,indi_idx=NULL,estimator='separate',e
     indi_idx = Y$individual
     Y = counts(Y)
   }
+  if(gene_length_adjust){
+    gene_length = gene_length/sum(gene_length)*length(gene_length)
+    if(!is.null(protocol)&!is.null(gene_length)){
+      if(protocol=='nonUMI'){
+        Y = Y/gene_length
+      }
+    }
+  }
+
 
   G = nrow(Y)
 
@@ -147,7 +305,8 @@ getXV_array = function(Y,cell_type_idx=NULL,indi_idx=NULL,estimator='separate',e
     indi_cell_idx = which(indi_idx==indi)
     Yi = Y[,indi_cell_idx]
     cell_type_i = cell_type_idx[indi_cell_idx]
-    indi_design.mat = scRef1_proc(Yi,cell_type_i,estimator=estimator,tau2=tau2,cell_types=cell_types)
+    indi_design.mat = scRef1_proc(Yi,cell_type_i,estimator=estimator,
+                                  tau2=tau2,cell_types=cell_types)
     #browser()
     #print(dim(indi_design.mat$X))
     #browser()
@@ -159,37 +318,45 @@ getXV_array = function(Y,cell_type_idx=NULL,indi_idx=NULL,estimator='separate',e
     S_mat[i,] = indi_design.mat$S
   }
 
+  #browser()
 
-  S_mat = round(S_mat)
-  rownames(S_mat) = indis
-  colnames(S_mat) = cell_types
-  S = colMeans(S_mat,na.rm = TRUE)
-  S = S/S[1]
+  if(!is.null(cellsize_est)){
+    S_mat = round(S_mat)
+    rownames(S_mat) = indis
+    colnames(S_mat) = cell_types
+    S = colMeans(S_mat,na.rm = TRUE)
+    S = S/S[1]
+    if(cellsize_est=='glm'&nrow(S_mat)>1){
+      # ## method 2: glm
+      #
+      S_mat_dataframe = data.frame(y = c(S_mat),
+                                   indi = factor(rep(indis,ncol(S_mat))),
+                                   type = factor(rep(cell_types,each = nrow(S_mat)),levels = cell_types))
+      suppressWarnings({fit = try(MASS::glm.nb(y~.,S_mat_dataframe),silent = TRUE)})
 
-  # ## method 2: glm
-  #
-  S_mat_dataframe = data.frame(y = c(S_mat),
-                               indi = factor(rep(indis,ncol(S_mat))),
-                               type = factor(rep(cell_types,each = nrow(S_mat)),levels = cell_types))
-  suppressWarnings({fit = try(MASS::glm.nb(y~.,S_mat_dataframe),silent = TRUE)})
+      if(class(fit)[1]=='try-error'){
 
-  if(class(fit)[1]=='try-error'){
+        fit = glm(y~.,S_mat_dataframe,family = 'poisson')
 
-    fit = glm(y~.,S_mat_dataframe,family = 'poisson')
+      }
 
+      S[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
+      names(S) = cell_types
+    }
+  }else{
+    S = rep(1,length(cell_types))
+    names(S) = cell_types
   }
 
-  S_glm = S
-  S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
-  names(S_glm) = cell_types
-
-  return(list(X_array = X_array,Vg_array = Vg_array,S_ols=S,S_glm=S_glm))
+  return(list(X_array = X_array,Vg_array = Vg_array,S=S))
 
 }
 
-
-getXV = function(X_array,Vg_array,S_olss=NULL,S_glms=NULL,sigma2=NULL,
-                 est_sigma2=TRUE,meta_var='adjust',meta_mode='smooth',diag_cov=FALSE,cell_types){
+# input X_array, V_array, S
+# output X,V,S
+getXV = function(X_array,Vg_array,S=NULL,sigma2=NULL,
+                 est_sigma2=TRUE,meta_var='adjust',meta_mode='smooth',
+                 diag_cov=FALSE,cell_types){
 
   GKN = dim(X_array)
   G = GKN[1]
@@ -300,27 +467,86 @@ getXV = function(X_array,Vg_array,S_olss=NULL,S_glms=NULL,sigma2=NULL,
   ## method 1: ols
 
   #browser()
+  S = apply(rbind(S),2,mean,na.rm=T)
 
-  if(!is.null(S_glms)){
-
-    S_glm = apply(rbind(S_glms),2,mean,na.rm=T)
-    S_ols = apply(rbind(S_olss),2,mean,na.rm=T)
-
-    return(list(X=X,Vg=Vg,Sigma=Sigma,
-                S_ols=S_ols,S_glm=S_glm,
-                X_array=X_array,Vg_array=Vg_array))
-  }else{
-    return(list(X=X,Vg=Vg,Sigma=Sigma,
-                X_array=X_array,Vg_array=Vg_array))
-  }
-
-
+  return(list(X=X,Vg=Vg,Sigma=Sigma,S=S,
+              X_array=X_array,Vg_array=Vg_array))
 
 }
 
 
 
+create_sce_from_counts = function(counts, colData, rowData = NULL) {
+  if(is.null(rowData)) {
+    sceset <- SingleCellExperiment(assays = list(counts = as.matrix(counts)),
+                                   colData = colData)
+  } else {
+    sceset <- SingleCellExperiment(assays = list(counts = as.matrix(counts)),
+                                   colData = colData,
+                                   rowData = rowData)
+  }
+  # use gene names as feature symbols
+  rowData(sceset)$feature_symbol <- rownames(sceset)
+  # remove features with duplicated names
+  if(is.null(rowData)) {
+    sceset <- sceset[!duplicated(rowData(sceset)$feature_symbol), ]
+  }
+  # QC
+  isSpike(sceset, "ERCC") <- grepl("^ERCC-", rownames(sceset))
+  sceset <- calculateQCMetrics(sceset, feature_controls = list("ERCC" = isSpike(sceset, "ERCC")))
+  return(sceset)
+}
 
+
+
+
+
+
+#'@title void voild voild
+#'@param ref.obj a list of singlecellexperiment object, each with raw counts, and colData cell_type and individual.
+#'@param genes external gene annotation file
+multi_ref_proc = function(ref.obj,bulk.obj = NULL,gene_length=NULL,protocols=NULL,marker_gene=NULL,
+                          cell_types = c('alpha','acinar','beta','delta','ductal','gamma')){
+
+  n_study = length(ref.obj)
+
+  common_genes = set_data_decon(Y = ref.obj[[1]],cell_types=cell_types)$genes
+
+  for(i in 2:n_study){
+
+    datax = set_data_decon(Y = ref.obj[[i]],cell_types=cell_types)
+    common_genes = intersect(common_genes,set_data_decon(Y = ref.obj[[i]],cell_types=cell_types)$genes)
+
+  }
+
+
+  if(!is.null(bulk.obj)){
+    common_genes = intersect(common_genes,rownames(bulk.obj))
+  }
+
+  if(!is.null(genes)){
+    common_genes = intersect(common_genes,genes$featurename)
+    gene_length = (genes$featureend-genes$featurestart)[match(common_genes,genes$featurename)]
+  }
+
+
+  for(i in 1:n_study){
+    gene_idx = match(common_genes,rownames(ref.obj[[i]]))
+    ref.obj[[i]] = (ref.obj[[i]])[gene_idx,]
+  }
+
+  if(!is.null(bulk.obj)){
+    gene_idx = match(common_genes,rownames(bulk.obj))
+    bulk.obj = (bulk.obj)[gene_idx,]
+    if(!is.null(genes)){
+      counts(bulk.obj) = counts(bulk.obj)/gene_length*1e3
+    }
+    return(list(ref.obj = ref.obj,bulk.obj = bulk.obj,common_genes = common_genes))
+  }else{
+    return(ref.obj)
+  }
+
+}
 
 
 

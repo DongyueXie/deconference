@@ -21,7 +21,7 @@ Q_stats_vector = function(sigma2,x,v){
 #'@param v variance of x, a vector
 #'@param ub upper bound of random effect variance sigma^2
 #'@return estimated random effect variance sigma^2, mu_hat and var(mu_hat)
-PMmeta_vector = function(x,v,ub=var(x,na.rm = TRUE),tol = .Machine$double.eps){
+PMmeta_vector = function(x,v,ub=var(x,na.rm = TRUE),tol = .Machine$double.eps^0.25){
 
   l = length(x)
   # do not use v=0
@@ -139,7 +139,7 @@ Q_stats_array = function(sigma2,X,V){
 }
 
 
-PMmeta_array = function(X,V,ub=var(as.vector(X),na.rm = TRUE),tol=.Machine$double.eps){
+PMmeta_array = function(X,V,ub=var(as.vector(X),na.rm = TRUE),tol=.Machine$double.eps^0.25){
 
   Q0 = Q_stats_array(0,X,V)
   Qub = Q_stats_array(ub,X,V)
@@ -235,7 +235,7 @@ Q_stats_matrix = function(sigma2,X,V){
 
 }
 
-PMmeta_matrix = function(X,V,ub=var(as.vector(X),na.rm = TRUE),tol = .Machine$double.eps){
+PMmeta_matrix = function(X,V,ub=var(as.vector(X),na.rm = TRUE),tol = .Machine$double.eps^0.25){
 
   Q0 = Q_stats_matrix(0,X,V)
   Qub = Q_stats_matrix(ub,X,V)

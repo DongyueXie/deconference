@@ -263,6 +263,7 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
       }
 
+      browser()
 
       fit_adj = deconference(data.obj,marker_gene=marker_gene,hc.type=hc.type,
                              est_pop_var=est_pop_var,x_estimator=x_estimator,
@@ -348,6 +349,7 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
                                   w=w,gene_thresh=gene_thresh)
 
       }
+
 
       fit_adj = deconference(data.obj,marker_gene=marker_gene,hc.type=hc.type,
                              x_estimator=x_estimator,correction=correction,eps=eps)
@@ -566,18 +568,19 @@ simu_study = function(ref,Ng=nrow(ref),b,ref_type='sc',
 
 
 ############## test ################
-# set.seed(12345)
-#
-# G = 1000
-# K = 4
-# b = 1:K
-# b = b/sum(b)
-# b2 = b
-# library(gtools)
-# ref = t(rdirichlet(K,rep(1,G)))
-# test = simu_study(ref,G,b,ref_type='bulk',nreps = 100,b2=b2)
-#
-# test = simu_study(ref,G,b,ref_type='sc',nreps = 100,b2=b2)
-#
-# test = simu_study(ref,G,b,ref_type='bulk',nreps = 100,b2=b2)
-
+set.seed(12345)
+G = 1000
+K = 6
+b1 = c(0.05,0.05,0.05,0.05,0.1,0.7)
+b2 = c(0.05,0.06,0.08,0.1,0.2,0.51)
+n_bulk = 10
+b = cbind(t(rdirichlet(n_bulk/2,b1*K)),t(rdirichlet(n_bulk/2,b2*K)))
+library(gtools)
+ref = t(rdirichlet(K,rep(1,G)))
+test = simu_study(ref,G,b,
+                  ref_type='multi_sc',
+                  nreps = 1,
+                  sc_lib_size = 0.1,
+                  printevery = 1,same_indi = F,mean_to_var_sigma = 1/3,mean_to_var_tau = 1/3,tau2 = NULL,sigma2 = NULL,
+                  tau2known=F,sigma2known = F,est_pop_var = T,correction = T,
+                  weight = 'equal',hc.type = 'hc3',n_indi = 10,meta_mode = 'smooth')

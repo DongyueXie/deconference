@@ -21,7 +21,7 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
   }
 
   if(is.null(w)){
-    w  = 1/rowSums(X)
+    w  = rep(1,G)
   }
   w = w/sum(w)*G
 
@@ -53,7 +53,7 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
 
   if(!is.null(groups)){
 
-    diff_group = rowMeans(beta_hat[,group1_idx]) - rowMeans(beta_hat[,group2_idx])
+    diff_group = rowMeans(beta_hat[,group1_idx,drop=F]) - rowMeans(beta_hat[,group2_idx,drop=F])
 
     # N_indi = length(group1_idx) + length(group2_idx)
 
@@ -229,6 +229,8 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
   }
 
 
+  rownames(beta_hat) = colnames(X)
+  rownames(beta_tilde_hat) = colnames(X)
 
 
 

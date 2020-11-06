@@ -1,3 +1,4 @@
+library(SingleCellExperiment)
 source('code/deconference_setdata.R')
 source('code/deconference_meta.R')
 source('code/deconference_estfunc.R')
@@ -33,13 +34,17 @@ source('code/unadjusted_lm.R')
 
 
 deconference = function(data.obj,
-                        marker_gene = NULL,
+                        #marker_gene= NULL,
                         hc.type = 'hc3',
                         x_estimator = 'separate',
                         est_pop_var = TRUE,
                         meta_var = 'adjust',
                         meta_mode = 'smooth',
-                        correction=TRUE,eps=0,cellsize_est='glm'){
+                        correction=TRUE,eps=0,
+                        cellsize_est='glm',
+                        calc_cov=TRUE,
+                        a=10,
+                        verbose=FALSE){
 
   ref_type = data.obj$ref_type
   w = data.obj$w
@@ -47,6 +52,10 @@ deconference = function(data.obj,
   Y = data.obj$Y
 
   #browser()
+
+  if(verbose){
+    message('constructing reference matrix')
+  }
 
   if(ref_type=='bulk'){
 
@@ -66,7 +75,9 @@ deconference = function(data.obj,
       sigma2 = data.obj$sigma2
       # multiple individual single cell reference samples, estimate sigma^2
       design.mat = scRef_multi_proc(Y,cell_type_idx,indi_idx,estimator=x_estimator,tau2=tau2,
-                                    sigma2=sigma2,est_sigma2 = est_pop_var,eps=eps,meta_var=meta_var,meta_mode=meta_mode)
+                                    sigma2=sigma2,est_sigma2 = est_pop_var,eps=eps,
+                                    meta_var=meta_var,meta_mode=meta_mode,
+                                    verbose = verbose)
 
       #browser()
     }else{
@@ -75,17 +86,20 @@ deconference = function(data.obj,
 
   }
 
-  #browser()
+
 
   if(cellsize_est=='ols'){
-    out = estimation_func(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
-                          w=w,hc.type=hc.type,correction=correction,S=design.mat$S)
+    out = estimation_func2(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,
+                          w=w,hc.type=hc.type,correction=correction,a=a,
+                          S=design.mat$S,calc_cov=calc_cov,verbose=verbose)
   }
   if(cellsize_est=='glm'){
-    out = estimation_func(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,marker_gene=marker_gene,
-                          w=w,hc.type=hc.type,correction=correction,S=design.mat$S_glm)
+    out = estimation_func2(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,
+                          w=w,hc.type=hc.type,correction=correction,a=a,
+                          S=design.mat$S_glm,calc_cov=calc_cov,verbose=verbose)
   }
 
+  rownames(out$beta_hat) = colnames(design.mat$X)
   return(out)
 }
 

@@ -17,7 +17,7 @@ two_group_test = function(out, groups){
 
   K = ncol(out$input$X)
 
-  diff_group = rowMeans(out$beta_hat[,group1_idx]) - rowMeans(out$beta_hat[,group2_idx])
+  diff_group = rowMeans(out$beta_hat[,group1_idx,drop=F]) - rowMeans(out$beta_hat[,group2_idx,drop=F])
 
   # N_indi = length(group1_idx) + length(group2_idx)
 

@@ -1,0 +1,112 @@
+---
+title: "cov_gene_corr"
+author: "DongyueXie"
+date: "2020-11-30"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+when calculating cov matrix, treat all y's correlated.
+
+$y = X\beta + \epsilon$, $var(\epsilon) = D^{1/2}\Omega D^{1/2}$, where $D$ is the diagonal of covariance matrix, and $\Omega$ is the correlation matrix and we treat it as known.
+
+We first estimate $\bets$ using ols. Then use the residual squared as estimates of variance. Then calculate $\hat{var}(\epsilon) = \hat D^{1/2}\Omega \hat D^{1/2}$. And finally the variance of $\hat\beta$ is $(X^TX)^{-1}X^T\hat{var}(\epsilon) X(X^TX)^{-1}X^T$.
+
+
+
+
+
+```{r}
+source('code/deconference_main.R')
+library(sandwich)
+
+# obj, a lm fitted model
+# Omega, correlation materix
+vcovHCC = function(obj,Omega=NULL,hc.type='hc3'){
+  library(Rfast)
+  X = as.matrix(obj$model[,-1])
+  if(is.null(Omega)){
+    A = mat.mult(mat.mult(solve(Crossprod(X,X)),t(X)),as.matrix(obj$residuals))
+    V = Tcrossprod(A,A)
+  }else{
+    A = mat.mult(solve(Crossprod(X,X)),t(X))
+    d = abs(obj$residuals)
+    if(hc.type=='hc3'){
+      d = d/(1-influence(obj)$hat)
+    }
+    Sigma = t(t(Omega*d)*d)
+    V = mat.mult(mat.mult(A,Sigma),t(A))
+  }
+  V
+}
+
+simu_result = function(X,beta,Omega){
+  
+  y <- apply(X, 3, function(mat) mat %*% beta)
+mu <- rowMeans(X, dims = 2)
+
+rm.idx = which(rowSums(mu)==0)
+
+
+est.beta <- apply(y, 2, function(v) {
+  temp <- lm(v ~ mu + 0)
+  sw.sd <- sqrt(diag(vcovHC(temp, type="HC3")))
+  std.sd <- sqrt(diag(vcov(temp)))
+  swc.sd <- sqrt(diag(vcovHCC(temp,Omega=Omega)))
+  temp <- pmax(temp$coef, 0)
+  return((c(temp/sum(temp), (temp - beta) / std.sd, (temp - beta) / sw.sd, (temp - beta) / swc.sd,std.sd,sw.sd,swc.sd)))
+})
+rownames(est.beta) <- c("Est1", "Est2", "Est3", "dev1.OLS", "dev2.OLS", "dev3.OLS", "dev1.sandwich", "dev2.sandwich", "dev3.sandwich","dev1.sandwich.cor", "dev2.sandwich.cor", "dev3.sandwich.cor","sd1.OLS", "sd2.OLS", "sd3.OLS", "sd1.sandwich", "sd2.sandwich", "sd3.sandwich","sd1.sandwich.cor", "sd2.sandwich.cor", "sd3.sandwich.cor")
+MSE <- sqrt(colSums((est.beta[1:3, ] - beta)^2))
+#print(rbind(est.beta, MSE))
+rbind(est.beta, MSE)
+}
+
+gene_cor <- readRDS("data/pancreas/gene_cor.rds")
+X_xin <- readRDS("data/pancreas/X_xin.rds")
+X_array = X_xin$X_array
+X_array = X_array[, , -c(4, 7)]
+
+N = dim(X_array)[1]
+K = dim(X_array)[2]
+NI = dim(X_array)[3]
+
+rm.gene = which(rowSums(rowSums(X_array,dims=2))==0)
+
+for(k in 1:K){
+  gene_mat_k = X_array[,k,]
+  rm.gene = c(rm.gene,which(rowSums(gene_mat_k)==0))
+}
+
+X_array = X_array[-rm.gene,,]
+gene_cor = gene_cor[-rm.gene,-rm.gene]
+
+out = simu_result(X_array,c(0.2,0.3,0.5),gene_cor)
+round(out,3)
+```
+
+
+
+```{r,eval=FALSE}
+set.seed(12345)
+n = 1000
+p = 4
+x_cor = toeplitz(c(1,0.8,0.7,0.6))
+X = rmvnorm(n,rep(0,p),x_cor)
+
+Omega = gene_cor[1:n,1:n]
+s = sqrt(runif(n,0.5,1.5))
+Sigma = t(t(Omega*s)*s)
+
+y = X%*%c(1:p) + c(rmvnorm(1,rep(0,n),Sigma))
+obj = lm(y~X+0)
+round(sqrt(diag(vcovHC(obj,type = 'HC3'))),3)
+round(sqrt(diag(vcovHCC(obj,Omega,hc.type = 'hc3'))),3)
+
+round(sqrt(diag(solve(t(X)%*%X)%*%t(X)%*%Sigma%*%X%*%solve(t(X)%*%X))),3)
+```
+
+

@@ -537,16 +537,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree31ee130df7eb4982a7ece352df831fed84b2a337targetblank31ee130a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/31ee130df7eb4982a7ece352df831fed84b2a337" target="_blank">31ee130</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreef6b875d2b781512d3a6be9bdff86a3225a2142dbtargetblankf6b875da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/f6b875d2b781512d3a6be9bdff86a3225a2142db" target="_blank">f6b875d</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree31ee130df7eb4982a7ece352df831fed84b2a337targetblank31ee130a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreef6b875d2b781512d3a6be9bdff86a3225a2142dbtargetblankf6b875da" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/31ee130df7eb4982a7ece352df831fed84b2a337" target="_blank">31ee130</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/f6b875d2b781512d3a6be9bdff86a3225a2142db" target="_blank">f6b875d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -720,6 +720,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/f6b875d2b781512d3a6be9bdff86a3225a2142db/analysis/oracle_mse_xin.Rmd" target="_blank">f6b875d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-12-10
+</td>
+<td>
+wflow_publish(“analysis/oracle_mse_xin.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/3a305a9594afa12c54a7125d6aeb39c452c1e200/docs/oracle_mse_xin.html" target="_blank">3a305a9</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2020-12-10
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/31ee130df7eb4982a7ece352df831fed84b2a337/analysis/oracle_mse_xin.Rmd" target="_blank">31ee130</a>
 </td>
 <td>
@@ -823,6 +857,132 @@ sd2.LS   3.930  3.930  3.930  3.930  3.930  3.930  3.930
 sd3.LS   0.852  0.852  0.852  0.852  0.852  0.852  0.852
 MSE      0.308  0.373  0.764  0.247  0.990  0.542  0.950</code></pre>
 <p>It does not work. Maybe the number of individual is too small.</p>
+<p>How about transform <span class="math inline">\(\Sigma\)</span> to correlation matrix.</p>
+<pre class="r"><code>library(sandwich)
+# obj, a lm fitted model
+# Omega, correlation materix
+vcovHCC = function(obj,Omega=NULL,hc.type=&#39;hc3&#39;){
+  library(Rfast)
+  X = as.matrix(obj$model[,-1])
+  if(is.null(Omega)){
+    A = mat.mult(mat.mult(solve(Crossprod(X,X)),t(X)),as.matrix(obj$residuals))
+    V = Tcrossprod(A,A)
+  }else{
+    A = mat.mult(solve(Crossprod(X,X)),t(X))
+    d = abs(obj$residuals)
+    if(hc.type==&#39;hc3&#39;){
+      d = d/(1-influence(obj)$hat)
+    }
+    Sigma = t(t(Omega*d)*d)
+    V = mat.mult(mat.mult(A,Sigma),t(A))
+  }
+  V
+}
+
+
+
+simu_result = function(X,beta,Omega){
+  
+  y &lt;- apply(X, 3, function(mat) mat %*% beta)
+mu &lt;- rowMeans(X, dims = 2)
+
+rm.idx = which(rowSums(mu)==0)
+
+
+est.beta &lt;- apply(y, 2, function(v) {
+  temp &lt;- lm(v ~ mu + 0)
+  sw.sd &lt;- sqrt(diag(vcovHC(temp, type=&quot;HC3&quot;)))
+  std.sd &lt;- sqrt(diag(vcov(temp)))
+  swc.sd &lt;- sqrt(diag(vcovHCC(temp,Omega=Omega)))
+  temp &lt;- pmax(temp$coef, 0)
+  return((c(temp/sum(temp), (temp - beta) / std.sd, (temp - beta) / sw.sd, (temp - beta) / swc.sd,std.sd,sw.sd,swc.sd)))
+})
+rownames(est.beta) &lt;- c(&quot;Est1&quot;, &quot;Est2&quot;, &quot;Est3&quot;, &quot;dev1.OLS&quot;, &quot;dev2.OLS&quot;, &quot;dev3.OLS&quot;, &quot;dev1.sandwich&quot;, &quot;dev2.sandwich&quot;, &quot;dev3.sandwich&quot;,&quot;dev1.sandwich.cor&quot;, &quot;dev2.sandwich.cor&quot;, &quot;dev3.sandwich.cor&quot;,&quot;sd1.OLS&quot;, &quot;sd2.OLS&quot;, &quot;sd3.OLS&quot;, &quot;sd1.sandwich&quot;, &quot;sd2.sandwich&quot;, &quot;sd3.sandwich&quot;,&quot;sd1.sandwich.cor&quot;, &quot;sd2.sandwich.cor&quot;, &quot;sd3.sandwich.cor&quot;)
+MSE &lt;- sqrt(colSums((est.beta[1:3, ] - beta)^2))
+#print(rbind(est.beta, MSE))
+rbind(est.beta, MSE)
+}
+
+out = simu_result(X_array,b,cov2cor(Sigma))</code></pre>
+<pre><code>Loading required package: Rcpp</code></pre>
+<pre><code>Loading required package: RcppZiggurat</code></pre>
+<pre class="r"><code>round(out,3)</code></pre>
+<pre><code>                     [,1]   [,2]    [,3]    [,4]    [,5]    [,6]   [,7]
+Est1                0.307  0.210   0.296   0.452   0.249   0.323  0.170
+Est2                0.518  0.217   0.434   0.334   0.511   0.328  0.392
+Est3                0.175  0.572   0.270   0.215   0.240   0.348  0.438
+dev1.OLS            6.669  0.187   4.996  11.699   2.560   5.837 -0.983
+dev2.OLS           13.606 -2.780   6.937   0.707  11.184   1.160  3.837
+dev3.OLS          -27.928  2.497 -15.071 -20.299 -18.614 -10.021 -2.612
+dev1.sandwich       4.128  0.121   3.263   7.040   1.611   3.807 -0.655
+dev2.sandwich       7.610 -1.682   4.322   0.461   6.452   0.739  2.356
+dev3.sandwich     -15.634  0.982  -8.974 -13.222  -9.825  -4.919 -1.422
+dev1.sandwich.cor   1.649  0.057   1.306   2.376   0.640   1.431 -0.295
+dev2.sandwich.cor   2.747 -0.648   1.536   0.203   2.255   0.276  0.996
+dev3.sandwich.cor  -3.651  0.229  -1.871  -2.765  -2.224  -1.214 -0.316
+sd1.OLS             0.015  0.031   0.020   0.019   0.018   0.020  0.026
+sd2.OLS             0.016  0.031   0.020   0.019   0.019   0.021  0.026
+sd3.OLS             0.012  0.024   0.015   0.015   0.014   0.016  0.020
+sd1.sandwich        0.025  0.048   0.030   0.032   0.029   0.031  0.039
+sd2.sandwich        0.028  0.052   0.032   0.030   0.032   0.032  0.043
+sd3.sandwich        0.021  0.061   0.025   0.023   0.027   0.032  0.037
+sd1.sandwich.cor    0.062  0.101   0.075   0.095   0.074   0.083  0.087
+sd2.sandwich.cor    0.077  0.135   0.090   0.068   0.092   0.087  0.102
+sd3.sandwich.cor    0.090  0.260   0.121   0.108   0.118   0.129  0.165
+MSE                 0.406  0.110   0.282   0.382   0.338   0.198  0.115
+                    [,8]   [,9]  [,10]  [,11]   [,12]  [,13]   [,14]
+Est1               0.217  0.018  0.151  0.269   0.298  0.000   0.295
+Est2               0.338  0.045  0.304  0.322   0.410  0.000   0.466
+Est3               0.445  0.937  0.544  0.409   0.292  1.000   0.239
+dev1.OLS           0.816 -4.618 -1.598  2.617   5.364 -4.029   5.654
+dev2.OLS           1.712 -6.392  0.435  0.707   5.882 -5.978   9.719
+dev3.OLS          -2.288 15.267  2.713 -4.984 -16.116 31.765 -19.537
+dev1.sandwich      0.525 -2.847 -1.125  1.791   3.465 -2.126   3.079
+dev2.sandwich      1.088 -3.863  0.291  0.410   3.827 -2.802   5.576
+dev3.sandwich     -1.046  5.129  1.256 -2.566  -9.977  8.332 -11.287
+dev1.sandwich.cor  0.229 -0.970 -0.505  0.751   1.334 -0.657   1.505
+dev2.sandwich.cor  0.385 -1.323  0.101  0.174   1.378 -0.693   2.056
+dev3.sandwich.cor -0.252  0.920  0.262 -0.590  -2.050  1.347  -2.540
+sd1.OLS            0.026  0.039  0.028  0.025   0.017  0.050   0.017
+sd2.OLS            0.026  0.040  0.028  0.025   0.017  0.050   0.017
+sd3.OLS            0.020  0.030  0.021  0.019   0.013  0.038   0.013
+sd1.sandwich       0.041  0.064  0.040  0.037   0.027  0.094   0.032
+sd2.sandwich       0.042  0.066  0.042  0.044   0.027  0.107   0.030
+sd3.sandwich       0.044  0.089  0.046  0.037   0.021  0.145   0.023
+sd1.sandwich.cor   0.093  0.187  0.088  0.088   0.069  0.304   0.065
+sd2.sandwich.cor   0.118  0.192  0.122  0.104   0.075  0.433   0.083
+sd3.sandwich.cor   0.181  0.499  0.222  0.163   0.104  0.895   0.102
+MSE                0.069  0.538  0.066  0.116   0.255  0.616   0.323
+                   [,15]  [,16]
+Est1               0.000  0.294
+Est2               0.235  0.333
+Est3               0.765  0.373
+dev1.OLS          -5.760  4.508
+dev2.OLS          -1.725  1.640
+dev3.OLS          10.478 -7.670
+dev1.sandwich     -3.578  2.900
+dev2.sandwich     -1.111  1.013
+dev3.sandwich      4.709 -4.310
+dev1.sandwich.cor -1.341  1.207
+dev2.sandwich.cor -0.438  0.390
+dev3.sandwich.cor  0.791 -0.950
+sd1.OLS            0.035  0.021
+sd2.OLS            0.035  0.021
+sd3.OLS            0.027  0.016
+sd1.sandwich       0.056  0.033
+sd2.sandwich       0.055  0.035
+sd3.sandwich       0.059  0.029
+sd1.sandwich.cor   0.149  0.079
+sd2.sandwich.cor   0.138  0.090
+sd3.sandwich.cor   0.352  0.131
+MSE                0.338  0.161</code></pre>
+<pre class="r"><code>hist(cov2cor(Sigma),breaks = 1000)</code></pre>
+<p><img src="figure/oracle_mse_xin.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>As a comparison, plot the gene correlation estiamted from raw count data.</p>
+<pre class="r"><code>gene_cor = readRDS(&quot;data/pancreas/gene_cor.rds&quot;)
+gene_cor = gene_cor[-rm.gene,-rm.gene]
+hist(gene_cor,breaks = 1000)</code></pre>
+<p><img src="figure/oracle_mse_xin.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -849,14 +1009,18 @@ locale:
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
+other attached packages:
+[1] Rfast_2.0.1        RcppZiggurat_0.1.5 Rcpp_1.0.5        
+[4] sandwich_2.5-1    
+
 loaded via a namespace (and not attached):
- [1] workflowr_1.6.2 Rcpp_1.0.5      rprojroot_1.3-2 digest_0.6.20  
- [5] later_0.8.0     MASS_7.3-51.4   R6_2.4.0        backports_1.1.4
- [9] git2r_0.26.1    magrittr_1.5    evaluate_0.14   stringi_1.4.3  
-[13] fs_1.3.1        promises_1.0.1  whisker_0.3-2   rmarkdown_1.13 
-[17] tools_3.6.1     stringr_1.4.0   glue_1.3.1      httpuv_1.5.1   
-[21] xfun_0.8        yaml_2.2.0      compiler_3.6.1  htmltools_0.3.6
-[25] knitr_1.23     </code></pre>
+ [1] knitr_1.23      whisker_0.3-2   magrittr_1.5    workflowr_1.6.2
+ [5] MASS_7.3-51.4   lattice_0.20-38 R6_2.4.0        stringr_1.4.0  
+ [9] tools_3.6.1     parallel_3.6.1  grid_3.6.1      xfun_0.8       
+[13] git2r_0.26.1    htmltools_0.3.6 yaml_2.2.0      digest_0.6.20  
+[17] rprojroot_1.3-2 later_0.8.0     promises_1.0.1  fs_1.3.1       
+[21] glue_1.3.1      evaluate_0.14   rmarkdown_1.13  stringi_1.4.3  
+[25] compiler_3.6.1  backports_1.1.4 httpuv_1.5.1    zoo_1.8-6      </code></pre>
 </div>
 </div>
 

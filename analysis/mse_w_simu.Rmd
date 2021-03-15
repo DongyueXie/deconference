@@ -1,0 +1,151 @@
+---
+title: "mse_w_simu"
+author: "DongyueXie"
+date: "2021-03-11"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+
+```{r}
+library(Rfast)
+mse = function(x,y){mean(sum((x-y)^2))}
+simu_study = function(X_array,bulk_idx,b = c(0.2,0.3,0.5),use.true.beta = FALSE,n.drop.eigen = 20,use.true.U=FALSE,U = NULL){
+  N = dim(X_array)[1]
+  K = dim(X_array)[2]
+  NI = dim(X_array)[3]
+  n_bulk = length(bulk_idx)
+  n_ref = NI-n_bulk
+  X_bulk = X_array[,,bulk_idx]
+  X_ref = X_array[,,-bulk_idx]
+  #X_ref = X_array
+  
+  X = rowMeans(X_ref,dims = 2)
+  y = apply(X_bulk,3,function(z){z%*%b})
+  
+  Sigma_sample = c()
+  for(i in 1:n_ref){
+    if(use.true.beta){
+      if(use.true.U){
+        Sigma_sample = cbind(Sigma_sample,(X_ref[,,i] - U)%*%b)
+      }else{
+        Sigma_sample = cbind(Sigma_sample,(X_ref[,,i] - X)%*%b)
+      }
+    }else{
+      if(use.true.U){
+        Sigma_sample = cbind(Sigma_sample,(X_ref[,,i] - U)%*%rep(1/K,K))
+      }else{
+        Sigma_sample = cbind(Sigma_sample,(X_ref[,,i] - X)%*%rep(1/K,K))
+      }
+    }
+  }
+  Sigma = cova(t(Sigma_sample))
+  Sigma.eigen = eigen(Sigma)
+  print(round(Sigma.eigen$values[1:20]),3)
+  b.gls = array(dim = c(K,n_bulk,n.drop.eigen))
+  for(j in 1:n.drop.eigen){
+    P = Sigma.eigen$vectors[,-(1:j)]
+    yp = t(P)%*%y
+    if(use.true.U){
+      Xp = t(P)%*%U
+    }else{
+      Xp = t(P)%*%X
+    }
+    
+    b.gls[,,j] = solve(t(Xp)%*%Xp)%*%t(Xp)%*%yp
+  }
+  
+  if(use.true.U){
+    b.ols = solve(t(U)%*%U)%*%t(U)%*%y
+  }else{
+    b.ols = solve(t(X)%*%X)%*%t(X)%*%y
+  }
+  
+  
+  return(list(b.ols=b.ols,b.gls=b.gls))
+}
+```
+
+```{r}
+X_xin <- readRDS("data/pancreas/X_xin.rds")
+X_array = X_xin$X_array
+X_array = X_array[, , -c(4, 7)]
+N = dim(X_array)[1]
+K = dim(X_array)[2]
+NI = dim(X_array)[3]
+
+rm.gene = which(rowSums(rowSums(X_array,dims=2))==0)
+for(k in 1:K){
+  gene_mat_k = X_array[,k,]
+  rm.gene = c(rm.gene,which(rowSums(gene_mat_k)==0))
+}
+X_array = X_array[-rm.gene,,]
+X = rowMeans(X_array,dims = 2)
+```
+
+```{r}
+set.seed(12345)
+n = 1000
+p = 3
+ni = 16
+X = X[sample(1:nrow(X),n),]
+#X = matrix(rnorm(n*p),nrow=n)
+# D = diag(c(100,1,1))
+# U.temp = matrix(rnorm(n * p), nrow = n)
+# U = svd(U.temp)$u
+# S = U%*%D%*%t(U)
+
+X_array = array(dim = c(n,p,ni))
+for(i in 1:ni){
+  X_array[,,i] = X + rbind(rnorm(p,0,sd=3),matrix(rnorm((n-1)*p,0,sd = 3),nrow=n-1))
+}
+
+bulk_idx = 1:4
+b = c(0.2,0.3,0.5)
+out = simu_study(X_array,bulk_idx,b,use.true.beta=T,n.drop.eigen = 20)
+round(apply(out$b.ols,2,function(x){mse(x,b)}),3)
+round(apply(out$b.gls, 3, function(x){
+  apply(x,2,function(z){mse(z,b)})
+}),3)
+```
+
+
+```{r}
+X_array = array(dim = c(n,p,ni))
+for(i in 1:ni){
+  X_array[,,i] = X + rbind(rnorm(p,0,sd=20),matrix(rnorm((n-1)*p,0,sd = 3),nrow=n-1))
+}
+
+bulk_idx = 1:4
+b = c(0.2,0.3,0.5)
+out = simu_study(X_array,bulk_idx,b,use.true.beta=T,n.drop.eigen = 20)
+round(apply(out$b.ols,2,function(x){mse(x,b)}),3)
+round(apply(out$b.gls, 3, function(x){
+  apply(x,2,function(z){mse(z,b)})
+}),3)
+```
+
+```{r}
+r = 10
+R = toeplitz(c(seq(1,0,length.out = r),rep(0,n-r)))
+sd = rchisq(n,5)
+hist(sd,breaks = 100)
+Sigma = sd*t(sd*R)
+
+X_array = array(dim = c(n,p,ni))
+for(i in 1:ni){
+  X_array[,,i] = X + t(Rfast::rmvnorm(p,rep(0,n),Sigma))
+}
+
+bulk_idx = 1:4
+b = c(0.2,0.3,0.5)
+out = simu_study(X_array,bulk_idx,b,use.true.beta=T,n.drop.eigen = 20)
+round(apply(out$b.ols,2,function(x){mse(x,b)}),3)
+round(apply(out$b.gls, 3, function(x){
+  apply(x,2,function(z){mse(z,b)})
+}),3)
+```
+

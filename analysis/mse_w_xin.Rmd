@@ -1,0 +1,207 @@
+---
+title: "Adding weight xin data "
+author: "DongyueXie"
+date: "2021-03-08"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+We have matrices $X_i$ for each individual $i = 1,2,...,n$. 
+
+Let $y_i = X_i\beta_i$ and $U = \frac{1}{n}\sum_i X_i$, we fit the following model to estimate $\beta_i$:
+
+\[y_i  =  U\beta_i +(X_i-U)\beta_i:=U\beta_i + \epsilon_i\]
+
+We previously estimated the variance of $\epsilon_i$ as the sample covariance of $(X_i-U)\beta_i$, denoted as $\Sigma_i$, and the estimator is $\hat\beta_i = (X^T\Sigma_i^{}X)^{-1}X^T\Sigma_i^{+}y$, where $\Sigma_i^{+}$ is the pseudo-inverse. This approach did not improve mean squared error.
+
+Later we figured out when $\Sigma_i$ is rank-deficient, we can recover the exact solution from data in this example.
+
+## exact solution
+
+We first illustrate the recovery of exact solution.
+
+```{r}
+library(Rfast)
+X_xin <- readRDS("data/pancreas/X_xin.rds")
+X_array = X_xin$X_array
+X_array = X_array[, , -c(4, 7)]
+N = dim(X_array)[1]
+K = dim(X_array)[2]
+NI = dim(X_array)[3]
+
+rm.gene = which(rowSums(rowSums(X_array,dims=2))==0)
+for(k in 1:K){
+  gene_mat_k = X_array[,k,]
+  rm.gene = c(rm.gene,which(rowSums(gene_mat_k)==0))
+}
+X_array = X_array[-rm.gene,,]
+
+X = rowMeans(X_array,dims = 2)
+b = c(0.2,0.3,0.5)
+y = apply(X_array,3,function(z){z%*%b})
+
+#Sigma_sample = c()
+#for(i in 1:16){
+#  Sigma_sample = cbind(Sigma_sample,(X_array[,,i] - X)%*%b)
+#}
+#Sigma = cova(t(Sigma_sample))
+#Sigma.eigen = eigen.sym(Sigma,100)
+Sigma.eigen = readRDS('output/Sigma_eigen100_xin.rds')
+```
+
+```{r}
+P = Sigma.eigen$vectors[,-(1:16)]
+yp = t(P)%*%y
+Xp = t(P)%*%X
+
+solve(t(Xp)%*%Xp)%*%t(Xp)%*%yp
+```
+
+## Pseudo-bulk
+
+This observation inspired us to use the sample covariancem matrix for reducing the mean squared error. 
+
+Consider $y = U\beta +(X-U)\beta = U\beta + \epsilon$. Assume $cov(\epsilon) = \Sigma + P_1DP_1^T$, where $P_1\in \mathbb{R}^{G\times r}$, and $D$ is a diagonal matrix, with possibly large diagonal elements. If we can find a mtrix $P_2 \in \mathbb{R}^{G\times (G-r)}$ such that it is othogonal and is to $P_1$, then we have 
+\[P_2^Ty = P_2^TU\beta+\tilde{\epsilon}, cov(\tilde{\epsilon}) = P_2^T\Sigma P_2.\]
+
+We can reduce heterogenity by using such transformations.
+
+Now we randomly choose 12 people as reference data and the rest 4 people are used for creating bulk data.  We then obtain the $\Sigma$ using 12 individuals, and take $P_2$ as the last $G-1$ eigenvectors of $\Sigma$. (Note that to obtain $\Sigma$ we would need the true $\beta$, and in examples here, we set them to be $1/K$).
+
+```{r}
+mse = function(x,y){mean(sum((x-y)^2))}
+simu_study = function(X_array,bulk_idx,b = c(0.2,0.3,0.5),use.true.beta = FALSE,n.drop.eigen = 20,n.eigen=200,seed=12345){
+  set.seed(seed)
+  N = dim(X_array)[1]
+  K = dim(X_array)[2]
+  NI = dim(X_array)[3]
+  n_bulk = length(bulk_idx)
+  n_ref = NI-n_bulk
+  X_bulk = X_array[,,bulk_idx]
+  X_ref = X_array[,,-bulk_idx]
+  
+  X = rowMeans(X_ref,dims = 2)
+  y = apply(X_bulk,3,function(z){z%*%b})
+  
+  Sigma_sample = c()
+  for(i in 1:n_ref){
+    if(use.true.beta){
+      Sigma_sample = cbind(Sigma_sample,(X_ref[,,i] - X)%*%b)
+    }else{
+      Sigma_sample = cbind(Sigma_sample,(X_ref[,,i] - X)%*%rep(1/K,K))
+    }
+  }
+  Sigma = cova(t(Sigma_sample))
+  Sigma.eigen = eigen.sym(Sigma,n.eigen)
+  b.gls = array(dim = c(K,n_bulk,n.drop.eigen))
+  for(j in 1:n.drop.eigen){
+    P = Sigma.eigen$vectors[,-(1:j)]
+    yp = t(P)%*%y
+    Xp = t(P)%*%X
+    b.gls[,,j] = solve(t(Xp)%*%Xp)%*%t(Xp)%*%yp
+  }
+  
+  b.ols = solve(t(X)%*%X)%*%t(X)%*%y
+  
+  return(list(b.ols=b.ols,b.gls=b.gls))
+}
+```
+
+### experiment 1
+
+individual = 1,4,7,10
+
+1. $\beta = c(0.2,0.3,0.5)$, use true beta.
+
+```{r}
+bulk_idx = c(1,4,7,10)
+b = c(0.2,0.3,0.5)
+out1 = simu_study(X_array,bulk_idx = bulk_idx,b=b,use.true.beta = TRUE)
+round(apply(out1$b.ols,2,function(x){mse(x,b)}),2)
+round(apply(out1$b.gls, 3, function(x){
+  apply(x,2,function(z){mse(z,b)})
+}),2)
+```
+
+```{r}
+round(out1$b.ols,2)
+round(out1$b.gls,2)
+```
+
+```{r}
+n_bulk = length(bulk_idx)
+n_ref = NI-n_bulk
+X_bulk = X_array[,,bulk_idx]
+X_ref = X_array[,,-bulk_idx]
+  
+X = rowMeans(X_ref,dims = 2)
+y = apply(X_bulk,3,function(z){z%*%b})
+sqrt(apply(X_bulk,3,mse,y=X))
+
+apply(X_bulk,3,function(x){
+  diag(cor(x,X))
+})
+```
+
+
+2. $\beta = c(0.2,0.3,0.5)$, use $1/K$.
+
+```{r}
+bulk_idx = c(1,4,7,10)
+b = c(0.2,0.3,0.5)
+out2 = simu_study(X_array,bulk_idx = bulk_idx,b=b,use.true.beta = FALSE)
+round(apply(out2$b.ols,2,function(x){mse(x,b)}),2)
+round(apply(out2$b.gls, 3, function(x){
+  apply(x,2,function(z){mse(z,b)})
+}),2)
+```
+
+
+```{r}
+round(out1$b.ols,2)
+round(out1$b.gls,2)
+```
+
+
+### experiment 2
+
+individual = 2,5,8,11
+
+
+1. $\beta = c(0.2,0.3,0.5)$, use true beta.
+
+```{r}
+bulk_idx = c(2,5,8,11)
+b = c(0.2,0.3,0.5)
+out1 = simu_study(X_array,bulk_idx = bulk_idx,b=b,use.true.beta = TRUE)
+round(apply(out1$b.ols,2,function(x){mse(x,b)}),2)
+round(apply(out1$b.gls, 3, function(x){
+  apply(x,2,function(z){mse(z,b)})
+}),2)
+```
+
+```{r}
+round(out1$b.ols,2)
+round(out1$b.gls,2)
+```
+
+2. $\beta = c(0.2,0.3,0.5)$, use $1/K$.
+
+```{r}
+bulk_idx = c(2,5,8,11)
+b = c(0.2,0.3,0.5)
+out2 = simu_study(X_array,bulk_idx = bulk_idx,b=b,use.true.beta = FALSE)
+round(apply(out2$b.ols,2,function(x){mse(x,b)}),2)
+round(apply(out2$b.gls, 3, function(x){
+  apply(x,2,function(z){mse(z,b)})
+}),2)
+```
+
+```{r}
+round(out1$b.ols,2)
+round(out1$b.gls,2)
+```
+

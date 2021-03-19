@@ -1,0 +1,304 @@
+---
+title: "Reduce mse by weighting, on real data"
+author: "DongyueXie"
+date: "2021-03-15"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Add weights obtained from reference samples to reduce mse, also compare with using music weights, and music.
+
+```{r,message=F,warning=F}
+library(MuSiC)
+library(Biobase)
+library(xbioc)
+source('code/deconference_main.R')
+source('code/utils.R')
+
+
+seger <- readRDS("~/deconference/data/pancreas/segerstolpe_raw.rds")
+refs_raw <- readRDS("~/deconference/data/pancreas/refs_raw.rds")
+genes = rownames(refs_raw$xin)
+
+```
+
+
+```{r}
+XinT2D.eset <- readRDS("data/MuSiC/XinT2Deset.rds")
+XinT2D.construct.full = bulk_construct(XinT2D.eset, clusters = 'cellType', samples = 'SubjectName')
+XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+```
+
+
+```{r}
+
+wols = function(X,Y,W,Vg=NULL){
+  n = nrow(X)
+  K = ncol(X)
+  ni = ncol(Y)
+  beta_hat = matrix(nrow=ni,ncol=K)
+  for(j in 1:ni){
+    Xw = X*sqrt(W[,j])
+    yw = Y[,j]*sqrt(W[,j])
+    
+    A = t(Xw)%*%Xw
+    if(!is.null(Vg)){
+      Vw = Vg*(W[,j])
+      V = diag(c(colSums(Vw)))
+    }else{
+      V = 0
+    }
+    
+    bhat = solve(A-V)%*%t(Xw)%*%yw
+    bhat = pmax(bhat,0)
+    bhat = bhat/sum(bhat)
+    beta_hat[j,] = bhat
+  }
+  beta_hat
+}
+```
+
+
+```{r}
+
+xin_raw <- readRDS("~/deconference/data/pancreas/xin_raw.rds")
+
+bulk.indi = c(4,7,10,12)
+bulk.indi = levels(XinT2D.eset$SubjectName)[bulk.indi]
+bulk.idx = which(XinT2D.eset$SubjectName%in%bulk.indi)
+
+Est.prop.xin = music_prop(XinT2D.construct.full$Bulk.counts,XinT2D.eset[,-bulk.idx],
+                          markers = genes,
+                          clusters = 'cellType', samples = 'SubjectName', 
+                          select.ct =  c('alpha', 'beta', 'delta', 'gamma'))
+rmse(as.matrix(XinT2D.construct.full$prop.real),(Est.prop.xin$Est.prop.weighted))
+
+
+cell_types = c('alpha', 'beta', 'delta', 'gamma')
+K = length(cell_types)
+datax = set_data_decon(exprs(XinT2D.construct.full$Bulk.counts),
+                       xin_raw[,-bulk.idx],marker_gene = rownames(Est.prop.xin$Weight.gene),
+                       cell_types = cell_types, gene_thresh = 0,max_count_quantile = 1,w=1)
+
+design.mat = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,estimator="separate",est_sigma2 = TRUE,
+                                    meta_var='plug_in',meta_mode='smooth',
+                                    verbose = TRUE)
+
+
+# w equal
+
+Sigma_sample = c()
+idx = 1:dim(design.mat$X_array)[3]
+idx = idx[-c(4,7,10,12)]
+for(i in idx){
+  Sigma_sample = cbind(Sigma_sample,(design.mat$X_array[,,i] - design.mat$X)%*%rep(1/K,K))
+}
+cov.Xb = Rfast::cova(t(Sigma_sample))
+w = diag(cov.Xb)
+
+range(w)
+
+w = 1/w
+w = w/sum(w)
+w = w%*%t(rep(1,ncol(datax$y)))
+
+b.est.equal = wols(design.mat$X,datax$y,w,design.mat$Vg)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.equal))
+
+b.est.equal0 = wols(design.mat$X,datax$y,w)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.equal0))
+```
+
+some w might be too big, try to set  a limit.
+
+```{r}
+w = diag(cov.Xb)
+w = pmax(w,0.001)
+w = 1/w
+w = w/sum(w)
+w = w%*%t(rep(1,ncol(datax$y)))
+
+b.est.equal = wols(design.mat$X,datax$y,w,design.mat$Vg)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.equal))
+
+b.est.equal0 = wols(design.mat$X,datax$y,w)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.equal0))
+```
+
+
+ use true beta's
+```{r}
+# w true
+
+w.true = matrix(nrow=nrow(datax$y),ncol = ncol(datax$y))
+for(j in 1:ncol(w.true)){
+  Sigma_sample = c()
+   for(i in idx){
+    Sigma_sample = cbind(Sigma_sample,(design.mat$X_array[,,i] - design.mat$X)%*%as.numeric(XinT2D.construct.full$prop.real[j,]))
+   }
+   cov.Xb = Rfast::cova(t(Sigma_sample))
+   #print(range(diag(cov.Xb)))
+   w = 1/pmax(diag(cov.Xb),0.001)
+   w = w/sum(w)
+   w.true[,j] = w
+}
+
+b.est.true = wols(design.mat$X,datax$y,w.true,design.mat$Vg)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.true))
+
+b.est.true0 = wols(design.mat$X,datax$y,w.true)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.true0))
+
+
+# w music
+
+w.music = Est.prop.xin$Weight.gene
+w.music[is.na(w.music)] = 0
+w.music = apply(w.music,2,function(z){z/sum(z)})
+b.est.musicw = wols(design.mat$X,datax$y,w.music,design.mat$Vg)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.musicw))
+
+b.est.musicw0 = wols(design.mat$X,datax$y,w.music)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.musicw0))
+```
+
+correlation between music's weights and out weights:
+
+```{r}
+round(diag(cor(w.music,w.true)),2)
+```
+
+
+# seger as reference, xin as bulk
+
+
+```{r}
+pheno_Data = data.frame(cellType = seger$cell_type,SubjectName = seger$individual)
+rownames(pheno_Data) = colnames(seger)
+seger.ref = ExpressionSet(assayData = counts(seger),phenoData = AnnotatedDataFrame(pheno_Data))
+
+#cm.gene = intersect(rownames(seger.ref),rownames(XinT2D.construct.full$Bulk.counts))
+#cm.gene = cm.gene[sample(1:length(cm.gene),3000)]
+#g.bulk = match(cm.gene,rownames(XinT2D.construct.full$Bulk.counts))
+#g.ref = match(cm.gene,rownames(seger.ref))
+Est.prop.xin = music_prop(XinT2D.construct.full$Bulk.counts,seger.ref,
+                          clusters = 'cellType', samples = 'SubjectName', 
+                          markers = genes,
+                          select.ct =  c('alpha', 'beta', 'delta', 'gamma'))
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(Est.prop.xin$Est.prop.weighted), 
+                           data.matrix(Est.prop.xin$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+```
+
+
+```{r}
+cm.gene = intersect(rownames(seger.ref),rownames(XinT2D.construct.full$Bulk.counts))
+g.bulk = match(cm.gene,rownames(XinT2D.construct.full$Bulk.counts))
+g.ref = match(cm.gene,rownames(seger.ref))
+sum(genes%in%cm.gene)
+Est.prop.xin = music_prop(XinT2D.construct.full$Bulk.counts[g.bulk,],seger.ref[g.ref,],
+                          clusters = 'cellType', samples = 'SubjectName', 
+                          
+                          select.ct =  c('alpha', 'beta', 'delta', 'gamma'))
+Eval_multi(prop.real = data.matrix(XinT2D.construct.full$prop.real), 
+           prop.est = list(data.matrix(Est.prop.xin$Est.prop.weighted), 
+                           data.matrix(Est.prop.xin$Est.prop.allgene)), 
+           method.name = c('MuSiC', 'NNLS'))
+
+```
+
+
+```{r}
+
+cell_types = c('alpha', 'beta', 'delta', 'gamma')
+K = length(cell_types)
+datax = set_data_decon(exprs(XinT2D.construct.full$Bulk.counts),
+                       seger,marker_gene = rownames(Est.prop.xin$Weight.gene),
+                       cell_types = cell_types, gene_thresh = 0,max_count_quantile = 1,w=1)
+
+design.mat = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,estimator="separate",est_sigma2 = TRUE,
+                                    meta_var='plug_in',meta_mode='smooth',
+                                    verbose = TRUE)
+
+
+# w equal
+
+Sigma_sample = c()
+idx = 1:dim(design.mat$X_array)[3]
+for(i in idx){
+  Sigma_sample = cbind(Sigma_sample,(design.mat$X_array[,,i] - design.mat$X)%*%rep(1/K,K))
+}
+cov.Xb = Rfast::cova(t(Sigma_sample))
+w = diag(cov.Xb)
+
+range(w)
+w = pmax(w,0.001)
+w = 1/w
+w = w/sum(w)
+w = w%*%t(rep(1,ncol(datax$y)))
+
+b.est.equal = wols(design.mat$X,datax$y,w,design.mat$Vg)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.equal))
+
+b.est.equal0 = wols(design.mat$X,datax$y,w)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.equal0))
+
+
+w = diag(cov.Xb) + design.mat$X%*%rep(1/K,K)
+w = 1/w
+w = w/sum(w)
+w = w%*%t(rep(1,ncol(datax$y)))
+
+b.est.equal = wols(design.mat$X,datax$y,w,design.mat$Vg)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.equal))
+
+b.est.equal0 = wols(design.mat$X,datax$y,w)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.equal0))
+
+```
+
+ use true beta's
+```{r}
+# w true
+
+w.true = matrix(nrow=nrow(datax$y),ncol = ncol(datax$y))
+for(j in 1:ncol(w.true)){
+  Sigma_sample = c()
+   for(i in idx){
+    Sigma_sample = cbind(Sigma_sample,(design.mat$X_array[,,i] - design.mat$X)%*%as.numeric(XinT2D.construct.full$prop.real[j,]))
+   }
+   cov.Xb = Rfast::cova(t(Sigma_sample))
+   #print(range(diag(cov.Xb)))
+   w = 1/pmax(diag(cov.Xb),0.001)
+   w = w/sum(w)
+   w.true[,j] = w
+}
+
+b.est.true = wols(design.mat$X,datax$y,w.true,design.mat$Vg)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.true))
+
+b.est.true0 = wols(design.mat$X,datax$y,w.true)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.true0))
+
+
+# w music
+
+w.music = Est.prop.xin$Weight.gene
+w.music[is.na(w.music)] = 0
+w.music = apply(w.music,2,function(z){z/sum(z)})
+b.est.musicw = wols(design.mat$X,datax$y,w.music,design.mat$Vg)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.musicw))
+
+b.est.musicw0 = wols(design.mat$X,datax$y,w.music)
+rmse(as.matrix(XinT2D.construct.full$prop.real),(b.est.musicw0))
+```
+
+correlation between music's weights and out weights:
+
+```{r}
+round(diag(cor(w.music,w.true)),2)
+```

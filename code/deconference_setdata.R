@@ -81,6 +81,13 @@ set_data_decon = function(y=NULL,Y,
     Y = Y[,temp_idx]
     cell_type_idx = cell_type_idx[temp_idx]
     indi_idx = indi_idx[temp_idx]
+    ## drop levels of cell_type_idx, and indi_idx
+    if(is.factor(cell_type_idx)){
+      cell_type_idx = droplevels(cell_type_idx)
+    }
+    if(is.factor(indi_idx)){
+      indi_idx = droplevels(indi_idx)
+    }
 
     if(gene_thresh<1){
       gene_thresh = round(gene_thresh*ncol(Y))

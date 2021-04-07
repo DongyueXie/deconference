@@ -14,7 +14,7 @@
 estimation_func = function(y,X,Vg,X_var_pop=NULL,
                            #marker_gene = NULL,
                            w=NULL,
-                           hc.type='hc3',a=ncol(X)+4,
+                           f='hc3',a=ncol(X)+4,
                            correction=TRUE,S=NULL,calc_cov=TRUE,
                            verbose=FALSE){
 
@@ -366,8 +366,13 @@ J_sum2one = function(b,K){
 estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            w=NULL,
                            hc.type='hc3',a=ncol(X)+4,
-                           correction=TRUE,S=NULL,calc_cov=TRUE,
-                           verbose=FALSE){
+                           correction=TRUE,S=NULL,
+                           calc_cov=TRUE,
+                           verbose=FALSE,
+                           X_array = NULL,
+                           ref_weights = TRUE,
+                           beta.to.use = "equal",
+                           beta.true = NULL){
 
   #browser()
 
@@ -388,11 +393,35 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   # generate weights
 
   if(is.null(w)){
-    if(is.null(X_var_pop)){
-      w  = 1/(rowSums(X)/K+rowSums(Vg)/K^2)
+
+    if(ref_weights){
+
+      if(beta.to.use == 'true'){
+
+      }else if(beta.to.use == 'equal'){
+
+
+        Sigma_sample = c()
+        for(i in 1:dim(X_array)[3]){
+          Sigma_sample = cbind(Sigma_sample,(X_array[,,i] - X)%*%rep(1/K,K))
+        }
+        cov.Xb = Rfast::cova(t(Sigma_sample))
+        w = 1/diag(cov.Xb)
+
+      }else if(beta.to.use == 'estimated'){
+
+      }
+
     }else{
-      w  = 1/(rowSums(X)/K+rowSums(X_var_pop)/K^2+rowSums(Vg)/K^2)
+
+      if(is.null(X_var_pop)){
+        w  = 1/(rowSums(X)/K+rowSums(Vg)/K^2)
+      }else{
+        w  = 1/(rowSums(X)/K+rowSums(X_var_pop)/K^2+rowSums(Vg)/K^2)
+      }
+
     }
+
   }
   w = w/sum(w)*G
 

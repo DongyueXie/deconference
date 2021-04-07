@@ -1,3 +1,5 @@
+rmse = function(x,y){sqrt(mean((x-y)^2))}
+
 music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples,
                       select.ct = NULL, cell_size = NULL, ct.cov = FALSE, verbose = TRUE,
                       iter.max = 1000, nu = 1e-04, eps = 0.01, centered = FALSE,
@@ -173,7 +175,7 @@ summary_real = function(out,true_b,groups){
   colnames(ss) = c('rmse','mad','r2')
   rownames(ss) = NULL
 
-  ## print(knitr::kable(ss,caption='error measure'))
+   print(knitr::kable(ss,caption='error measure'))
 
   # coverage, length of CI
   ci = build_ci(out)
@@ -260,6 +262,7 @@ get_se_diff = function(out,K,nbulk){
 }
 
 
+# random select a half from each dataset as reference
 # data.obj is a list of single cell dataset
 # return 1. bulk data; 2. the rest as reference; 3. the bulk as reference; 4. all as reference
 create_realsimu_data = function(refs,cell_types,proph,propd,ncells = 1000,indis_ref = NULL){
@@ -365,6 +368,90 @@ create_realsimu_data = function(refs,cell_types,proph,propd,ncells = 1000,indis_
   return(list(bulk = out,bulk_prop = bulk_prop,group = condition,ref1=ref1,ref2=ref2,ref_same=ref_same))
 }
 
+create_bulk_abitrary_prop = function(refs,cell_types,proph,propd,ncells = 1000,seed=12345){
+  set.seed(seed)
+  G = nrow(refs[[1]])
+  bulk_counts = matrix(0,nrow=G,ncol=50)
+  bulk_prop = c()
+  all_indis = c()
+  condition = c()
+  indi_counter = 0
+
+  for(d in 1:length(refs)){
+
+    # random sample a half individuals
+    data.obj = refs[[d]]
+
+    ## these indis are for bulk data
+
+      c.idx = which(data.obj$cell_type%in%cell_types)
+      temp = table(data.obj$individual[c.idx],data.obj$cell_type[c.idx])
+      temp = temp[,match(cell_types,colnames(temp))]
+      valid_indi = which(rowSums(temp==0)==0)
+      indis = rownames(temp)[valid_indi]
+
+    all_indis = c(all_indis,indis)
+    condition = c(condition,c(rep('health',length(indis)/2),rep('disease',length(indis)/2)))
+    #print(indis)
+    # first half health
+    # second half disease
+    for(i in 1:(length(indis)/2)){
+      idx.temp = which(data.obj$individual==indis[i]&data.obj$cell_type%in%cell_types)
+      cell_counts = table(data.obj$cell_type[idx.temp])
+      if(is.null(ncells)){
+        ncells = round(max(cell_counts/proph))
+      }
+      bcounts = 0
+      for(j in 1:length(cell_types)){
+        idx_ij = which(data.obj$individual==indis[i]&data.obj$cell_type==cell_types[j])
+        #print(idx_ij)
+        #print(data.obj[,sample(idx_ij,ncells*prop[j],replace = TRUE)])
+        bcounts = bcounts + rowSums(counts(data.obj[,sample(idx_ij,ncells*proph[j],replace = TRUE)]))
+      }
+      bulk_prop = rbind(bulk_prop,proph)
+      indi_counter = indi_counter + 1
+      bulk_counts[,indi_counter] = bcounts
+
+    }
+
+
+    ## disease
+    for(i in (length(indis)/2+1):(length(indis))){
+      idx.temp = which(data.obj$individual==indis[i]&data.obj$cell_type%in%cell_types)
+      cell_counts = table(data.obj$cell_type[idx.temp])
+      if(is.null(ncells)){
+        ncells = round(max(cell_counts/propd))
+      }
+      bcounts = 0
+      for(j in 1:length(cell_types)){
+        idx_ij = which(data.obj$individual==indis[i]&data.obj$cell_type==cell_types[j])
+        #print(idx_ij)
+        #print(data.obj[,sample(idx_ij,ncells*prop[j],replace = TRUE)])
+        bcounts = bcounts + rowSums(counts(data.obj[,sample(idx_ij,ncells*propd[j],replace = TRUE)]))
+      }
+      bulk_prop = rbind(bulk_prop,propd)
+      indi_counter = indi_counter + 1
+      bulk_counts[,indi_counter] = bcounts
+    }
+  }
+
+  #browser()
+  bulk_counts = bulk_counts[,which(colSums(bulk_counts)!=0)]
+  colnames(bulk_counts) = all_indis
+  rownames(bulk_counts) = rownames(data.obj)
+  #rownames(bulk_ncell) = indis
+  rownames(bulk_prop) = all_indis
+  colnames(bulk_prop) = cell_types
+  #ii = which(data.obj$individual%in%indis&data.obj$cell_type%in%cell_types)
+  #bulk_prop = table(data.obj$individual[ii],data.obj$cell_type[ii])
+  #bulk_prop = bulk_prop/rowSums(bulk_prop)
+  coldata = DataFrame(individual = all_indis,condition=condition)
+  #browser()
+  out = SingleCellExperiment(assays = list(counts = as.matrix(bulk_counts)),
+                             colData = coldata)
+  return(list(bulk = out,bulk_prop = bulk_prop,group = condition))
+}
+
 sce_to_es = function(sce){
   #bulk.data = ExpressionSet(assayData = counts(enge_bulk$bulk))
   pheno_Data = data.frame(cell_type = sce$cell_type,individual = sce$individual)
@@ -397,4 +484,26 @@ merge_ref = function(refs){
 
   ref1_es
 
+}
+
+
+
+# obj, a lm fitted model
+# Omega, correlation materix
+vcovHCC = function(obj,Omega=NULL,hc.type='hc3'){
+  library(Rfast)
+  X = as.matrix(obj$model[,-1])
+  if(is.null(Omega)){
+    A = mat.mult(mat.mult(solve(Crossprod(X,X)),t(X)),as.matrix(obj$residuals))
+    V = Tcrossprod(A,A)
+  }else{
+    A = mat.mult(solve(Crossprod(X,X)),t(X))
+    d = abs(obj$residuals)
+    if(hc.type=='hc3'){
+      d = d/(1-influence(obj)$hat)
+    }
+    Sigma = t(t(Omega*d)*d)
+    V = mat.mult(mat.mult(A,Sigma),t(A))
+  }
+  V
 }

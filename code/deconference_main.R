@@ -44,7 +44,10 @@ deconference = function(data.obj,
                         cellsize_est='glm',
                         calc_cov=TRUE,
                         a=10,
-                        verbose=FALSE){
+                        verbose=FALSE,
+                        ref_weights = TRUE,
+                        beta.to.use = "equal",
+                        beta.true = NULL){
 
   ref_type = data.obj$ref_type
   w = data.obj$w
@@ -79,6 +82,8 @@ deconference = function(data.obj,
                                     meta_var=meta_var,meta_mode=meta_mode,
                                     verbose = verbose)
 
+
+
       #browser()
     }else{
       stop("unspported reference type")
@@ -91,12 +96,18 @@ deconference = function(data.obj,
   if(cellsize_est=='ols'){
     out = estimation_func2(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,
                           w=w,hc.type=hc.type,correction=correction,a=a,
-                          S=design.mat$S,calc_cov=calc_cov,verbose=verbose)
+                          S=design.mat$S,calc_cov=calc_cov,verbose=verbose,
+                          ref_weights = ref_weights,
+                          beta.to.use = beta.to.use,
+                          beta.true = beta.true)
   }
   if(cellsize_est=='glm'){
     out = estimation_func2(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,
                           w=w,hc.type=hc.type,correction=correction,a=a,
-                          S=design.mat$S_glm,calc_cov=calc_cov,verbose=verbose)
+                          S=design.mat$S_glm,calc_cov=calc_cov,verbose=verbose,
+                          ref_weights = ref_weights,
+                          beta.to.use = beta.to.use,
+                          beta.true = beta.true)
   }
 
   rownames(out$beta_hat) = colnames(design.mat$X)

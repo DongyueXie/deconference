@@ -84,27 +84,53 @@ createBulk_tech.noise = function(X_array, b, gene_names, ls_per_gene = 500,seed=
 }
 
 #'@param W variance, either a length G vector or a G*n_bulk matrix
-#'@param b true beta
-#'@param X reference mai
+#'@param b beta for evaluating weights
+#'@param X reference matrix
 #'@param Y bulk data
 #'@param Vg variance
-#'@param w.mode "res", "res+ref_var", "ref_var", "res+bvb"
+#'@param w.mode "equal", "res", "res+ref_var", "ref_var", "res+bvb"
 
-wols = function(X,Y,W=NULL,
+wols = function(X,Y,
                 Vg=NULL,
                 b=NULL,
                 w.mode = "res",
                 adj.v = FALSE,
-                nu = 1e-4
+                nu = 1e-4,
+                marker = NULL,
+                scale.y = FALSE,
+                X_array = NULL
                ){
+  if(!is.null(marker)){
+    X = X[marker,]
+    Y = Y[marker,]
+    Vg = Vg[marker,]
+    if(!is.null(X_array)){
+      X_array = X_array[marker,,]
+    }
+  }
+  
   n = nrow(X)
   K = ncol(X)
   ni = ncol(Y)
-  if(!is.null(W)&is.null(dim(W))){
-    W = W%*%t(rep(1,ni))
+  
+  if(scale.y){
+    Y = apply(Y,2,function(z){z/(sum(z)/n)})
+  }
+
+  
+  
+  
+  if(is.null(b)){
+    # then use b as
+    b = c(rowMeans(solve(t(X)%*%X)%*%t(X)%*%Y))
   }
   
-  beta_hat = matrix(nrow=ni,ncol=K)
+  Sigma_sample = c()
+  for(i in 1:dim(X_array)[3]){
+    Sigma_sample = cbind(Sigma_sample,(X_array[,,i] - X)%*%b)
+  }
+  w = diag.cov(t(Sigma_sample))
+  W = w%*%t(rep(1,ni))
   
   if(is.null(dim(b))){
       b = b%*%t(rep(1,ni))
@@ -112,8 +138,12 @@ wols = function(X,Y,W=NULL,
     
   r = Y - X%*%b
   
-  
+  beta_hat = matrix(nrow=ni,ncol=K)
   for(j in 1:ni){
+    
+    if(w.mode=="equal"){
+      wj = rep(1,n)
+    }
     
     if(w.mode=="res"){
       wj = 1/(nu + r[,j]^2)
@@ -193,66 +223,75 @@ diag.cov = function(X){
   colSums(X^2)/(nrow(X)-1)
 }
 
-simu_func = function(design.mat,datax,b,b.res){
+simu_func = function(design.mat,datax,b,b.res,marker.gene=NULL,scale.y=FALSE){
   
   n_bulk = ncol(datax$y)
   G = nrow(design.mat$X)
+  
+  if(!is.null(marker.gene)){
+    marker = which(datax$genes%in%marker.gene)
+  }else{
+    marker = NULL
+  }
+  
+  
   cat('---no weight---',"\n")
 
-  b.est0 = wols(design.mat$X,datax$y,W=rep(1,G),w.mode = 'ref_var',b=b.res)
+
+  b.est0 = wols(design.mat$X,datax$y,w.mode = 'equal',b=b.res,marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est0)),3)))
   print(round(b.est0,2))
 
-  b.est = wols(design.mat$X,datax$y,W=rep(1,G),Vg = design.mat$Vg,b=b.res,w.mode='ref_var',adj.v = TRUE)
+  b.est = wols(design.mat$X,datax$y,Vg = design.mat$Vg,b=b.res,w.mode='ref_var',adj.v = TRUE,marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   #print("No weight, ols adjusted for measurement error")
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est)),3)))
   print(round(b.est,2))
   
   cat('---weight from reference data---',"\n")
   
-  Sigma_sample = c()
-  for(i in 1:dim(design.mat$X_array)[3]){
-    Sigma_sample = cbind(Sigma_sample,(design.mat$X_array[,,i] - design.mat$X)%*%b.res)
+  if(is.null(b.res)){
+    b.ols = c(rowMeans(solve(t(design.mat$X)%*%design.mat$X)%*%t(design.mat$X)%*%datax$y))
+  }else{
+    b.ols = b.res
   }
-  w = diag.cov(t(Sigma_sample))
+  
 
-
-  b.est.ref0 = wols(design.mat$X,datax$y,W=w,w.mode = 'ref_var',b=b.res)
+  b.est.ref0 = wols(design.mat$X,datax$y,w.mode = 'ref_var',b=b.res,marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est.ref0)),3)))
   print(round(b.est.ref0,2))
 
-  b.est.ref = wols(design.mat$X,datax$y,W=w,Vg = design.mat$Vg,b=b.res,w.mode='ref_var',adj.v = TRUE)
+  b.est.ref = wols(design.mat$X,datax$y,Vg = design.mat$Vg,b=b.res,w.mode='ref_var',adj.v = TRUE,marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est.ref)),3)))
   print(round(b.est.ref,2))
   
   
   cat('---weight from residual---',"\n")
   
-  b.est.ref0 = wols(design.mat$X,datax$y,b=b.res,w.mode='res')
+  b.est.ref0 = wols(design.mat$X,datax$y,b=b.res,w.mode='res',marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est.ref0)),3)))
   print(round(b.est.ref0,2))
 
-  b.est.ref = wols(design.mat$X,datax$y,Vg = design.mat$Vg,b=b.res,w.mode='res',adj.v = TRUE)
+  b.est.ref = wols(design.mat$X,datax$y,Vg = design.mat$Vg,b=b.res,w.mode='res',adj.v = TRUE,marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est.ref)),3)))
   print(round(b.est.ref,2))
   
   cat('---weight from residual and reference---',"\n")
   
-  b.est.ref0 = wols(design.mat$X,datax$y,b=b.res,W=w,w.mode = 'res+ref_var')
+  b.est.ref0 = wols(design.mat$X,datax$y,b=b.res,w.mode = 'res+ref_var',marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est.ref0)),3)))
   print(round(b.est.ref0,2))
 
-  b.est.ref = wols(design.mat$X,datax$y,W=w,Vg = design.mat$Vg,b=b.res,w.mode = 'res+ref_var',adj.v = TRUE)
+  b.est.ref = wols(design.mat$X,datax$y,Vg = design.mat$Vg,b=b.res,w.mode = 'res+ref_var',adj.v = TRUE,marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est.ref)),3)))
   print(round(b.est.ref,2))
   
   cat('---weight from residual and reference bvb---',"\n")
   
-  b.est.ref0 = wols(design.mat$X,datax$y,b=b.res,W=w,w.mode = 'res+bvb',Vg = design.mat$Vg)
+  b.est.ref0 = wols(design.mat$X,datax$y,b=b.res,w.mode = 'res+bvb',Vg = design.mat$Vg,marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est.ref0)),3)))
   print(round(b.est.ref0,2))
 
-  b.est.ref = wols(design.mat$X,datax$y,W=w,Vg = design.mat$Vg,b=b.res,w.mode = 'res+bvb',adj.v = TRUE)
+  b.est.ref = wols(design.mat$X,datax$y,Vg = design.mat$Vg,b=b.res,w.mode = 'res+bvb',adj.v = TRUE,marker=marker,scale.y=scale.y,X_array = design.mat$X_array)
   print(paste("rmse",round(rmse(rep(1,n_bulk)%*%t(b/sum(b)),(b.est.ref)),3)))
   print(round(b.est.ref,2))
   
@@ -261,7 +300,13 @@ simu_func = function(design.mat,datax,b,b.res){
 
 ## create bulk data(no technical noise) using Xin.
 
- $y = X\beta = U\beta + (X-U)\beta + r$. $y_g = u_g^T\beta+r_g$. $w_g = 1/r_g^2$. $y_g/r_g = x_g^T\beta/r_g+1$. So the fit is very good.
+ $y = X\beta = U\beta + (X-U)\beta = U\beta + r$. 
+ 
+ $y_g = u_g^T\beta+r_g$. 
+ 
+ $w_g = 1/r_g^2$. 
+ 
+ $y_g/r_g = x_g^T\beta/r_g+1$. So the fit is very good.
 
 ```{r}
 cell_types = c('alpha', 'beta', 'delta', 'gamma')
@@ -293,7 +338,7 @@ design.mat.seger = scRef_multi_proc(datax.seger$Y,datax.seger$cell_type_idx,data
                                     verbose = F)
 simu_func(design.mat.seger,datax.seger,b,b)
 
-simu_func(design.mat.seger,datax.seger,b,rep(1/4,4))
+simu_func(design.mat.seger,datax.seger,b,NULL)
 
 ```
 
@@ -308,7 +353,7 @@ design.mat.baron = scRef_multi_proc(datax.baron$Y,datax.baron$cell_type_idx,data
                                     verbose = F)
 
 simu_func(design.mat.baron,datax.baron,b,b)
-simu_func(design.mat.baron,datax.baron,b,rep(1/4,4))
+simu_func(design.mat.baron,datax.baron,b,NULL)
 
 ```
 
@@ -329,7 +374,7 @@ design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,datax.xin$
                                     meta_var='plug_in',meta_mode='smooth',
                                     verbose = F)
 simu_func(design.mat.xin,datax.xin,b,b)
-simu_func(design.mat.xin,datax.xin,b,rep(1/4,4))
+simu_func(design.mat.xin,datax.xin,b,NULL)
 
 ```
 
@@ -345,7 +390,7 @@ design.mat.baron = scRef_multi_proc(datax.baron$Y,datax.baron$cell_type_idx,data
                                     verbose = F)
 
 simu_func(design.mat.baron,datax.baron,b,b)
-simu_func(design.mat.baron,datax.baron,b,rep(1/4,4))
+simu_func(design.mat.baron,datax.baron,b,NULL)
 
 ```
 
@@ -375,11 +420,14 @@ datax.seger = set_data_decon(y = bulk.xin$y, Y = seger,
 design.mat.seger = scRef_multi_proc(datax.seger$Y,datax.seger$cell_type_idx,datax.seger$indi_idx,estimator="separate",est_sigma2 = FALSE,
                                     meta_var='plug_in',meta_mode='smooth',
                                     verbose = F)
+
+# true b for calculating weights
 simu_func(design.mat.seger,datax.seger,bulk.xin$b,bulk.xin$b)
 
-simu_func(design.mat.seger,datax.seger,bulk.xin$b,rep(sum(bulk.xin$b)/4,4))
 
-simu_func(design.mat.seger,datax.seger,bulk.xin$b,c(0.08, 0.28, 0.38, 0.27)*500)
+simu_func(design.mat.seger,datax.seger,bulk.xin$b,b.res=NULL)
+
+simu_func(design.mat.seger,datax.seger,bulk.xin$b,b.res=NULL,scale.y = TRUE)
 
 ```
 
@@ -416,13 +464,22 @@ cor(w2,w_cibersort)
 w3 = 1/(nu+w+r[,3]^2)
 cor(w3,w_cibersort)
 
-#civersort result
+#cibersort result
 
 seger_cibersort_Results = read.delim("data/pancreas/seger_cibersort_Results.txt", quote="")
 cibersort_est = seger_cibersort_Results[,2:5]
 cibersort_est = cibersort_est[,c(2,4,1,3)]
 round(cibersort_est,2)
 rmse(as.matrix(cibersort_est),(rep(1,14))%*%t(b))
+
+
+```
+
+use cibersort marker gene
+
+```{r}
+simu_func(design.mat.seger,datax.seger,bulk.xin$b,b.res=bulk.xin$b,marker.gene = sig_genes)
+simu_func(design.mat.seger,datax.seger,bulk.xin$b,b.res=NULL,marker.gene = sig_genes)
 ```
 
 ### Using Baron as reference data.
@@ -437,10 +494,13 @@ design.mat.baron = scRef_multi_proc(datax.baron$Y,datax.baron$cell_type_idx,data
 
 simu_func(design.mat.baron,datax.baron,bulk.xin$b,bulk.xin$b)
 
-simu_func(design.mat.baron,datax.baron,bulk.xin$b,rep(sum(bulk.xin$b)/4,4))
 
 
-simu_func(design.mat.baron,datax.baron,bulk.xin$b,c(0.15,0.22,0.24,0.39)*500)
+simu_func(design.mat.baron,datax.baron,bulk.xin$b,NULL)
+
+simu_func(design.mat.baron,datax.baron,bulk.xin$b,NULL,scale.y = TRUE)
+
+
 
 ```
 
@@ -461,7 +521,8 @@ design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,datax.xin$
                                     meta_var='plug_in',meta_mode='smooth',
                                     verbose = F)
 simu_func(design.mat.xin,datax.xin,bulk.seger$b,bulk.seger$b)
-simu_func(design.mat.xin,datax.xin,bulk.seger$b,rep(sum(bulk.seger$b)/4,4))
+simu_func(design.mat.xin,datax.xin,bulk.seger$b,NULL)
+simu_func(design.mat.xin,datax.xin,bulk.seger$b,NULL,scale.y = TRUE)
 
 ```
 
@@ -477,7 +538,8 @@ design.mat.baron = scRef_multi_proc(datax.baron$Y,datax.baron$cell_type_idx,data
                                     verbose = F)
 
 simu_func(design.mat.baron,datax.baron,bulk.seger$b,bulk.seger$b)
-simu_func(design.mat.baron,datax.baron,bulk.seger$b,rep(sum(bulk.seger$b)/4,4))
+simu_func(design.mat.baron,datax.baron,bulk.seger$b,NULL)
+simu_func(design.mat.baron,datax.baron,bulk.seger$b,NULL,scale.y = TRUE)
 
 ```
 

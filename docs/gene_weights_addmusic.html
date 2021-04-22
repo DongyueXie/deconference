@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreefe2b130e9f1acb3137b26f88035ed1c433942f50targetblankfe2b130a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/fe2b130e9f1acb3137b26f88035ed1c433942f50" target="_blank">fe2b130</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree2282a21dba9aa633ebd61f135158fc38f44a7e42targetblank2282a21a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/2282a21dba9aa633ebd61f135158fc38f44a7e42" target="_blank">2282a21</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreefe2b130e9f1acb3137b26f88035ed1c433942f50targetblankfe2b130a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree2282a21dba9aa633ebd61f135158fc38f44a7e42targetblank2282a21a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/fe2b130e9f1acb3137b26f88035ed1c433942f50" target="_blank">fe2b130</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/2282a21dba9aa633ebd61f135158fc38f44a7e42" target="_blank">2282a21</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -587,6 +587,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/2282a21dba9aa633ebd61f135158fc38f44a7e42/analysis/gene_weights_addmusic.Rmd" target="_blank">2282a21</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-04-22
+</td>
+<td>
+wflow_publish(“analysis/gene_weights_addmusic.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/d8a41e2d2fd333f32a9b231bee2fd3ce3c685b0c/docs/gene_weights_addmusic.html" target="_blank">d8a41e2</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-04-22
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -915,65 +949,66 @@ rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))</code></pre>
 0.9998892 0.9999562 0.9999928 0.9996858 </code></pre>
 <pre class="r"><code>diag(cor(fit.my$Vg[,c(1,6,11,16)],fit.music$Sigma,use = &quot;pairwise.complete.obs&quot;))</code></pre>
 <pre><code>[1] 0.9998389 0.9999864 0.9999957 0.9996672</code></pre>
+<p>scale y as y/sum(y)*100</p>
 <pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
               w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
               hc.type = &#39;hc0&#39;,marker = rownames(fit.music$Weight.gene),
-              nu=1e-4,scale.y = F,use.weight.for.var = T)
+              nu=1e-4,scale.y = T,use.weight.for.var = T)
 rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))</code></pre>
-<pre><code>[1] 0.1184853</code></pre>
+<pre><code>[1] 0.09512512</code></pre>
 <pre class="r"><code>round(fit.my$beta_hat,2)</code></pre>
 <pre><code>      [,1] [,2] [,3] [,4]
- [1,] 0.17 0.23 0.20 0.40
- [2,] 0.16 0.22 0.25 0.38
- [3,] 0.11 0.12 0.26 0.51
- [4,] 0.13 0.08 0.39 0.40
- [5,] 0.33 0.13 0.38 0.16
- [6,] 0.12 0.15 0.42 0.31
- [7,] 0.16 0.16 0.18 0.50
- [8,] 0.16 0.21 0.18 0.45
- [9,] 0.10 0.14 0.24 0.51
-[10,] 0.16 0.16 0.30 0.38
-[11,] 0.16 0.12 0.15 0.57
-[12,] 0.24 0.15 0.29 0.32
-[13,] 0.36 0.15 0.42 0.07
-[14,] 0.19 0.09 0.17 0.55</code></pre>
+ [1,] 0.05 0.30 0.19 0.46
+ [2,] 0.08 0.26 0.19 0.47
+ [3,] 0.07 0.11 0.26 0.55
+ [4,] 0.09 0.08 0.39 0.43
+ [5,] 0.26 0.15 0.34 0.26
+ [6,] 0.08 0.12 0.39 0.40
+ [7,] 0.09 0.17 0.20 0.54
+ [8,] 0.08 0.21 0.21 0.50
+ [9,] 0.02 0.16 0.26 0.56
+[10,] 0.11 0.16 0.27 0.46
+[11,] 0.09 0.08 0.19 0.64
+[12,] 0.15 0.18 0.22 0.45
+[13,] 0.28 0.13 0.39 0.20
+[14,] 0.14 0.07 0.15 0.63</code></pre>
 <pre class="r"><code>round(fit.my$beta_hat_se,3)</code></pre>
 <pre><code>       [,1]  [,2]  [,3]  [,4]
- [1,] 0.011 0.011 0.016 0.014
- [2,] 0.014 0.013 0.023 0.019
- [3,] 0.011 0.009 0.020 0.017
- [4,] 0.009 0.006 0.018 0.017
- [5,] 0.014 0.010 0.019 0.015
- [6,] 0.011 0.009 0.018 0.015
- [7,] 0.014 0.011 0.020 0.019
- [8,] 0.015 0.013 0.020 0.019
- [9,] 0.010 0.008 0.017 0.015
-[10,] 0.011 0.009 0.018 0.015
-[11,] 0.012 0.009 0.019 0.018
-[12,] 0.011 0.008 0.017 0.015
-[13,] 0.016 0.010 0.021 0.016
-[14,] 0.011 0.007 0.014 0.014</code></pre>
+ [1,] 0.037 0.040 0.055 0.052
+ [2,] 0.038 0.048 0.058 0.062
+ [3,] 0.026 0.025 0.042 0.037
+ [4,] 0.016 0.020 0.060 0.049
+ [5,] 0.044 0.034 0.072 0.063
+ [6,] 0.032 0.022 0.039 0.039
+ [7,] 0.030 0.030 0.036 0.037
+ [8,] 0.038 0.026 0.033 0.035
+ [9,] 0.031 0.028 0.048 0.045
+[10,] 0.033 0.036 0.071 0.063
+[11,] 0.035 0.021 0.020 0.039
+[12,] 0.027 0.035 0.045 0.047
+[13,] 0.040 0.030 0.056 0.056
+[14,] 0.024 0.021 0.031 0.034</code></pre>
 <pre class="r"><code>is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
 <pre><code>       [,1]  [,2]  [,3]  [,4]
- [1,] FALSE FALSE FALSE FALSE
- [2,] FALSE FALSE FALSE FALSE
- [3,]  TRUE  TRUE FALSE  TRUE
- [4,] FALSE FALSE FALSE FALSE
- [5,] FALSE FALSE FALSE FALSE
- [6,]  TRUE FALSE FALSE FALSE
- [7,] FALSE FALSE FALSE  TRUE
- [8,] FALSE FALSE FALSE FALSE
- [9,]  TRUE FALSE FALSE  TRUE
-[10,] FALSE FALSE  TRUE FALSE
-[11,] FALSE FALSE FALSE FALSE
-[12,] FALSE FALSE  TRUE FALSE
-[13,] FALSE FALSE FALSE FALSE
-[14,] FALSE  TRUE FALSE FALSE</code></pre>
+ [1,]  TRUE FALSE FALSE  TRUE
+ [2,]  TRUE FALSE  TRUE  TRUE
+ [3,]  TRUE  TRUE  TRUE  TRUE
+ [4,]  TRUE  TRUE  TRUE  TRUE
+ [5,] FALSE  TRUE  TRUE FALSE
+ [6,]  TRUE  TRUE FALSE FALSE
+ [7,]  TRUE FALSE FALSE  TRUE
+ [8,]  TRUE FALSE FALSE  TRUE
+ [9,] FALSE FALSE  TRUE  TRUE
+[10,]  TRUE  TRUE  TRUE  TRUE
+[11,]  TRUE  TRUE FALSE FALSE
+[12,]  TRUE FALSE  TRUE  TRUE
+[13,] FALSE  TRUE  TRUE FALSE
+[14,]  TRUE  TRUE FALSE FALSE</code></pre>
 <pre class="r"><code>mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
-<pre><code>[1] 0.1785714</code></pre>
+<pre><code>[1] 0.6428571</code></pre>
 <pre class="r"><code>diag(cor(fit.my$weight,fit.music$Weight.gene,use = &quot;complete.obs&quot;))</code></pre>
-<pre><code> [1] 0.1059406 0.1457204 0.2318830 0.1805058 0.1846132 0.1075222 0.2037898
- [8] 0.1360044 0.1067047 0.1050186 0.1498726 0.2279809 0.1448036 0.1569034</code></pre>
+<pre><code> [1] 0.3320024 0.3751053 0.3749012 0.3690007 0.3634617 0.3817499 0.3981354
+ [8] 0.3636165 0.3720600 0.3468162 0.3914478 0.3642222 0.4019095 0.3554792</code></pre>
 <p>Scaling of y, selection of nu is tricky.</p>
 <p>Use music X,weights,variance to calculate weights:</p>
 <pre class="r"><code># use everything from music
@@ -1002,6 +1037,7 @@ rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))</code></pre>
 <pre class="r"><code>diag(cor(fit.my$weight,fit.music$Weight.gene,use = &quot;complete.obs&quot;))</code></pre>
 <pre><code> [1] 0.3652590 0.4127070 0.3879344 0.3853449 0.3818779 0.3930913 0.4189878
  [8] 0.3874375 0.3958587 0.3792553 0.4135212 0.3898178 0.4344387 0.4104707</code></pre>
+<p>other hc2, hc3</p>
 <pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
               w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
               hc.type = &#39;hc2&#39;,marker = rownames(fit.music$Weight.gene),
@@ -1078,6 +1114,7 @@ is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
 [12,] 0.011 0.008 0.017 0.015
 [13,] 0.016 0.010 0.022 0.016
 [14,] 0.011 0.007 0.014 0.014</code></pre>
+<p>do not use weights when calculating variance</p>
 <pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
               w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
               hc.type = &#39;hc0&#39;,marker = rownames(fit.music$Weight.gene),
@@ -1116,6 +1153,82 @@ is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
 [12,] 0.043 0.123 0.086 0.052
 [13,] 0.215 0.143 0.184 0.067
 [14,] 0.042 0.086 0.032 0.071</code></pre>
+<pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
+              hc.type = &#39;hc2&#39;,marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
+<pre><code>       [,1] [,2]  [,3]  [,4]
+ [1,]  TRUE TRUE  TRUE  TRUE
+ [2,]  TRUE TRUE  TRUE  TRUE
+ [3,]  TRUE TRUE  TRUE  TRUE
+ [4,]  TRUE TRUE  TRUE  TRUE
+ [5,]  TRUE TRUE  TRUE FALSE
+ [6,]  TRUE TRUE  TRUE  TRUE
+ [7,]  TRUE TRUE FALSE  TRUE
+ [8,]  TRUE TRUE  TRUE  TRUE
+ [9,]  TRUE TRUE  TRUE  TRUE
+[10,]  TRUE TRUE  TRUE  TRUE
+[11,]  TRUE TRUE FALSE  TRUE
+[12,] FALSE TRUE  TRUE FALSE
+[13,]  TRUE TRUE  TRUE FALSE
+[14,] FALSE TRUE FALSE  TRUE</code></pre>
+<pre class="r"><code>mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
+<pre><code>[1] 0.8571429</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat_se,3)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,] 0.092 0.189 0.098 0.162
+ [2,] 0.095 0.177 0.107 0.126
+ [3,] 0.053 0.115 0.067 0.077
+ [4,] 0.032 0.072 0.070 0.055
+ [5,] 0.142 0.120 0.132 0.063
+ [6,] 0.066 0.154 0.162 0.113
+ [7,] 0.075 0.151 0.059 0.118
+ [8,] 0.089 0.190 0.090 0.123
+ [9,] 0.064 0.140 0.078 0.147
+[10,] 0.067 0.146 0.117 0.141
+[11,] 0.051 0.122 0.064 0.100
+[12,] 0.044 0.124 0.088 0.053
+[13,] 0.216 0.143 0.184 0.067
+[14,] 0.042 0.086 0.033 0.071</code></pre>
+<pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
+              hc.type = &#39;hc3&#39;,marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
+<pre><code>       [,1] [,2]  [,3]  [,4]
+ [1,]  TRUE TRUE  TRUE  TRUE
+ [2,]  TRUE TRUE  TRUE  TRUE
+ [3,]  TRUE TRUE  TRUE  TRUE
+ [4,]  TRUE TRUE  TRUE  TRUE
+ [5,]  TRUE TRUE  TRUE FALSE
+ [6,]  TRUE TRUE  TRUE  TRUE
+ [7,]  TRUE TRUE FALSE  TRUE
+ [8,]  TRUE TRUE  TRUE  TRUE
+ [9,]  TRUE TRUE  TRUE  TRUE
+[10,]  TRUE TRUE  TRUE  TRUE
+[11,]  TRUE TRUE FALSE  TRUE
+[12,] FALSE TRUE  TRUE FALSE
+[13,]  TRUE TRUE  TRUE FALSE
+[14,] FALSE TRUE FALSE  TRUE</code></pre>
+<pre class="r"><code>mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
+<pre><code>[1] 0.8571429</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat_se,3)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,] 0.093 0.190 0.100 0.163
+ [2,] 0.096 0.177 0.111 0.128
+ [3,] 0.053 0.115 0.068 0.077
+ [4,] 0.032 0.073 0.071 0.056
+ [5,] 0.142 0.120 0.133 0.064
+ [6,] 0.066 0.154 0.162 0.114
+ [7,] 0.075 0.151 0.059 0.118
+ [8,] 0.089 0.190 0.090 0.123
+ [9,] 0.064 0.140 0.079 0.148
+[10,] 0.068 0.147 0.118 0.142
+[11,] 0.052 0.122 0.067 0.101
+[12,] 0.044 0.124 0.089 0.053
+[13,] 0.216 0.144 0.184 0.067
+[14,] 0.043 0.087 0.034 0.072</code></pre>
 <pre class="r"><code>plot(fit.my$weight[,3])
 quantile((fit.my$weight[,3]),na.rm=TRUE)
 order(fit.my$weight[,3],decreasing = T)[1:10]
@@ -1356,6 +1469,82 @@ round(fit.my$beta_hat_se,3)</code></pre>
 [14,] FALSE FALSE FALSE  TRUE</code></pre>
 <pre class="r"><code>mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
 <pre><code>[1] 0.3214286</code></pre>
+<pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
+              hc.type = &#39;hc2&#39;,marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+round(fit.my$beta_hat_se,3)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,] 0.096 0.034 0.037 0.077
+ [2,] 0.125 0.041 0.045 0.101
+ [3,] 0.047 0.020 0.015 0.035
+ [4,] 0.035 0.019 0.016 0.027
+ [5,] 0.143 0.018 0.093 0.050
+ [6,] 0.062 0.025 0.058 0.062
+ [7,] 0.097 0.017 0.029 0.075
+ [8,] 0.071 0.023 0.028 0.054
+ [9,] 0.063 0.027 0.032 0.056
+[10,] 0.080 0.022 0.042 0.085
+[11,] 0.055 0.026 0.027 0.046
+[12,] 0.039 0.020 0.020 0.032
+[13,] 0.211 0.027 0.171 0.033
+[14,] 0.052 0.017 0.018 0.055</code></pre>
+<pre class="r"><code>is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,] FALSE FALSE FALSE  TRUE
+ [2,]  TRUE  TRUE FALSE  TRUE
+ [3,]  TRUE FALSE FALSE FALSE
+ [4,] FALSE FALSE FALSE  TRUE
+ [5,] FALSE FALSE  TRUE FALSE
+ [6,]  TRUE FALSE FALSE FALSE
+ [7,]  TRUE FALSE FALSE  TRUE
+ [8,]  TRUE FALSE FALSE FALSE
+ [9,]  TRUE FALSE  TRUE  TRUE
+[10,] FALSE FALSE  TRUE  TRUE
+[11,]  TRUE FALSE FALSE FALSE
+[12,] FALSE FALSE FALSE FALSE
+[13,] FALSE FALSE  TRUE FALSE
+[14,] FALSE FALSE FALSE  TRUE</code></pre>
+<pre class="r"><code>mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
+<pre><code>[1] 0.3392857</code></pre>
+<pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
+              hc.type = &#39;hc3&#39;,marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+round(fit.my$beta_hat_se,3)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,] 0.097 0.035 0.037 0.078
+ [2,] 0.125 0.043 0.046 0.102
+ [3,] 0.047 0.022 0.016 0.036
+ [4,] 0.036 0.021 0.017 0.028
+ [5,] 0.145 0.019 0.096 0.051
+ [6,] 0.063 0.026 0.061 0.064
+ [7,] 0.097 0.018 0.029 0.076
+ [8,] 0.071 0.023 0.032 0.055
+ [9,] 0.063 0.031 0.033 0.057
+[10,] 0.081 0.024 0.044 0.087
+[11,] 0.056 0.028 0.035 0.049
+[12,] 0.040 0.022 0.023 0.033
+[13,] 0.212 0.030 0.172 0.033
+[14,] 0.052 0.019 0.021 0.056</code></pre>
+<pre class="r"><code>is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,] FALSE FALSE FALSE  TRUE
+ [2,]  TRUE  TRUE  TRUE  TRUE
+ [3,]  TRUE FALSE FALSE FALSE
+ [4,] FALSE FALSE  TRUE  TRUE
+ [5,] FALSE FALSE  TRUE FALSE
+ [6,]  TRUE FALSE FALSE FALSE
+ [7,]  TRUE FALSE FALSE  TRUE
+ [8,]  TRUE FALSE FALSE FALSE
+ [9,]  TRUE FALSE  TRUE  TRUE
+[10,] FALSE FALSE  TRUE  TRUE
+[11,]  TRUE FALSE FALSE FALSE
+[12,] FALSE FALSE FALSE FALSE
+[13,] FALSE FALSE  TRUE FALSE
+[14,] FALSE FALSE FALSE  TRUE</code></pre>
+<pre class="r"><code>mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
+<pre><code>[1] 0.375</code></pre>
 <p><strong>gene weights comparison with cibersort x</strong></p>
 <pre class="r"><code>baron_sig_cibersort_output = read.delim(&quot;data/pancreas/baron_sig_cibersort_output.txt&quot;, quote=&quot;&quot;)
 sig_genes = baron_sig_cibersort_output[,1]
@@ -1484,6 +1673,94 @@ rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))</code></pre>
 [10,] FALSE FALSE  TRUE FALSE</code></pre>
 <pre class="r"><code>mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
 <pre><code>[1] 0.3</code></pre>
+<pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
+              hc.type = &#39;hc2&#39;,marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))</code></pre>
+<pre><code>[1] 0.08526634</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat,2)</code></pre>
+<pre><code>      [,1] [,2] [,3] [,4]
+ [1,] 0.04 0.01 0.46 0.49
+ [2,] 0.14 0.01 0.33 0.51
+ [3,] 0.06 0.01 0.56 0.38
+ [4,] 0.05 0.01 0.43 0.51
+ [5,] 0.11 0.02 0.30 0.57
+ [6,] 0.03 0.01 0.38 0.58
+ [7,] 0.08 0.03 0.30 0.59
+ [8,] 0.19 0.02 0.22 0.58
+ [9,] 0.17 0.02 0.23 0.58
+[10,] 0.05 0.02 0.32 0.61</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat_se,3)</code></pre>
+<pre><code>        [,1]  [,2]   [,3]  [,4]
+ [1,] 10.124 1.515 11.147 2.539
+ [2,]  0.012 0.008  0.036 0.037
+ [3,]  0.012 0.004  0.052 0.052
+ [4,]  0.008 0.004  0.072 0.072
+ [5,]  0.010 0.010  0.050 0.051
+ [6,]  7.516 1.739  3.802 1.976
+ [7,]  0.030 0.056  0.059 0.040
+ [8,]  0.010 0.005  0.037 0.038
+ [9,]  0.012 0.012  0.034 0.034
+[10,]  0.039 0.011  0.055 0.058</code></pre>
+<pre class="r"><code>is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,]  TRUE  TRUE  TRUE  TRUE
+ [2,] FALSE FALSE  TRUE  TRUE
+ [3,] FALSE FALSE FALSE FALSE
+ [4,] FALSE FALSE  TRUE  TRUE
+ [5,]  TRUE FALSE  TRUE  TRUE
+ [6,]  TRUE  TRUE  TRUE  TRUE
+ [7,]  TRUE  TRUE  TRUE FALSE
+ [8,] FALSE FALSE FALSE FALSE
+ [9,] FALSE FALSE FALSE FALSE
+[10,]  TRUE FALSE  TRUE  TRUE</code></pre>
+<pre class="r"><code>mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
+<pre><code>[1] 0.525</code></pre>
+<pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
+              hc.type = &#39;hc3&#39;,marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))</code></pre>
+<pre><code>[1] 0.08526634</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat,2)</code></pre>
+<pre><code>      [,1] [,2] [,3] [,4]
+ [1,] 0.04 0.01 0.46 0.49
+ [2,] 0.14 0.01 0.33 0.51
+ [3,] 0.06 0.01 0.56 0.38
+ [4,] 0.05 0.01 0.43 0.51
+ [5,] 0.11 0.02 0.30 0.57
+ [6,] 0.03 0.01 0.38 0.58
+ [7,] 0.08 0.03 0.30 0.59
+ [8,] 0.19 0.02 0.22 0.58
+ [9,] 0.17 0.02 0.23 0.58
+[10,] 0.05 0.02 0.32 0.61</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat_se,3)</code></pre>
+<pre><code>          [,1]    [,2]     [,3]    [,4]
+ [1,] 1342.538 200.972 1478.222 336.655
+ [2,]    0.015   0.015    0.038   0.038
+ [3,]    0.013   0.006    0.053   0.052
+ [4,]    0.009   0.005    0.072   0.072
+ [5,]    0.012   0.013    0.050   0.051
+ [6,]  996.953 230.670  504.309 261.974
+ [7,]    0.129   0.241    0.214   0.104
+ [8,]    0.010   0.007    0.037   0.039
+ [9,]    0.014   0.018    0.035   0.035
+[10,]    0.125   0.027    0.065   0.084</code></pre>
+<pre class="r"><code>is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,]  TRUE  TRUE  TRUE  TRUE
+ [2,] FALSE FALSE  TRUE  TRUE
+ [3,] FALSE FALSE FALSE FALSE
+ [4,] FALSE FALSE  TRUE  TRUE
+ [5,]  TRUE FALSE  TRUE  TRUE
+ [6,]  TRUE  TRUE  TRUE  TRUE
+ [7,]  TRUE  TRUE  TRUE  TRUE
+ [8,] FALSE FALSE FALSE FALSE
+ [9,] FALSE FALSE FALSE FALSE
+[10,]  TRUE FALSE  TRUE  TRUE</code></pre>
+<pre class="r"><code>mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
+<pre><code>[1] 0.55</code></pre>
 <pre class="r"><code>ii = which(rownames(fit.music$Weight.gene)%in%rownames(fit.my$weight))
 diag(cor(fit.my$weight,fit.music$Weight.gene[ii,],use = &quot;complete.obs&quot;))</code></pre>
 <pre><code> [1] 0.11847550 0.15119127 0.09649927 0.12203838 0.11564573 0.16593279
@@ -1523,6 +1800,94 @@ rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))</code></pre>
  [8,] 0.139 0.592 0.267 0.300
  [9,] 0.115 0.476 0.201 0.249
 [10,] 0.070 0.827 0.363 0.624</code></pre>
+<pre class="r"><code>is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
+<pre><code>      [,1] [,2] [,3] [,4]
+ [1,] TRUE TRUE TRUE TRUE
+ [2,] TRUE TRUE TRUE TRUE
+ [3,] TRUE TRUE TRUE TRUE
+ [4,] TRUE TRUE TRUE TRUE
+ [5,] TRUE TRUE TRUE TRUE
+ [6,] TRUE TRUE TRUE TRUE
+ [7,] TRUE TRUE TRUE TRUE
+ [8,] TRUE TRUE TRUE TRUE
+ [9,] TRUE TRUE TRUE TRUE
+[10,] TRUE TRUE TRUE TRUE</code></pre>
+<pre class="r"><code>mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
+<pre><code>[1] 1</code></pre>
+<pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
+              hc.type = &#39;hc2&#39;,marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))</code></pre>
+<pre><code>[1] 0.08526634</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat,2)</code></pre>
+<pre><code>      [,1] [,2] [,3] [,4]
+ [1,] 0.04 0.01 0.46 0.49
+ [2,] 0.14 0.01 0.33 0.51
+ [3,] 0.06 0.01 0.56 0.38
+ [4,] 0.05 0.01 0.43 0.51
+ [5,] 0.11 0.02 0.30 0.57
+ [6,] 0.03 0.01 0.38 0.58
+ [7,] 0.08 0.03 0.30 0.59
+ [8,] 0.19 0.02 0.22 0.58
+ [9,] 0.17 0.02 0.23 0.58
+[10,] 0.05 0.02 0.32 0.61</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat_se,3)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,] 0.103 1.690 0.512 1.358
+ [2,] 0.068 0.540 0.165 0.409
+ [3,] 0.093 1.454 0.406 1.153
+ [4,] 0.105 1.792 0.536 1.453
+ [5,] 0.077 0.539 0.362 0.296
+ [6,] 0.060 0.500 0.116 0.442
+ [7,] 0.057 0.746 0.194 0.563
+ [8,] 0.139 0.593 0.271 0.300
+ [9,] 0.115 0.478 0.204 0.249
+[10,] 0.070 0.833 0.370 0.628</code></pre>
+<pre class="r"><code>is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
+<pre><code>      [,1] [,2] [,3] [,4]
+ [1,] TRUE TRUE TRUE TRUE
+ [2,] TRUE TRUE TRUE TRUE
+ [3,] TRUE TRUE TRUE TRUE
+ [4,] TRUE TRUE TRUE TRUE
+ [5,] TRUE TRUE TRUE TRUE
+ [6,] TRUE TRUE TRUE TRUE
+ [7,] TRUE TRUE TRUE TRUE
+ [8,] TRUE TRUE TRUE TRUE
+ [9,] TRUE TRUE TRUE TRUE
+[10,] TRUE TRUE TRUE TRUE</code></pre>
+<pre class="r"><code>mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))</code></pre>
+<pre><code>[1] 1</code></pre>
+<pre class="r"><code>fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = &#39;res+ref_var&#39;,adj.v = T,X_array = design.mat$X_array,
+              hc.type = &#39;hc3&#39;,marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))</code></pre>
+<pre><code>[1] 0.08526634</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat,2)</code></pre>
+<pre><code>      [,1] [,2] [,3] [,4]
+ [1,] 0.04 0.01 0.46 0.49
+ [2,] 0.14 0.01 0.33 0.51
+ [3,] 0.06 0.01 0.56 0.38
+ [4,] 0.05 0.01 0.43 0.51
+ [5,] 0.11 0.02 0.30 0.57
+ [6,] 0.03 0.01 0.38 0.58
+ [7,] 0.08 0.03 0.30 0.59
+ [8,] 0.19 0.02 0.22 0.58
+ [9,] 0.17 0.02 0.23 0.58
+[10,] 0.05 0.02 0.32 0.61</code></pre>
+<pre class="r"><code>round(fit.my$beta_hat_se,3)</code></pre>
+<pre><code>       [,1]  [,2]  [,3]  [,4]
+ [1,] 0.104 1.699 0.516 1.366
+ [2,] 0.068 0.543 0.168 0.411
+ [3,] 0.094 1.461 0.407 1.158
+ [4,] 0.105 1.802 0.542 1.461
+ [5,] 0.077 0.543 0.369 0.297
+ [6,] 0.060 0.503 0.118 0.445
+ [7,] 0.057 0.748 0.194 0.565
+ [8,] 0.140 0.595 0.276 0.301
+ [9,] 0.116 0.479 0.208 0.250
+[10,] 0.070 0.838 0.377 0.632</code></pre>
 <pre class="r"><code>is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)</code></pre>
 <pre><code>      [,1] [,2] [,3] [,4]
  [1,] TRUE TRUE TRUE TRUE

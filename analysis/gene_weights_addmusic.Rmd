@@ -1,0 +1,459 @@
+---
+title: "Simulation on real data set, with comparisons to MuSiC and CibersortX"
+author: "Dongyue Xie"
+date: "2021-04-09"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+
+See [here](gene_weights.html) for a previous simulation on choosing gene weights.
+
+
+In MuSiC:
+
+  The default is for bulk data Y: convert y such that it sums to 1 and then multiply y by 100; for reference matrix X: it's the relative expression matrix whose each column sum to 1; it's default mode also multiply X by cell size S, where S is very big if estimated from single cell data.
+  
+  The above scaling makes the parameter nu in the weight computation important, where $weight = 1/(\nu+r^2+across.indi.var)$. 
+
+```{r}
+library(MuSiC)
+library(Biobase)
+library(xbioc)
+source('code/deconference_main.R')
+source('code/utils.R')
+source('code/wols.R')
+seger <- readRDS("data/pancreas/segerstolpe_raw.rds")
+
+#XinT2D.eset <- readRDS("data/MuSiC/XinT2Deset.rds")
+#XinT2D.construct.full = bulk_construct(XinT2D.eset, clusters = 'cellType', samples = 'SubjectName')
+#XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+xin_raw <- readRDS("data/pancreas/xin_raw.rds")
+baron = readRDS("data/pancreas/baron.rds")
+```
+
+
+```{r}
+
+bulk_mat_to_es = function(Y){
+  ExpressionSet(assayData = Y)
+}
+
+
+#'@param b either a vector or a matrix of dimension K*n_bulk
+createBulk_no.tech.noise = function(X_array, b,gene_names){
+  if(is.null(dim(b))){
+    y = apply(X_array,3,function(z){z%*%b})
+  }else{
+    G = dim(X_array)[1]
+    K = dim(X_array)[2]
+    Ni = dim(X_array)[3]
+    y = matrix(nrow=G,ncol=Ni)
+    for(i in 1:Ni){
+      y[,i] = X_array[,,i]%*%b[,i]
+    }
+  }
+  rownames(y) = gene_names
+  colnames(y) = 1:ncol(y)
+  list(y=y,b=b)
+}
+
+createBulk_tech.noise = function(X_array, b, gene_names, ls_per_gene = 500,seed=12345){
+  
+  G = dim(X_array)[1]
+  K = dim(X_array)[2]
+  Ni = dim(X_array)[3]
+    
+  if(is.null(dim(b))){
+    y = apply(X_array,3,function(z){z%*%b})
+  }else{
+    y = matrix(nrow=G,ncol=Ni)
+    for(i in 1:Ni){
+      y[,i] = X_array[,,i]%*%b[,i]
+    }
+  }
+  y = y/colSums(y)*ls_per_gene*G
+  set.seed(seed)
+  y = matrix(rpois(prod(dim(y)),y),nrow=nrow(y),ncol=ncol(y))
+  rownames(y) = gene_names
+  colnames(y) = 1:ncol(y)
+  list(y=y,b=b*ls_per_gene)
+}
+
+
+calc_weight = function(){
+  ####
+}
+
+
+
+
+
+is.covered = function(b,bhat,bhat.se,alpha=0.05){
+  (b<=bhat+qnorm(1-alpha/2)*bhat.se)&(b>=bhat-qnorm(1-alpha/2)*bhat.se)
+}
+
+#'@param design.mat output from scRef_multi_proc, in which X is the reference matrix.
+#'@param datax output from set_data_decon, in which y is the bulk data matrix.
+#'@param b betas, K by n_bulk.
+
+
+diag.cov = function(X){
+  #center X
+  X = scale(X,center=TRUE,scale=F)
+  colSums(X^2)/(nrow(X)-1)
+}
+
+
+```
+
+## Create bulk data(with technical noise) using Xin dataset.
+
+```{r}
+cell_types = c('alpha', 'beta', 'delta', 'gamma')
+K = length(cell_types)
+rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+#rm.indi = levels(XinT2D.eset$SubjectName)[rm.indi]
+rm.indi.idx = which(xin_raw$individual%in%rm.indi)
+datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types, gene_thresh = 0,max_count_quantile = 1,w=1)
+design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,datax.xin$indi_idx,estimator="separate",est_sigma2 = FALSE)
+# create bulk data
+b = c(0.1,0.1,0.3,0.5)
+bulk.xin = createBulk_tech.noise(design.mat.xin$X_array,b,gene_names = rownames(xin_raw),seed=12345,ls_per_gene = 500)
+```
+
+### Seger as reference
+
+```{r}
+# fit music
+seger.es = sce_to_es(seger)
+cell_size = data.frame(type = c('alpha', 'beta', 'delta', 'gamma'), size=c(1,1,1,1))
+fit.music = music_prop(bulk_mat_to_es(bulk.xin$y),seger.es,clusters = 'cell_type', samples = 'individual',
+                       select.ct = cell_types,cell_size=cell_size,verbose = FALSE,nu=1e-4,normalize = F)
+rmse(fit.music$Est.prop.weighted,(rep(1,14))%*%t(b))
+round(fit.music$Est.prop.weighted,2)
+
+fit.music2 = music_prop(bulk_mat_to_es(bulk.xin$y),seger.es,clusters = 'cell_type', samples = 'individual',
+                       select.ct = cell_types,cell_size=cell_size,verbose = FALSE,nu=1e-4,normalize = T)
+rmse(fit.music2$Est.prop.weighted,(rep(1,14))%*%t(b))
+round(fit.music2$Est.prop.weighted,2)
+
+fit.music3 = music_prop(bulk_mat_to_es(bulk.xin$y),seger.es,clusters = 'cell_type', samples = 'individual',
+                       select.ct = cell_types,cell_size=cell_size,verbose = FALSE,nu=1e-2,normalize = T)
+rmse(fit.music3$Est.prop.weighted,(rep(1,14))%*%t(b))
+round(fit.music3$Est.prop.weighted,2)
+```
+
+
+```{r}
+datax = set_data_decon(y = bulk.xin$y, Y = seger,
+                       cell_types = cell_types, 
+                       gene_thresh = 0,max_count_quantile = 1,w=1)
+
+design.mat = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                                    estimator="separate",est_sigma2 = FALSE)
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+
+```
+
+
+```{r}
+diag(cor(fit.my$weight,fit.music$Weight.gene,use = "complete.obs"))
+diag(cor(fit.my$X,fit.music$X,use = "pairwise.complete.obs"))
+diag(cor(fit.my$Vg[,c(1,6,11,16)],fit.music$Sigma,use = "pairwise.complete.obs"))
+```
+
+
+```{r}
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+diag(cor(fit.my$weight,fit.music$Weight.gene,use = "complete.obs"))
+```
+
+Scaling of y, selection of nu is tricky.
+
+Use music X,weights,variance to calculate weights: 
+
+```{r}
+# use everything from music
+# music weights
+fit.my = wols(fit.music$X,datax$y,fit.music$Sigma,b=t(as.matrix(fit.music$Est.prop.weighted))*100,
+              w.mode = 'res+bvb',adj.v = F,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),nu=1e-4,scale.y = T)
+rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))
+round(fit.my$beta_hat,2)
+diag(cor(fit.my$weight,fit.music$Weight.gene,use = "complete.obs"))
+```
+
+
+
+
+
+```{r}
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc2',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+round(fit.my$beta_hat_se,3)
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc3',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+round(fit.my$beta_hat_se,3)
+
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+round(fit.my$beta_hat_se,3)
+
+```
+
+```{r,eval=F}
+plot(fit.my$weight[,3])
+quantile((fit.my$weight[,3]),na.rm=TRUE)
+order(fit.my$weight[,3],decreasing = T)[1:10]
+
+# top 10 weighted samples
+
+round(fit.my$weight[order(fit.my$weight[,3],decreasing = T)[1:10],3],7)
+
+round(fit.my$X[order(fit.my$weight[,3],decreasing = T)[1:10],],4)
+
+```
+
+
+**gene weights comparison with cibersort x**
+
+```{r}
+seger_sig_cibersort_output = read.delim("data/pancreas/seger_sig_cibersort_output.txt", quote="")
+sig_genes = seger_sig_cibersort_output[,1]
+length(sig_genes)
+
+
+genes_all = rownames(fit.music$Weight.gene)
+w_cibersort = rep(0,length(genes_all))
+names(w_cibersort) = genes_all
+w_cibersort[names(w_cibersort)%in%sig_genes] = 1
+
+
+cor(fit.my$weight[,1],w_cibersort,use='pairwise.complete.obs')
+cor(fit.music$Weight.gene[,1],w_cibersort,use='pairwise.complete.obs')
+
+cor(fit.my$weight[,2],w_cibersort,use='pairwise.complete.obs')
+cor(fit.music$Weight.gene[,2],w_cibersort,use='pairwise.complete.obs')
+
+cor(fit.my$weight[,3],w_cibersort,use='pairwise.complete.obs')
+cor(fit.music$Weight.gene[,3],w_cibersort,use='pairwise.complete.obs')
+
+#plot(w_cibersort,fit.music$Weight.gene[,1])
+#cibersort result
+
+seger_cibersort_Results = read.delim("data/pancreas/seger_cibersort_Results.txt", quote="")
+cibersort_est = seger_cibersort_Results[,2:5]
+cibersort_est = cibersort_est[,c(2,4,1,3)]
+round(cibersort_est,2)
+rmse(as.matrix(cibersort_est),(rep(1,14))%*%t(b))
+
+```
+
+
+## Baron as reference
+
+```{r}
+# fit music
+baron.es = sce_to_es(baron)
+cell_size = data.frame(type = c('alpha', 'beta', 'delta', 'gamma'), size=c(1,1,1,1))
+fit.music = music_prop(bulk_mat_to_es(bulk.xin$y),baron.es,clusters = 'cell_type', samples = 'individual',
+                       select.ct = cell_types,cell_size=cell_size,verbose = FALSE,nu=1e-4)
+rmse(fit.music$Est.prop.weighted,(rep(1,14))%*%t(b))
+round(fit.music$Est.prop.weighted,2)
+
+fit.music2 = music_prop(bulk_mat_to_es(bulk.xin$y),baron.es,clusters = 'cell_type', samples = 'individual',
+                       select.ct = cell_types,cell_size=cell_size,verbose = FALSE,nu=1e-4,normalize = TRUE)
+rmse(fit.music2$Est.prop.weighted,(rep(1,14))%*%t(b))
+round(fit.music2$Est.prop.weighted,2)
+```
+
+```{r}
+
+datax = set_data_decon(y = bulk.xin$y, Y = baron,
+                       cell_types = cell_types, 
+                       gene_thresh = 0,max_count_quantile = 1,w=1)
+
+design.mat = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                                    estimator="separate",est_sigma2 = FALSE)
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+```
+
+```{r}
+diag(cor(fit.my$weight,fit.music$Weight.gene,use = "complete.obs"))
+diag(cor(fit.my$X,fit.music$X,use = "complete.obs"))
+diag(cor(fit.my$Vg[,c(1,6,11,16)],fit.music$Sigma,use = "complete.obs"))
+```
+
+
+
+```{r}
+# use everything from music
+# music weights
+fit.my = wols(fit.music$X,datax$y,fit.music$Sigma,b=t(as.matrix(fit.music$Est.prop.weighted))*100,
+              w.mode = 'res+bvb',adj.v = F,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),nu=1e-4,scale.y = T)
+rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))
+round(fit.my$beta_hat,2)
+diag(cor(fit.my$weight,fit.music$Weight.gene,use = "complete.obs"))
+```
+
+
+
+do not use weights when calculating variance
+
+```{r}
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+```
+
+
+**gene weights comparison with cibersort x**
+
+```{r}
+baron_sig_cibersort_output = read.delim("data/pancreas/baron_sig_cibersort_output.txt", quote="")
+sig_genes = baron_sig_cibersort_output[,1]
+length(sig_genes)
+
+
+genes_all = rownames(fit.music$Weight.gene)
+w_cibersort = rep(0,length(genes_all))
+names(w_cibersort) = genes_all
+w_cibersort[names(w_cibersort)%in%sig_genes] = 1
+
+
+cor(fit.my$weight[,1],w_cibersort,use='complete.obs')
+cor(fit.music$Weight.gene[,1],w_cibersort,use='complete.obs')
+
+cor(fit.my$weight[,2],w_cibersort,use='complete.obs')
+cor(fit.music$Weight.gene[,2],w_cibersort,use='complete.obs')
+
+cor(fit.my$weight[,3],w_cibersort,use='complete.obs')
+cor(fit.music$Weight.gene[,3],w_cibersort,use='complete.obs')
+
+#plot(w_cibersort,fit.music$Weight.gene[,1])
+#cibersort result
+
+baron_cibersort_Results = read.delim("data/pancreas/baron_cibersort_Results.txt", quote="")
+cibersort_est = baron_cibersort_Results[,2:5]
+cibersort_est = cibersort_est[,c(3,1,2,4)]
+round(cibersort_est,2)
+rmse(as.matrix(cibersort_est),(rep(1,14))%*%t(b))
+
+```
+
+
+## Create bulk data(with technical noise) using Seger dataset.
+
+```{r}
+datax = set_data_decon(Y = seger,cell_types = cell_types, gene_thresh = 0,max_count_quantile = 1,w=1)
+design.mat = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,estimator="separate",est_sigma2 = FALSE)
+# create bulk data
+b = c(0.1,0.1,0.3,0.5)
+bulk.seger = createBulk_tech.noise(design.mat$X_array,b,gene_names = rownames(seger),seed=12345,ls_per_gene = 500)
+```
+
+
+## Xin as reference
+
+
+```{r}
+# fit music
+xin.es = sce_to_es(xin_raw)
+cell_size = data.frame(type = c('alpha', 'beta', 'delta', 'gamma'), size=c(1,1,1,1))
+fit.music = music_prop(bulk_mat_to_es(bulk.seger$y),xin.es,clusters = 'cell_type', samples = 'individual',
+                       select.ct = cell_types,cell_size=cell_size,verbose = FALSE,nu=1e-4,normalize = F)
+rmse(fit.music$Est.prop.weighted,(rep(1,10))%*%t(b))
+round(fit.music$Est.prop.weighted,2)
+
+```
+
+
+```{r}
+datax = set_data_decon(y = bulk.seger$y, Y = xin_raw[,-rm.indi.idx],
+                       cell_types = cell_types, 
+                       gene_thresh = 0,max_count_quantile = 1,w=1,filter.gene = F)
+
+design.mat = scRef_multi_proc(datax$Y,datax$cell_type_idx,datax$indi_idx,
+                                    estimator="separate",est_sigma2 = FALSE)
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+
+```
+
+
+```{r}
+ii = which(rownames(fit.music$Weight.gene)%in%rownames(fit.my$weight))
+diag(cor(fit.my$weight,fit.music$Weight.gene[ii,],use = "complete.obs"))
+diag(cor(fit.my$X,fit.music$X[ii,],use = "pairwise.complete.obs"))
+diag(cor(fit.my$Vg[,c(1,6,11,16)],fit.music$Sigma[ii,],use = "pairwise.complete.obs"))
+```
+
+
+```{r}
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+```

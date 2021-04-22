@@ -175,12 +175,13 @@ diag(cor(fit.my$X,fit.music$X,use = "pairwise.complete.obs"))
 diag(cor(fit.my$Vg[,c(1,6,11,16)],fit.music$Sigma,use = "pairwise.complete.obs"))
 ```
 
+scale y as y/sum(y)*100
 
 ```{r}
 fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
               w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
               hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
-              nu=1e-4,scale.y = F,use.weight.for.var = T)
+              nu=1e-4,scale.y = T,use.weight.for.var = T)
 rmse(fit.my$beta_hat,(rep(1,14))%*%t(b))
 round(fit.my$beta_hat,2)
 round(fit.my$beta_hat_se,3)
@@ -206,7 +207,7 @@ diag(cor(fit.my$weight,fit.music$Weight.gene,use = "complete.obs"))
 
 
 
-
+other hc2, hc3
 
 ```{r}
 fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
@@ -225,10 +226,30 @@ is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
 mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
 round(fit.my$beta_hat_se,3)
 
+```
 
+do not use weights when calculating variance
+
+```{r}
 fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
               w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
               hc.type = 'hc0',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+round(fit.my$beta_hat_se,3)
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc2',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+round(fit.my$beta_hat_se,3)
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc3',marker = rownames(fit.music$Weight.gene),
               nu=1e-4,scale.y = F,use.weight.for.var = F)
 is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
 mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
@@ -353,6 +374,22 @@ fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
 round(fit.my$beta_hat_se,3)
 is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
 mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc2',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc3',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,14))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
 ```
 
 
@@ -435,6 +472,28 @@ round(fit.my$beta_hat_se,3)
 is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
 mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
 
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc2',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc3',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = T)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+
 ```
 
 
@@ -456,4 +515,31 @@ round(fit.my$beta_hat,2)
 round(fit.my$beta_hat_se,3)
 is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
 mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc2',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
+
+fit.my = wols(design.mat$X,datax$y,design.mat$Vg,b=NULL,
+              w.mode = 'res+ref_var',adj.v = T,X_array = design.mat$X_array,
+              hc.type = 'hc3',marker = rownames(fit.music$Weight.gene),
+              nu=1e-4,scale.y = F,use.weight.for.var = F)
+rmse(fit.my$beta_hat,(rep(1,10))%*%t(b))
+round(fit.my$beta_hat,2)
+round(fit.my$beta_hat_se,3)
+is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se)
+mean(is.covered((rep(1,10))%*%t(b),fit.my$beta_hat,fit.my$beta_hat_se))
 ```
+
+
+
+
+
+
+

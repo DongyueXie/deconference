@@ -81,11 +81,18 @@ meta_analysis = function(x,v,sigma2,meta_var='plug_in'){
       var_mu_hat = 1/sum(1/(sigma2+v))
     }
 
-    return(list(mu_hat=mu_hat,var_mu_hat=var_mu_hat))
+    if(length(rm.v)!=0){
+      w.temp = rep(0,l)
+      w.temp[-rm.v] = w
+    }else{
+      w.temp = w
+    }
+
+    #print(length(w.temp))
+
+    return(list(mu_hat=mu_hat,var_mu_hat=var_mu_hat,w=w.temp))
   }else{
-
-    return(list(mu_hat=mean(x,na.rm=TRUE),var_mu_hat=mean(v+sigma2,na.rm=TRUE)/l))
-
+    return(list(mu_hat=mean(x,na.rm=TRUE),var_mu_hat=mean(v+sigma2,na.rm=TRUE)/l,w=rep(1/l,l)))
   }
 
 }
@@ -250,5 +257,18 @@ PMmeta_matrix = function(X,V,ub=var(as.vector(X),na.rm = TRUE),tol = .Machine$do
     sigma2 = 0
   }
   sigma2
+}
+
+
+
+calc_cov = function(x1,x2,w1,w2,mu1,mu2){
+
+  temp = w1*w2*(x1-mu1)*(x2-mu2)
+
+  out = sum(temp,na.rm = TRUE)
+
+  out
+
+
 }
 

@@ -55,6 +55,7 @@ music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples,
   N.bulk = ncol(bulk.eset)
   if (ct.cov) {
     Sigma.ct = sc.basis$Sigma.ct[, m.sc]
+    Sigma = Sigma.ct
     if (sum(Yjg[, i] == 0) > 0) {
       D1.temp = D1[Yjg[, i] != 0, ]
       Yjg.temp = Yjg[Yjg[, i] != 0, i]
@@ -94,8 +95,8 @@ music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples,
     }
     D1 = D1[, valid.ct]
     M.S = M.S[valid.ct]
-    D1 = D1/M.S[1]
-    M.S = M.S/M.S[1]
+    #D1 = D1/M.S[1]
+    #M.S = M.S/M.S[1]
 
     Sigma = Sigma[, valid.ct]
     Est.prop.allgene = NULL
@@ -123,6 +124,7 @@ music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples,
       lm.D1.weighted = music.iter(Yjg.temp, D1.temp, M.S,
                                   Sigma.temp, iter.max = iter.max, nu = nu, eps = eps,
                                   centered = centered, normalize = normalize)
+
       Est.prop.allgene = rbind(Est.prop.allgene, lm.D1.weighted$p.nnls)
       Est.prop.weighted = rbind(Est.prop.weighted, lm.D1.weighted$p.weight)
       weight.gene.temp = rep(NA, nrow(Yjg))
@@ -143,7 +145,7 @@ music_prop = function(bulk.eset, sc.eset, markers = NULL, clusters, samples,
   rownames(Var.prop) = colnames(Yjg)
   return(list(Est.prop.weighted = Est.prop.weighted, Est.prop.allgene = Est.prop.allgene,
               Weight.gene = Weight.gene, r.squared.full = r.squared.full,
-              Var.prop = Var.prop,X=D1,S=M.S))
+              Var.prop = Var.prop,X=D1,S=M.S,Sigma=Sigma,Y=Yjg))
 }
 
 

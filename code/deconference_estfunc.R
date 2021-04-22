@@ -14,7 +14,7 @@
 estimation_func = function(y,X,Vg,X_var_pop=NULL,
                            #marker_gene = NULL,
                            w=NULL,
-                           f='hc3',a=ncol(X)+4,
+                           hc.type='hc3',a=ncol(X)+4,
                            correction=TRUE,S=NULL,calc_cov=TRUE,
                            verbose=FALSE){
 

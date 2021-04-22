@@ -3,7 +3,7 @@ set_data_decon = function(y=NULL,Y,
                           marker_gene = NULL,
                           cell_type_idx=NULL,indi_idx = NULL,cell_types=NULL,
                           tau2 = NULL,sigma2 = NULL,
-                          w=NULL,gene_thresh=0.05,max_count_quantile=0.99){
+                          w=NULL,gene_thresh=0.05,max_count_quantile=0.99,filter.gene=TRUE){
 
   if(!is.null(y)){
     y = cbind(y)
@@ -114,22 +114,25 @@ set_data_decon = function(y=NULL,Y,
 
     }
 
-
-    if(length(rm.gene)!=0){
-      Y = Y[-rm.gene,]
-      if(!is.null(sigma2)){
-        sigma2 = sigma2[-rm.gene,]
-      }
-      if(!is.null(tau2)){
-        tau2  = tau2[-rm.gene,]
-      }
-      if(!is.null(w)){
-        w = w[-rm.gene]
-      }
-      if(!is.null(y)){
-        y = y[-rm.gene,]
+    if(filter.gene){
+      if(length(rm.gene)!=0){
+        Y = Y[-rm.gene,]
+        if(!is.null(sigma2)){
+          sigma2 = sigma2[-rm.gene,]
+        }
+        if(!is.null(tau2)){
+          tau2  = tau2[-rm.gene,]
+        }
+        if(!is.null(w)){
+          w = w[-rm.gene]
+        }
+        if(!is.null(y)){
+          y = y[-rm.gene,]
+        }
       }
     }
+
+
 
 
     # remove cells without expression
@@ -170,9 +173,12 @@ bulkRef_proc = function(Y){
 }
 
 #'@title process single cell reference data of one individual
+#'@param Y gene by cell matrix from one individual
+#'@param cell_type_idx the cell type label of each cell
 #'@param estimator aggregate or separate
+#'@param scale.x whether scale ref matrix x such that it's column sum to G
 #'@return design matrix X and its variance matrix Vg, and estimate cell size; note: X is of order O(1)
-scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types = NULL){
+scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types = NULL,scale.x = TRUE){
 
   G = nrow(Y)
   if(is.null(cell_types)){
@@ -191,6 +197,7 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types
   #browser()
 
   ## what if this individual have no cell type k?
+  ## Set it's X_k to NA
 
   X = matrix(nrow=G,ncol=K)
   Vg = matrix(nrow=G,ncol=K)
@@ -209,6 +216,12 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types
       Vg[,k] = NA
       S[k] = NA
       S_var[k] = NA
+    }else if(Nk==1){
+      Yk = Y[,cell_idx]
+      X[,k] = Yk/sum(Yk)
+      S[k] = sum(Yk)
+      S_var[k] = NA
+      Vg[,k] = NA
     }else{
       Yk = Y[,cell_idx,drop=FALSE]
       S[k] = sum(Yk)/Nk
@@ -229,10 +242,12 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types
         # Xk = Yk%*%diag(c(1/colSums(Yk)))
         X[,k] = rowMeans(Xk)
         if(is.null(tau2)){
-          Vg[,k] = 1/(Nk^2)*rowSums((Xk - X[,k,drop=FALSE]%*%t(rep(1,Nk)))^2)
+          Vg[,k] = 1/(Nk^(Nk-1))*rowSums((Xk - X[,k,drop=FALSE]%*%t(rep(1,Nk)))^2)
         }else{
           Vg[,k] = tau2[,k]/Nk + X[,k]/Nk^2*sum(1/colSums(Yk))
         }
+      }else{
+        stop('estimator should be either separate or aggregate')
       }
 
     }
@@ -241,19 +256,35 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types
   colnames(X) = cell_types
   colnames(Vg) = cell_types
 
-  return(list(X=X*G,Vg=Vg*G^2,S=S,S_var=S_var,Sigma=NULL))
+  if(scale.x){
+    return(list(X=X*G,Vg=Vg*G^2,S=S,S_var=S_var,Sigma=NULL))
+  }else{
+    return(list(X=X,Vg=Vg,S=S,S_var=S_var,Sigma=NULL))
+  }
+
 }
 
 #'@title process single cell data from multiple subject.
+#'@param Y gene by cell matrix
 #'@param eps a gene might have no expression in any cells of an individual so it's relative expression's standard error will be (0+eps)
 #'@param est_sigma2 Indicate whether estiamte sigma^2, the variance of gene relative expresison across individuals. If yes, a PM method will be used; If not, will directly use sample variance-covariance matrix(if diag_cov, then use the diagnal of sample cov).
 #'@param meta_var variance of hat{mu}, either 'plug_in' or 'adjust'
 #'@param meta_mode 'universal': one sigma^2 for all X;'by_celltype': one sigma^2 for each cell type; 'local': one sigma^2 for each gene and cell type; 'smooth': fit a local polynomial to mean-var per cell type.
 #'@return design matrix X and its variance matrix Vg
-scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
-                            est_sigma2=TRUE,sigma2=NULL,tau2=NULL,meta_var='plug_in',
+scRef_multi_proc = function(Y,cell_type_idx,indi_idx,
+                            estimator='separate',
+                            eps=0,
+                            est_sigma2=TRUE,
+                            sigma2=NULL,
+                            tau2=NULL,
+                            meta_var='plug_in',
                             meta_mode = "universal",
-                            cell_types = NULL,indis=NULL,diag_cov=FALSE,verbose=F){
+                            smooth.sigma = TRUE,
+                            cell_types = NULL,
+                            indis=NULL,
+                            diag_cov=FALSE,
+                            verbose=F,
+                            scale.x=TRUE){
 
   ##multiple individual single cell reference
 
@@ -286,7 +317,7 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
   # then, for each g and k, perform PM method
 
   if(verbose){
-    message('...running each individual')
+    message('...going through each individual')
   }
 
 
@@ -300,9 +331,9 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
   for(i in 1:NI){
     indi = indis[i]
     indi_cell_idx = which(indi_idx==indi)
-    Yi = Y[,indi_cell_idx]
+    Yi = Y[,indi_cell_idx,drop=FALSE]
     cell_type_i = cell_type_idx[indi_cell_idx]
-    indi_design.mat = scRef1_proc(Yi,cell_type_i,estimator=estimator,tau2=tau2,cell_types=cell_types)
+    indi_design.mat = scRef1_proc(Yi,cell_type_i,estimator=estimator,tau2=tau2,cell_types=cell_types,scale.x=scale.x)
     #browser()
     #print(dim(indi_design.mat$X))
     #browser()
@@ -369,10 +400,16 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
             Sigma[g,k] = PMmeta_vector(x,v)
           }
         }
-      }else if(meta_mode=="smooth"){
+      }else if(meta_mode=="naive"){
         X = apply(X_array,c(1,2),mean,na.rm=TRUE)
         Vg = t(apply(X_array,c(1),function(z){diag(cov(t(z),use = 'pairwise.complete.obs'))}))
         Sigma = pmax(Vg - apply(Vg_array,c(1,2),mean,na.rm=TRUE),0)
+      }else{
+        stop('unsupported meta analysis method')
+      }
+
+      if(smooth.sigma){
+        X = apply(X_array,c(1,2),mean,na.rm=TRUE)
         for(k in 1:K){
           if(!all(is.na(X[,k]))){
             loess_fit = loess(y~.,
@@ -380,34 +417,52 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
             Sigma[,k] = pmax(loess_fit$fitted,0)
           }
         }
-      }else{
-        stop('unsupported meta analysis method')
       }
 
       X = matrix(nrow = G,ncol = K)
-      Vg = matrix(nrow = G,ncol = K)
+      if(diag_cov){
+        V = matrix(nrow = G,ncol = K)
+      }else{
+        V = matrix(nrow = G,ncol = K^2)
+      }
+
       for(g in 1:G){
+        Wg = matrix(nrow=NI,ncol=K)
+        Vg = rep(0,K)
         for(k in 1:K){
           x = X_array[g,k,]
           v = Vg_array[g,k,]
           pm_out = meta_analysis(x,v,Sigma[g,k],meta_var=meta_var)
           X[g,k] = pm_out$mu_hat
-          Vg[g,k] = pm_out$var_mu_hat
+          Vg[k] = pm_out$var_mu_hat
+          Wg[,k] = pm_out$w
         }
+        if(!diag_cov){
+          Vg = diag(Vg)
+          for(k in 1:(K-1)){
+            for(j in (k+1):K){
+              Vg[k,j] = calc_cov(X_array[g,k,],X_array[g,j,],Wg[,k],Wg[,j],X[g,k],X[g,j])
+            }
+          }
+          Vg = t(Vg)+Vg-diag(diag(Vg))
+        }
+        V[g,] = c(Vg)
       }
+
+
 
     }else{
       X = apply(X_array,c(1,2),mean,na.rm=TRUE)
+      V = t(apply(X_array,c(1),function(z){(cov(t(z),use = 'pairwise.complete.obs'))}))/NI
+      Sigma=NULL
       #browser()
-      if(diag_cov){
-        Vg = t(apply(X_array,c(1),function(z){diag(cov(t(z),use = 'pairwise.complete.obs'))}))/NI
-        Sigma = pmax(Vg*NI - apply(Vg_array,c(1,2),mean,na.rm=TRUE),0)
-      }else{
-        Vg = t(apply(X_array,c(1),function(z){(cov(t(z),use = 'pairwise.complete.obs'))}))/NI
-        Sigma=NULL
-      }
-
-
+      # if(diag_cov){
+      #   Vg = t(apply(X_array,c(1),function(z){diag(cov(t(z),use = 'pairwise.complete.obs'))}))/NI
+      #   Sigma = pmax(Vg*NI - apply(Vg_array,c(1,2),mean,na.rm=TRUE),0)
+      # }else{
+      #   Vg = t(apply(X_array,c(1),function(z){(cov(t(z),use = 'pairwise.complete.obs'))}))/NI
+      #   Sigma=NULL
+      # }
     }
 
   }
@@ -415,7 +470,9 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
   #browser()
 
   colnames(X) = cell_types
-  #colnames(Vg) = cell_types
+  rownames(X) = rownames(Y)
+  rownames(V) = rownames(Y)
+  rownames(X_array) = rownames(Y)
 
 
   # estimate cell size
@@ -450,7 +507,7 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,estimator='separate',eps=0,
   S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
   names(S_glm) = cell_types
 
-  return(list(X=X,Vg=Vg,Sigma=Sigma,
+  return(list(X=X,Vg=V,Sigma=Sigma,
               S=S,S_mat=S_mat,S_glm=S_glm,
               X_array=X_array,Vg_array=Vg_array))
 

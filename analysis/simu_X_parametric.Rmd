@@ -1,0 +1,183 @@
+---
+title: "simu X parametric"
+author: "Dongyue Xie"
+date: "2021-05-01"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+```{r}
+source('code/deconference_main.R')
+source('code/utils.R')
+source('code/wols.R')
+source('code/simulation/simu_studyX.R')
+
+
+
+K = 4
+
+#b = matrix(runif(n*K),nrow=4)
+#b = apply(b, 2, function(z){z/sum(z)})
+nreps = 100
+b = c(0.1,0.1,0.3,0.5)
+b.m = b%*%t(rep(1,nreps))
+
+
+
+#sigma2 = matrix(1/n,nrow=n,ncol=K)
+#tau2 = matrix(1/n,nrow=n,ncol=K)
+
+
+```
+
+
+
+## n = 500
+
+```{r}
+n = 500
+
+set.seed(12345)
+ref = matrix(rnorm(n*K),nrow=n)
+ref = abs(ref)
+ref = apply(ref, 2, function(z){z/sum(z)})*n
+
+sigma2 = ref/2
+tau2 = sigma2/100
+rownames(ref) = 1:n
+```
+
+### nk = 10
+
+```{r}
+set.seed(12345)
+simu1 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=10)
+get_summary(simu1,b=b.m,trans = T)
+colMeans(simu1$est_adj)
+colMeans(simu1$est_unadj)
+```
+
+```{r}
+set.seed(12345)
+simu1 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=10)
+get_summary2(simu1,b=b,trans = T)
+colMeans(simu1$est_adj)
+colMeans(simu1$est_unadj)
+```
+
+
+
+### nk = 50
+
+```{r}
+set.seed(12345)
+simu2 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=50)
+get_summary(simu2,b=b.m,trans = T)
+colMeans(simu2$est_adj)
+colMeans(simu2$est_unadj)
+```
+
+```{r}
+set.seed(12345)
+simu2 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=50)
+get_summary2(simu2,b=b,trans = T)
+colMeans(simu2$est_adj)
+colMeans(simu2$est_unadj)
+```
+
+### nk  = 100
+
+```{r}
+set.seed(12345)
+simu3 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=100)
+get_summary(simu3,b=b.m,trans = T)
+colMeans(simu3$est_adj)
+colMeans(simu3$est_unadj)
+```
+
+```{r}
+set.seed(12345)
+simu3 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=100)
+get_summary2(simu3,b=b,trans = T)
+colMeans(simu3$est_adj)
+colMeans(simu3$est_unadj)
+```
+
+
+
+
+
+## n = 1000
+
+```{r}
+n = 1000
+
+set.seed(12345)
+ref = matrix(rnorm(n*K),nrow=n)
+ref = abs(ref)
+ref = apply(ref, 2, function(z){z/sum(z)})*n
+
+sigma2 = ref/2
+tau2 = sigma2/100
+rownames(ref) = 1:n
+```
+
+### nk = 10
+
+```{r}
+set.seed(12345)
+simu1 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=10)
+get_summary(simu1,b=b.m,trans = T)
+colMeans(simu1$est_adj)
+colMeans(simu1$est_unadj)
+```
+
+```{r}
+set.seed(12345)
+simu1 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=10)
+get_summary2(simu1,b=b,trans = T)
+colMeans(simu1$est_adj)
+colMeans(simu1$est_unadj)
+```
+
+
+
+### nk = 50
+
+```{r}
+set.seed(12345)
+simu2 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=50)
+get_summary(simu2,b=b.m,trans = T)
+colMeans(simu2$est_adj)
+colMeans(simu2$est_unadj)
+```
+
+```{r}
+set.seed(12345)
+simu2 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=50)
+get_summary2(simu2,b=b,trans = T)
+colMeans(simu2$est_adj)
+colMeans(simu2$est_unadj)
+```
+
+### nk  = 100
+
+```{r}
+set.seed(12345)
+simu3 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=100)
+get_summary(simu3,b=b.m,trans = T)
+colMeans(simu3$est_adj)
+colMeans(simu3$est_unadj)
+```
+
+```{r}
+set.seed(12345)
+simu3 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = 'equal',sc_lib_size = 0.1,n_indi = 10,expr_dist = 'log-normal',nk=100)
+get_summary2(simu3,b=b,trans = T)
+colMeans(simu3$est_adj)
+colMeans(simu3$est_unadj)
+```
+

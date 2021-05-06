@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Dongyue Xie" />
+
+<meta name="date" content="2021-05-01" />
+
+<title>simu X parametric</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/sandstone.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">deconference</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+<li>
+  <a href="about.html">Data</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/DongyueXie/deconference">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">simu X parametric</h1>
+<h4 class="author">Dongyue Xie</h4>
+<h4 class="date">2021-05-01</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-05-06
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>deconference/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20200403code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20200403)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20200403code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20200403)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree56fd057285ead7ce70ac91a677695d3e390904a9targetblank56fd057a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/56fd057285ead7ce70ac91a677695d3e390904a9" target="_blank">56fd057</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree56fd057285ead7ce70ac91a677695d3e390904a9targetblank56fd057a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/56fd057285ead7ce70ac91a677695d3e390904a9" target="_blank">56fd057</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    data/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/simu_X_from_real.Rmd
+    Untracked:  code/simulation/
+    Untracked:  data/MuSiC/
+    Untracked:  data/V.rds
+    Untracked:  data/X.rds
+    Untracked:  data/pancreas/
+
+Unstaged changes:
+    Modified:   analysis/MuSiC.Rmd
+    Modified:   analysis/gene_weights.Rmd
+    Modified:   analysis/gene_weights_addmusic.Rmd
+    Modified:   code/deconference_setdata.R
+    Modified:   code/wols.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/simu_X_parametric.Rmd</code>) and HTML (<code>docs/simu_X_parametric.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/56fd057285ead7ce70ac91a677695d3e390904a9/analysis/simu_X_parametric.Rmd" target="_blank">56fd057</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-05-06
+</td>
+<td>
+wflow_publish(“analysis/simu_X_parametric.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<pre class="r"><code>source(&#39;code/deconference_main.R&#39;)</code></pre>
+<pre><code>Loading required package: SummarizedExperiment</code></pre>
+<pre><code>Loading required package: MatrixGenerics</code></pre>
+<pre><code>Loading required package: matrixStats</code></pre>
+<pre><code>
+Attaching package: &#39;MatrixGenerics&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:matrixStats&#39;:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+    colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+    colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+    colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+    colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+    colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+    colWeightedMeans, colWeightedMedians, colWeightedSds,
+    colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+    rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+    rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+    rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+    rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+    rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+    rowWeightedSds, rowWeightedVars</code></pre>
+<pre><code>Loading required package: GenomicRanges</code></pre>
+<pre><code>Loading required package: stats4</code></pre>
+<pre><code>Loading required package: BiocGenerics</code></pre>
+<pre><code>Loading required package: parallel</code></pre>
+<pre><code>
+Attaching package: &#39;BiocGenerics&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:parallel&#39;:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB</code></pre>
+<pre><code>The following objects are masked from &#39;package:stats&#39;:
+
+    IQR, mad, sd, var, xtabs</code></pre>
+<pre><code>The following objects are masked from &#39;package:base&#39;:
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colnames,
+    dirname, do.call, duplicated, eval, evalq, Filter, Find, get, grep,
+    grepl, intersect, is.unsorted, lapply, Map, mapply, match, mget,
+    order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+    rbind, Reduce, rownames, sapply, setdiff, sort, table, tapply,
+    union, unique, unsplit, which.max, which.min</code></pre>
+<pre><code>Loading required package: S4Vectors</code></pre>
+<pre><code>
+Attaching package: &#39;S4Vectors&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:base&#39;:
+
+    expand.grid</code></pre>
+<pre><code>Loading required package: IRanges</code></pre>
+<pre><code>Loading required package: GenomeInfoDb</code></pre>
+<pre><code>Loading required package: Biobase</code></pre>
+<pre><code>Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    &#39;browseVignettes()&#39;. To cite Bioconductor, see
+    &#39;citation(&quot;Biobase&quot;)&#39;, and for packages &#39;citation(&quot;pkgname&quot;)&#39;.</code></pre>
+<pre><code>
+Attaching package: &#39;Biobase&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:MatrixGenerics&#39;:
+
+    rowMedians</code></pre>
+<pre><code>The following objects are masked from &#39;package:matrixStats&#39;:
+
+    anyMissing, rowMedians</code></pre>
+<pre class="r"><code>source(&#39;code/utils.R&#39;)
+source(&#39;code/wols.R&#39;)
+source(&#39;code/simulation/simu_studyX.R&#39;)
+
+
+
+K = 4
+
+#b = matrix(runif(n*K),nrow=4)
+#b = apply(b, 2, function(z){z/sum(z)})
+nreps = 100
+b = c(0.1,0.1,0.3,0.5)
+b.m = b%*%t(rep(1,nreps))
+
+
+
+#sigma2 = matrix(1/n,nrow=n,ncol=K)
+#tau2 = matrix(1/n,nrow=n,ncol=K)</code></pre>
+<div id="n-500" class="section level2">
+<h2>n = 500</h2>
+<pre class="r"><code>n = 500
+
+set.seed(12345)
+ref = matrix(rnorm(n*K),nrow=n)
+ref = abs(ref)
+ref = apply(ref, 2, function(z){z/sum(z)})*n
+
+sigma2 = ref/2
+tau2 = sigma2/100
+rownames(ref) = 1:n</code></pre>
+<div id="nk-10" class="section level3">
+<h3>nk = 10</h3>
+<pre class="r"><code>set.seed(12345)
+simu1 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=10)
+get_summary(simu1,b=b.m,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0263 0.0291
+             adj    ols
+hc0       0.9725 0.8550
+hc3       0.9750 0.8575
+const.var 0.0000 0.8450</code></pre>
+<pre class="r"><code>colMeans(simu1$est_adj)</code></pre>
+<pre><code>[1] 0.08935810 0.09035553 0.30716020 0.51312616</code></pre>
+<pre class="r"><code>colMeans(simu1$est_unadj)</code></pre>
+<pre><code>[1] 0.1180717 0.1202402 0.2936496 0.4680385</code></pre>
+<pre class="r"><code>set.seed(12345)
+simu1 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=10)
+get_summary2(simu1,b=b,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0282 0.0394
+             adj    ols
+hc0       0.9575 0.6900
+hc3       0.9675 0.6975
+const.var 0.0000 0.6950</code></pre>
+<pre class="r"><code>colMeans(simu1$est_adj)</code></pre>
+<pre><code>[1] 0.1018455 0.1040615 0.2958567 0.4982363</code></pre>
+<pre class="r"><code>colMeans(simu1$est_unadj)</code></pre>
+<pre><code>[1] 0.1296168 0.1312970 0.2841694 0.4549168</code></pre>
+</div>
+<div id="nk-50" class="section level3">
+<h3>nk = 50</h3>
+<pre class="r"><code>set.seed(12345)
+simu2 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=50)
+get_summary(simu2,b=b.m,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0245 0.0291
+             adj    ols
+hc0       0.9625 0.8375
+hc3       0.9650 0.8450
+const.var 0.0000 0.8250</code></pre>
+<pre class="r"><code>colMeans(simu2$est_adj)</code></pre>
+<pre><code>[1] 0.09999533 0.11024129 0.30096414 0.48879924</code></pre>
+<pre class="r"><code>colMeans(simu2$est_unadj)</code></pre>
+<pre><code>[1] 0.1134238 0.1222354 0.2937560 0.4705849</code></pre>
+<pre class="r"><code>set.seed(12345)
+simu2 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=50)
+get_summary2(simu2,b=b,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0247 0.0271
+             adj    ols
+hc0       0.9625 0.8900
+hc3       0.9650 0.8925
+const.var 0.0000 0.8675</code></pre>
+<pre class="r"><code>colMeans(simu2$est_adj)</code></pre>
+<pre><code>[1] 0.10016958 0.09936862 0.29989542 0.50056638</code></pre>
+<pre class="r"><code>colMeans(simu2$est_unadj)</code></pre>
+<pre><code>[1] 0.1149853 0.1138487 0.2933862 0.4777797</code></pre>
+</div>
+<div id="nk-100" class="section level3">
+<h3>nk = 100</h3>
+<pre class="r"><code>set.seed(12345)
+simu3 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=100)
+get_summary(simu3,b=b.m,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0247 0.0233
+            adj    ols
+hc0       0.960 0.9325
+hc3       0.965 0.9350
+const.var 0.000 0.9125</code></pre>
+<pre class="r"><code>colMeans(simu3$est_adj)</code></pre>
+<pre><code>[1] 0.0912658 0.1016596 0.2933909 0.5136837</code></pre>
+<pre class="r"><code>colMeans(simu3$est_unadj)</code></pre>
+<pre><code>[1] 0.1040699 0.1136739 0.2899185 0.4923377</code></pre>
+<pre class="r"><code>set.seed(12345)
+simu3 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=100)
+get_summary2(simu3,b=b,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0236 0.0263
+            adj    ols
+hc0       0.965 0.8900
+hc3       0.965 0.8925
+const.var 0.000 0.8825</code></pre>
+<pre class="r"><code>colMeans(simu3$est_adj)</code></pre>
+<pre><code>[1] 0.1003295 0.1004131 0.3025462 0.4967112</code></pre>
+<pre class="r"><code>colMeans(simu3$est_unadj)</code></pre>
+<pre><code>[1] 0.1130163 0.1132641 0.2964791 0.4772405</code></pre>
+</div>
+</div>
+<div id="n-1000" class="section level2">
+<h2>n = 1000</h2>
+<pre class="r"><code>n = 1000
+
+set.seed(12345)
+ref = matrix(rnorm(n*K),nrow=n)
+ref = abs(ref)
+ref = apply(ref, 2, function(z){z/sum(z)})*n
+
+sigma2 = ref/2
+tau2 = sigma2/100
+rownames(ref) = 1:n</code></pre>
+<div id="nk-10-1" class="section level3">
+<h3>nk = 10</h3>
+<pre class="r"><code>set.seed(12345)
+simu1 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=10)
+get_summary(simu1,b=b.m,trans = T)</code></pre>
+<pre><code>       adj    ols
+rmse 0.024 0.0274
+             adj    ols
+hc0       0.9625 0.7650
+hc3       0.9625 0.7675
+const.var 0.0000 0.7150</code></pre>
+<pre class="r"><code>colMeans(simu1$est_adj)</code></pre>
+<pre><code>[1] 0.08238452 0.08956826 0.31597222 0.51207500</code></pre>
+<pre class="r"><code>colMeans(simu1$est_unadj)</code></pre>
+<pre><code>[1] 0.1128602 0.1217397 0.3025766 0.4628236</code></pre>
+<pre class="r"><code>set.seed(12345)
+simu1 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=10)
+get_summary2(simu1,b=b,trans = T)</code></pre>
+<pre><code>        adj   ols
+rmse 0.0205 0.034
+             adj    ols
+hc0       0.9725 0.5700
+hc3       0.9775 0.5725
+const.var 0.0000 0.5425</code></pre>
+<pre class="r"><code>colMeans(simu1$est_adj)</code></pre>
+<pre><code>[1] 0.09881688 0.10170213 0.29927374 0.50020725</code></pre>
+<pre class="r"><code>colMeans(simu1$est_unadj)</code></pre>
+<pre><code>[1] 0.1261169 0.1285165 0.2896863 0.4556804</code></pre>
+</div>
+<div id="nk-50-1" class="section level3">
+<h3>nk = 50</h3>
+<pre class="r"><code>set.seed(12345)
+simu2 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=50)
+get_summary(simu2,b=b.m,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0184 0.0216
+             adj    ols
+hc0       0.9500 0.8625
+hc3       0.9525 0.8650
+const.var 0.0000 0.8250</code></pre>
+<pre class="r"><code>colMeans(simu2$est_adj)</code></pre>
+<pre><code>[1] 0.10512279 0.09217862 0.30342489 0.49927370</code></pre>
+<pre class="r"><code>colMeans(simu2$est_unadj)</code></pre>
+<pre><code>[1] 0.1173413 0.1073310 0.2971930 0.4781347</code></pre>
+<pre class="r"><code>set.seed(12345)
+simu2 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=50)
+get_summary2(simu2,b=b,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0203 0.0234
+           adj    ols
+hc0       0.95 0.8200
+hc3       0.95 0.8225
+const.var 0.00 0.7875</code></pre>
+<pre class="r"><code>colMeans(simu2$est_adj)</code></pre>
+<pre><code>[1] 0.09961184 0.09875281 0.30079811 0.50083724</code></pre>
+<pre class="r"><code>colMeans(simu2$est_unadj)</code></pre>
+<pre><code>[1] 0.1136496 0.1130226 0.2956322 0.4776956</code></pre>
+</div>
+<div id="nk-100-1" class="section level3">
+<h3>nk = 100</h3>
+<pre class="r"><code>set.seed(12345)
+simu3 = simu_studyX(ref,b.m,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=100)
+get_summary(simu3,b=b.m,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0191 0.0226
+             adj   ols
+hc0       0.9475 0.845
+hc3       0.9500 0.855
+const.var 0.0000 0.810</code></pre>
+<pre class="r"><code>colMeans(simu3$est_adj)</code></pre>
+<pre><code>[1] 0.10744653 0.09402546 0.29909236 0.49943565</code></pre>
+<pre class="r"><code>colMeans(simu3$est_unadj)</code></pre>
+<pre><code>[1] 0.1196493 0.1072194 0.2934095 0.4797218</code></pre>
+<pre class="r"><code>set.seed(12345)
+simu3 = simu_studyX2(ref,b,tau2=tau2,sigma2=sigma2,w.mode = &#39;equal&#39;,sc_lib_size = 0.1,n_indi = 10,expr_dist = &#39;log-normal&#39;,nk=100)
+get_summary2(simu3,b=b,trans = T)</code></pre>
+<pre><code>        adj    ols
+rmse 0.0191 0.0221
+            adj    ols
+hc0       0.945 0.8550
+hc3       0.945 0.8575
+const.var 0.000 0.8250</code></pre>
+<pre class="r"><code>colMeans(simu3$est_adj)</code></pre>
+<pre><code>[1] 0.09963387 0.10183796 0.29885094 0.49967723</code></pre>
+<pre class="r"><code>colMeans(simu3$est_unadj)</code></pre>
+<pre><code>[1] 0.1117544 0.1139533 0.2944851 0.4798073</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.0.3 (2020-10-10)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS High Sierra 10.13.6
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] parallel  stats4    stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+ [1] SingleCellExperiment_1.12.0 SummarizedExperiment_1.20.0
+ [3] Biobase_2.50.0              GenomicRanges_1.42.0       
+ [5] GenomeInfoDb_1.26.1         IRanges_2.24.0             
+ [7] S4Vectors_0.28.0            BiocGenerics_0.36.0        
+ [9] MatrixGenerics_1.2.0        matrixStats_0.57.0         
+[11] workflowr_1.6.2            
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5             XVector_0.30.0         pillar_1.4.6          
+ [4] compiler_4.0.3         later_1.1.0.1          git2r_0.27.1          
+ [7] zlibbioc_1.36.0        bitops_1.0-6           tools_4.0.3           
+[10] digest_0.6.27          lattice_0.20-41        evaluate_0.14         
+[13] lifecycle_1.0.0        tibble_3.0.4           pkgconfig_2.0.3       
+[16] rlang_0.4.10           Matrix_1.2-18          DelayedArray_0.16.0   
+[19] rstudioapi_0.11        yaml_2.2.1             xfun_0.18             
+[22] GenomeInfoDbData_1.2.4 stringr_1.4.0          knitr_1.30            
+[25] fs_1.5.0               vctrs_0.3.7            grid_4.0.3            
+[28] rprojroot_1.3-2        glue_1.4.2             R6_2.4.1              
+[31] rmarkdown_2.5          magrittr_2.0.1         whisker_0.4           
+[34] backports_1.1.10       promises_1.1.1         ellipsis_0.3.1        
+[37] htmltools_0.5.1.1      httpuv_1.5.4           stringi_1.5.3         
+[40] RCurl_1.98-1.2         crayon_1.3.4          </code></pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

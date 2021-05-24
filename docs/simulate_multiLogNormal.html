@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree0882338f29e8234ce409abfc94fa31245603e8b5targetblank0882338a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/0882338f29e8234ce409abfc94fa31245603e8b5" target="_blank">0882338</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreef519f18b886e20c0d572e9aa2f8f806689cde143targetblankf519f18a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/f519f18b886e20c0d572e9aa2f8f806689cde143" target="_blank">f519f18</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree0882338f29e8234ce409abfc94fa31245603e8b5targetblank0882338a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreef519f18b886e20c0d572e9aa2f8f806689cde143targetblankf519f18a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/0882338f29e8234ce409abfc94fa31245603e8b5" target="_blank">0882338</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/f519f18b886e20c0d572e9aa2f8f806689cde143" target="_blank">f519f18</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -601,6 +601,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/f519f18b886e20c0d572e9aa2f8f806689cde143/analysis/simulate_multiLogNormal.Rmd" target="_blank">f519f18</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-05-24
+</td>
+<td>
+wflow_publish(“analysis/simulate_multiLogNormal.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/1ea3e1df8fefef122eaa2b19aa0224efa0f7b380/docs/simulate_multiLogNormal.html" target="_blank">1ea3e1d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-05-24
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/0882338f29e8234ce409abfc94fa31245603e8b5/analysis/simulate_multiLogNormal.Rmd" target="_blank">0882338</a>
 </td>
 <td>
@@ -623,11 +657,12 @@ wflow_publish(“analysis/simulate_multiLogNormal.Rmd”)
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <p>Suppose we want to generate <span class="math inline">\(x\sim [\mu,\Sigma]\)</span> and ensure all elements of <span class="math inline">\(x\)</span> are non-negative.</p>
-<p>Let <span class="math inline">\(\Sigma = VRV\)</span> where <span class="math inline">\(V\)</span> is a diagonal matrix of standard deviations <span class="math inline">\(V = diag(\sigma)\)</span>,<span class="math inline">\(\sigma = \sqrt{diag(\Sigma)}\)</span>, and <span class="math inline">\(R\)</span> is the correlation matrix, first generate</p>
+<p>Let <span class="math inline">\(\Sigma = VRV\)</span> where <span class="math inline">\(V\)</span> is a diagonal matrix of standard deviations <span class="math inline">\(V = diag(\sigma)\)</span>, <span class="math inline">\(\sigma = \sqrt{diag(\Sigma)}\)</span>, and <span class="math inline">\(R\)</span> is the correlation matrix.</p>
+<p>First generate</p>
 <p><span class="math display">\[y\sim N(\log\frac{\mu^2}{\sqrt{\mu^2+\sigma^2}},V&#39;RV&#39;),\]</span></p>
-<p>where <span class="math inline">\(V&#39; = diag\{\log(1+\frac{\sigma^2}{\mu^2})\}\)</span> and the square and log are taken element-wise.</p>
+<p>where <span class="math inline">\(V&#39; = diag\{\sqrt{\log(1+\frac{\sigma^2}{\mu^2})}\}\)</span> and the square and log are taken elementwisely.</p>
 <p>Let <span class="math inline">\(x = \exp(y)\)</span>, then <span class="math inline">\(E(x) = \mu\)</span>, <span class="math inline">\(diag\{cov(x)\} = \sigma^2\)</span>.</p>
-<p>The correlations won’t match but mean and variances match.</p>
+<p>The correlations won’t match but mean and variance match.</p>
 <pre class="r"><code>sim_MLN = function(n,mu,s,R){
   n.mu = log(mu^2/sqrt(mu^2+s^2))
   n.s = sqrt(log(1+s^2/mu^2))
@@ -638,19 +673,20 @@ s = sqrt(c(1,2,3))
 R = toeplitz(c(1,0.3,0.2))
 mu = c(1,2,3)
 
+set.seed(12345)
 x = sim_MLN(100000,mu,s,R)
 colMeans(x)</code></pre>
-<pre><code>[1] 0.9978967 2.0024230 2.9996725</code></pre>
+<pre><code>[1] 1.002424 1.996516 2.998094</code></pre>
 <pre class="r"><code>cov(x)</code></pre>
 <pre><code>          [,1]      [,2]      [,3]
-[1,] 0.9991912 0.3523966 0.2813520
-[2,] 0.3523966 1.9900799 0.6460106
-[3,] 0.2813520 0.6460106 2.9835825</code></pre>
+[1,] 1.0260081 0.3446461 0.2834299
+[2,] 0.3446461 1.9841630 0.6359664
+[3,] 0.2834299 0.6359664 2.9683864</code></pre>
 <pre class="r"><code>cov2cor(cov(x))</code></pre>
 <pre><code>          [,1]      [,2]      [,3]
-[1,] 1.0000000 0.2499034 0.1629509
-[2,] 0.2499034 1.0000000 0.2651156
-[3,] 0.1629509 0.2651156 1.0000000</code></pre>
+[1,] 1.0000000 0.2415513 0.1624090
+[2,] 0.2415513 1.0000000 0.2620507
+[3,] 0.1624090 0.2620507 1.0000000</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

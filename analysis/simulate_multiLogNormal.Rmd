@@ -11,15 +11,17 @@ editor_options:
 
 Suppose we want to generate $x\sim [\mu,\Sigma]$ and ensure all elements of $x$ are non-negative. 
 
-Let $\Sigma = VRV$ where $V$ is a diagonal matrix of standard deviations $V = diag(\sigma)$,$\sigma = \sqrt{diag(\Sigma)}$, and $R$ is the correlation matrix, first generate 
+Let $\Sigma = VRV$ where $V$ is a diagonal matrix of standard deviations $V = diag(\sigma)$, $\sigma = \sqrt{diag(\Sigma)}$,  and $R$ is the correlation matrix.
+
+First generate 
 
 \[y\sim N(\log\frac{\mu^2}{\sqrt{\mu^2+\sigma^2}},V'RV'),\]
 
-where $V' = diag\{\log(1+\frac{\sigma^2}{\mu^2})\}$ and the square and log are taken element-wise.
+where $V' = diag\{\sqrt{\log(1+\frac{\sigma^2}{\mu^2})}\}$ and the square and log are taken elementwisely.
 
 Let $x = \exp(y)$, then $E(x) = \mu$, $diag\{cov(x)\} = \sigma^2$.
 
-The correlations won't match but mean and variances match.
+The correlations won't match but mean and variance match.
 
 ```{r}
 sim_MLN = function(n,mu,s,R){
@@ -32,6 +34,7 @@ s = sqrt(c(1,2,3))
 R = toeplitz(c(1,0.3,0.2))
 mu = c(1,2,3)
 
+set.seed(12345)
 x = sim_MLN(100000,mu,s,R)
 colMeans(x)
 cov(x)

@@ -1,0 +1,40 @@
+---
+title: "Simulate multivariate Log Normal data"
+author: "Dongyue Xie"
+date: "2021-05-24"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Suppose we want to generate $x\sim [\mu,\Sigma]$ and ensure all elements of $x$ are non-negative. 
+
+Let $\Sigma = VRV$ where $V$ is a diagonal matrix of standard deviations $V = diag(\sigma)$,$\sigma = \sqrt{diag(\Sigma)}$, and $R$ is the correlation matrix, first generate 
+
+\[y\sim N(\log\frac{\mu^2}{\sqrt{\mu^2+\sigma^2}},V'RV'),\]
+
+where $V' = diag\{\log(1+\frac{\sigma^2}{\mu^2})\}$ and the square and log are taken element-wise.
+
+Let $x = \exp(y)$, then $E(x) = \mu$, $diag\{cov(x)\} = \sigma^2$.
+
+The correlations won't match but mean and variances match.
+
+```{r}
+sim_MLN = function(n,mu,s,R){
+  n.mu = log(mu^2/sqrt(mu^2+s^2))
+  n.s = sqrt(log(1+s^2/mu^2))
+  n.Sigma = t(R*n.s)*n.s
+  exp(MASS::mvrnorm(n,mu = n.mu,Sigma = n.Sigma))
+}
+s = sqrt(c(1,2,3))
+R = toeplitz(c(1,0.3,0.2))
+mu = c(1,2,3)
+
+x = sim_MLN(100000,mu,s,R)
+colMeans(x)
+cov(x)
+cov2cor(cov(x))
+```
+

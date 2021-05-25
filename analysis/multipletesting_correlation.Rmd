@@ -1,0 +1,89 @@
+---
+title: "multiple testing of correlations"
+author: "Dongyue Xie"
+date: "2021-05-15"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+We review the one sample case, section 4 in the paper [Cai and Liu(2016)](https://www.tandfonline.com/doi/abs/10.1080/01621459.2014.999157).
+
+Suppose $n$ samples from p-dimensional distribution with mean $\mu$ and correlation matrix $R$ are observed and the goal is to simultaneously test $H_{0ij}:\rho_{ij} = 0$. It's quivalent to $H_{0ij}:\sigma_{ij} = 0$. A test statistics is 
+\[T_{ij} = \frac{\sum_{k=1}^n (x_{ki}-\bar x_i)(x_{kj}-\bar x_j)}{\sqrt{n\hat\theta_{ij}}},\]
+where $\bar x_i = \frac{1}{n}\sum_k x_{k,i}$ and 
+\[\hat\theta_{ij} = \frac{1}{n}\sum_k ((x_{ki}-\bar x_i)(x_{kj}-\bar x_j)-\hat\sigma_{ij})^2\]
+
+Define 
+\[\hat t = \inf\{0\leq t\leq b_p:\frac{G(t)(p^2-p)/2}{\max\{\sum_{i<j} I(|T_{ij}\geq t|),1\}}\},\]
+where $G(t) = 2(1-\Phi(t))$, $b_p = \sqrt{4\log p-2\log(\log p)}$. If $\hat t$ does not exist, then set $\hat t = \sqrt{4\log p}$.
+
+Reject $H_{0ij}$ when $|T_{ij}|\geq \hat t$. 
+
+```{r}
+library(Matrix)
+library(Rfast)
+#'@param X sample by condition matrix
+#'@param 
+multipletesting_correlation = function(X,alpha=0.05){
+  n = nrow(X)
+  p = ncol(X)
+  S = cova(X)
+  mean.col = colmeans(X)
+  Theta = Matrix(0,nrow=p,ncol=p,sparse = TRUE)
+  for(i in 1:(p-1)){
+    for(j in (1+i):p){
+      Theta[i,j] = mean(((X[,i]-mean.col[i])*(X[,j]-mean.col[j]) - S[i,j])^2)
+    }
+  }
+  Tmat = Matrix(0,nrow=p,ncol=p,sparse = TRUE)
+  for(i in 1:(p-1)){
+    for(j in (1+i):p){
+      Tmat[i,j] = sum((X[,i]-mean.col[i])*(X[,j]-mean.col[j]))/sqrt(n*Theta[i,j])
+    }
+  }
+  # find t
+  bp = sqrt(4*log(p)-2*log(log(p)))
+  a = (p^2-p)/2
+  Tvec = Tmat[(Tmat!=0)]
+  t_vec = sort(abs(Tvec),decreasing = FALSE)
+  nt = length(t_vec)
+  for(t in 1:nt){
+    temp = 2*(1-pnorm(t_vec[t]))*a/(nt-t+1)
+    if(temp<=alpha){
+      break
+    }
+  }
+  if(t_vec[t]>bp){
+    thresh = sqrt(4*log(p))
+  }else{
+    thresh = t_vec[t]
+  }
+  list(S=S,
+       Tmat=Tmat,
+       Tvec = Tvec,
+       t=thresh,
+       alpha=alpha)
+}
+
+
+```
+
+
+Example
+
+```{r}
+n = 30
+p = 100
+X = MASS::mvrnorm(n,rep(0,p),diag(p))
+out = multipletesting_correlation(X)
+which(out$Tvec>=out$t)
+
+X = MASS::mvrnorm(n,rep(0,p),diag(p))
+out = multipletesting_correlation(X)
+which(out$Tvec>=out$t)
+```
+
+

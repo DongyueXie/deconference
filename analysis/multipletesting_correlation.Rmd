@@ -79,11 +79,11 @@ n = 30
 p = 100
 X = MASS::mvrnorm(n,rep(0,p),diag(p))
 out = multipletesting_correlation(X)
-which(out$Tvec>=out$t)
+which(abs(out$Tvec)>=out$t)
 
 X = MASS::mvrnorm(n,rep(0,p),diag(p))
 out = multipletesting_correlation(X)
-which(out$Tvec>=out$t)
+which(abs(out$Tvec)>=out$t)
 ```
 
 

@@ -1,0 +1,67 @@
+---
+title: "Read gtex data"
+author: "Dongyue Xie"
+date: "2021-05-24"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Download Gene TPMs data from gtex [portal](https://www.gtexportal.org/home/datasets), and the annotation data GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt.
+
+Code from [here](https://bioinformatics.stackexchange.com/questions/4862/reproducing-gtex-transcriptome-analysis).
+
+```{r,eval=FALSE}
+# Load the gct file
+gen <- read.delim("data/gtex/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_tpm.gct", skip = 2, header = TRUE)
+gen_ann <- gen[ , c(1,2) ]
+gen <- gen[ , -seq( 2 ) ]
+
+# Load sample annotation file
+sample_map <- read.delim( "data/gtex/GTEx_Analysis_v8_Annotations_SampleAttributesDS.txt" )
+sample_map$SAMPID <- gsub( "-", "\\.", sample_map$SAMPID )
+rownames(sample_map) <- sample_map$SAMPID
+
+# Match data-sets
+common_samples <- intersect( 
+    colnames( gen ), rownames( sample_map )
+)
+gen <- gen[ , common_samples ]
+sample_map <- sample_map[ common_samples, ]
+```
+
+save the matrix 
+
+```{r,eval=FALSE}
+library(Biobase)
+gtex = ExpressionSet(assayData = as.matrix(gen),
+                     phenoData = sample_map,
+                     featureData = gen_ann)
+# memory limit reached
+```
+
+
+get pancreas data
+
+```{r,eval=FALSE}
+#tissue_to_get <- c( "muscle", "brain", "heart", "blood", "pituitary", "adipose tissue", "nerve", "lung", "breast", "blood vessel", "thyroid", "liver", "skin", "testis" )
+
+
+tissue_to_get = 'pancreas'
+samples_to_use <- sample_map$SAMPID[ 
+	    tolower( as.character( sample_map$SMTS ) ) %in% tissue_to_get 
+]
+gtex.pancreas = gen[,samples_to_use]
+gtex.pancreas = Matrix(as.matrix(gtex.pancreas),sparse = T)
+saveRDS(gtex.pancreas,'data/pancreas/gtex_pancreas.rds')
+```
+
+```{r,eval=FALSE}
+# Filter gene expression matrix according to GTEx
+trs_to_use <- apply( X = gen, MARGIN = 1, FUN = function( row, exp_th, min_sam ) {
+  sum( row > exp_th ) >= min_sam
+}, exp_th = 0.1, min_sam = 10 )
+```
+

@@ -22,6 +22,10 @@ where $G(t) = 2(1-\Phi(t))$, $b_p = \sqrt{4\log p-2\log(\log p)}$. If $\hat t$ d
 
 Reject $H_{0ij}$ when $|T_{ij}|\geq \hat t$. 
 
+## Implementation
+
+The two quantities need calculating is the sample covariance matrix $S$ and $\sum_{k=1}^n[(x_k-\mu)(x_k-\mu)^T]^2$ where the square is taken elementwisely.
+
 ```{r}
 library(Matrix)
 library(Rfast)
@@ -30,24 +34,25 @@ library(Rfast)
 multipletesting_correlation = function(X,alpha=0.05){
   n = nrow(X)
   p = ncol(X)
-  S = cova(X)
-  mean.col = colmeans(X)
-  Theta = Matrix(0,nrow=p,ncol=p,sparse = TRUE)
-  for(i in 1:(p-1)){
-    for(j in (1+i):p){
-      Theta[i,j] = mean(((X[,i]-mean.col[i])*(X[,j]-mean.col[j]) - S[i,j])^2)
-    }
+  
+  X.center = scale(X,center=TRUE,scale=FALSE)
+  S = cova(X.center,center = TRUE)
+  
+  # calc S2
+  
+  S2 = 0
+  for(k in 1:n){
+    S2 = S2+(tcrossprod(X.center[k,]))^2
   }
-  Tmat = Matrix(0,nrow=p,ncol=p,sparse = TRUE)
-  for(i in 1:(p-1)){
-    for(j in (1+i):p){
-      Tmat[i,j] = sum((X[,i]-mean.col[i])*(X[,j]-mean.col[j]))/sqrt(n*Theta[i,j])
-    }
-  }
+  
+  # calc T statistics
+  
+  Tmat = S*(n-p)/sqrt(S2+(2*p-n)*S^2)
+  
   # find t
   bp = sqrt(4*log(p)-2*log(log(p)))
   a = (p^2-p)/2
-  Tvec = Tmat[(Tmat!=0)]
+  Tvec = Tmat[lower.tri(Tmat)]
   t_vec = sort(abs(Tvec),decreasing = FALSE)
   nt = length(t_vec)
   for(t in 1:nt){
@@ -62,9 +67,10 @@ multipletesting_correlation = function(X,alpha=0.05){
     thresh = t_vec[t]
   }
   list(S=S,
+       S2=S2,
        Tmat=Tmat,
        Tvec = Tvec,
-       t=thresh,
+       thresh=thresh,
        alpha=alpha)
 }
 
@@ -75,15 +81,15 @@ multipletesting_correlation = function(X,alpha=0.05){
 Example
 
 ```{r}
-n = 30
+n = 300
 p = 100
 X = MASS::mvrnorm(n,rep(0,p),diag(p))
 out = multipletesting_correlation(X)
-which(abs(out$Tvec)>=out$t)
+which(abs(out$Tvec)>=out$thresh)
 
 X = MASS::mvrnorm(n,rep(0,p),diag(p))
 out = multipletesting_correlation(X)
-which(abs(out$Tvec)>=out$t)
+which(abs(out$Tvec)>=out$thresh)
 ```
 
 

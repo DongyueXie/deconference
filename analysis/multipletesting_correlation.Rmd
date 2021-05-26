@@ -78,18 +78,78 @@ multipletesting_correlation = function(X,alpha=0.05){
 ```
 
 
-Example
+Example, see the null distribution of test statistics
+
+```{r}
+n = 3000
+p = 100
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+out = multipletesting_correlation(X)
+#which(abs(out$Tvec)>=out$thresh)
+h=hist(out$Tvec,breaks = 100)
+xfit<-seq(min(out$Tvec),max(out$Tvec),length=100)
+yfit<-dnorm(xfit,mean=0,sd=1)
+yfit <- yfit*diff(h$mids[1:2])*length(out$Tvec)
+lines(xfit, yfit, col="blue", lwd=2)
+```
+
 
 ```{r}
 n = 300
 p = 100
-X = MASS::mvrnorm(n,rep(0,p),diag(p))
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
 out = multipletesting_correlation(X)
-which(abs(out$Tvec)>=out$thresh)
+#which(abs(out$Tvec)>=out$thresh)
+h=hist(out$Tvec,breaks = 100)
+xfit<-seq(min(out$Tvec),max(out$Tvec),length=100)
+yfit<-dnorm(xfit,mean=0,sd=1)
+yfit <- yfit*diff(h$mids[1:2])*length(out$Tvec)
+lines(xfit, yfit, col="blue", lwd=2)
+```
 
-X = MASS::mvrnorm(n,rep(0,p),diag(p))
+```{r}
+n = 30
+p = 100
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
 out = multipletesting_correlation(X)
-which(abs(out$Tvec)>=out$thresh)
+#which(abs(out$Tvec)>=out$thresh)
+h=hist(out$Tvec,breaks = 100)
+xfit<-seq(min(out$Tvec),max(out$Tvec),length=100)
+yfit<-dnorm(xfit,mean=0,sd=1)
+yfit <- yfit*diff(h$mids[1:2])*length(out$Tvec)
+lines(xfit, yfit, col="blue", lwd=2)
+```
+
+
+
+
+
+
+```{r}
+n = 300
+p = 1000
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+out = multipletesting_correlation(X)
+#which(abs(out$Tvec)>=out$thresh)
+h=hist(out$Tvec,breaks = 100)
+xfit<-seq(min(out$Tvec),max(out$Tvec),length=100)
+yfit<-dnorm(xfit,mean=0,sd=1)
+yfit <- yfit*diff(h$mids[1:2])*length(out$Tvec)
+lines(xfit, yfit, col="blue", lwd=2)
+```
+
+
+```{r}
+n = 300
+p = 5000
+X = matrix(rnorm(n*p),nrow=n,ncol=p)
+out = multipletesting_correlation(X)
+#which(abs(out$Tvec)>=out$thresh)
+h=hist(out$Tvec,breaks = 100)
+xfit<-seq(min(out$Tvec),max(out$Tvec),length=100)
+yfit<-dnorm(xfit,mean=0,sd=1)
+yfit <- yfit*diff(h$mids[1:2])*length(out$Tvec)
+lines(xfit, yfit, col="blue", lwd=2)
 ```
 
 

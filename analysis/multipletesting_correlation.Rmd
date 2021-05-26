@@ -47,7 +47,7 @@ multipletesting_correlation = function(X,alpha=0.05){
   
   # calc T statistics
   
-  Tmat = S*(n-p)/sqrt(S2+(2*p-n)*S^2)
+  Tmat = S*(n-1)/sqrt(S2+(2-n)*S^2)
   
   # find t
   bp = sqrt(4*log(p)-2*log(log(p)))

@@ -1,0 +1,132 @@
+---
+title: "gene correlations - gtex pancreas"
+author: "Dongyue Xie"
+date: "2021-05-18"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+We apply the [multiple testing procedure](multipletesting_correlation.html) to the pancreas data from gtex.
+
+```{r,eval=FALSE}
+gtex.pancreas = readRDS('data/pancreas/gtex_pancreas.rds')
+#rownames(gtex.pancreas) = gen_ann$Description
+#saveRDS(gtex.pancreas,'data/pancreas/gtex_pancreas.rds')
+# filter out some genes that have very low expression 
+gene_to_use <- apply(gtex.pancreas, MARGIN = 1, FUN = function( row, exp_th, min_sam ) {
+  sum( row > exp_th ) >= min_sam
+}, exp_th = 0.1, min_sam = 10 )
+gtex.pancreas = gtex.pancreas[gene_to_use,]
+
+```
+
+```{r,eval=FALSE}
+source('code/deconference_main.R')
+source('code/utils.R')
+source('code/wols.R')
+source('code/simulation/simu_studyX.R')
+
+# get common genes of our study
+xin_raw <- readRDS("data/pancreas/xin_raw.rds")
+cell_types = c('alpha', 'beta', 'delta', 'gamma')
+K = length(cell_types)
+rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+rm.indi.idx = which(xin_raw$individual%in%rm.indi)
+
+datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types, gene_thresh = 0.05,max_count_quantile = 0.95,w=1)
+
+inter.gene = intersect(datax.xin$genes,rownames(gtex.pancreas))
+
+gtex.pancreas = gtex.pancreas[match(inter.gene,rownames(gtex.pancreas)),]
+```
+
+Do multiple testing procedure
+
+```{r,eval=FALSE}
+library(Matrix)
+library(Rfast)
+#'@param X sample by condition matrix
+#'@param 
+
+multipletesting_correlation = function(X,alpha=0.05){
+  n = nrow(X)
+  p = ncol(X)
+  
+  X.center = scale(X,center=TRUE,scale=FALSE)
+  S = cova(X.center,center = TRUE)
+  
+  # calc S2
+  
+  S2 = 0
+  for(k in 1:n){
+    S2 = S2+(tcrossprod(X.center[k,]))^2
+  }
+  
+  # calc T statistics
+  
+  Tmat = S*(n-1)/sqrt(S2+(2-n)*S^2)
+  
+  # find t
+  bp = sqrt(4*log(p)-2*log(log(p)))
+  a = (p^2-p)/2
+  Tvec = Tmat[lower.tri(Tmat)]
+  t_vec = sort(abs(Tvec),decreasing = FALSE)
+  nt = length(t_vec)
+  for(t in 1:nt){
+    temp = 2*(1-pnorm(t_vec[t]))*a/(nt-t+1)
+    if(temp<=alpha){
+      break
+    }
+  }
+  if(t_vec[t]>bp){
+    thresh = sqrt(4*log(p))
+  }else{
+    thresh = t_vec[t]
+  }
+  list(S=S,
+       S2=S2,
+       Tmat=Tmat,
+       Tvec = Tvec,
+       thresh=thresh,
+       alpha=alpha)
+}
+
+```
+
+```{r,eval=FALSE}
+out = multipletesting_correlation(t(as.matrix(gtex.pancreas)),alpha=0.05)
+#saveRDS(out,file="output/geneCor_gtexpancreas.rds")
+out_log = multipletesting_correlation(log(t(as.matrix(gtex.pancreas))+0.01),alpha=0.05)
+saveRDS(out_log,file="output/geneCor_gtexpancreas_logtpm.rds")
+```
+
+
+results based on 8724 genes, 328 samples.
+
+```{r}
+out = readRDS("output/geneCor_gtexpancreas_tpm.rds")
+hist(out$Tvec,breaks = 100)
+rej.idx = which(abs(out$Tvec)>=out$thresh)
+p = nrow(out$S)
+length(rej.idx) / (p*(p+1)/2-p)
+rm(out)
+```
+
+Most of them are correlated.
+
+Now we take log of the TPM and re-do the calculations
+
+```{r}
+
+out_log = readRDS("output/geneCor_gtexpancreas_logtpm.rds")
+hist(out_log$Tvec,breaks = 100)
+rej.idx = which(abs(out_log$Tvec)>=out_log$thresh)
+p = nrow(out_log$S)
+length(rej.idx) / (p*(p+1)/2-p)
+```
+
+
+

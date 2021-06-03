@@ -1,0 +1,137 @@
+---
+title: "Correlated gene simulation"
+author: "Dongyue Xie"
+date: "2021-05-26"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+ploter.temp = function(results){
+
+  par(mfrow=c(2,2))
+
+  plot(results$coverage_adj_hc0,
+       ylim = range(c(results$coverage_adj_hc0,results$coverage_unadj_hc0,results$coverage_unadj_cv,1)),
+       col=2,ylab='coverage',xlab='coefs',main='coverage of p',type='b')
+  lines(results$coverage_unadj_hc0,type='b',pch=2,col=4)
+  lines(results$coverage_unadj_cv,type='b',pch=2,col=3)
+  abline(h=0.95,lty=2)
+
+  plot(results$coverage_diff_adj_hc0,ylim = range(c(results$coverage_diff_adj_hc0,results$coverage_diff_unadj_hc0,results$coverage_diff_unadj_cv,1)),
+       col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of difference')
+  lines(results$coverage_diff_unadj_hc0,type='b',pch=2,col=4)
+  lines(results$coverage_diff_unadj_cv,type='b',pch=2,col=3)
+  abline(h=0.95,lty=2)
+
+  #p_order = order(abs(results$p-results$p2))
+
+  plot(results$power_adj_hc0,ylim = range(c(results$power_adj_hc0,results$power_unadj_hc0,results$power_unadj_cv)),
+       col=2,ylab="power",xlab='',main='power')
+  lines(results$power_unadj_hc0,type='p',pch=2,col=4)
+  lines(results$power_unadj_cv,type='p',pch=2,col=3)
+  abline(h=0.05,lty=2)
+
+  legend('bottomright',c('adjusted_hc0','unadj_hc0',"unadj_const"),col=c(2,4,3),pch=c(1,2,2))
+
+  par(mfrow=c(1,1))
+
+}
+
+# make gene.R sparser
+#'@param n keep #top pairs correlations and set all others to 0
+#'@param R
+#'@param random If true, random draw n pairs to keep; otherwise, top n pairs to keep
+pruneR = function(R,n=nrow(R),random=F){
+
+  R.up = R
+  R.up[lower.tri(R.up)] = 0
+  diag(R.up) = 0
+  non0idx = which(R.up!=0)
+
+  if(random){
+    idx.temp = sample(non0idx,n)
+  }else{
+    r.non0 = R.up[non0idx]
+    t = quantile(abs(r.non0),1-n/length(non0idx))
+    idx.temp = non0idx[which(abs(r.non0)>t)]
+  }
+
+  R.up[-idx.temp] = 0
+  R = R.up+t(R.up)
+  diag(R) = 1
+  # make sure R is positive definite
+  min.ev = RSpectra::eigs(Matrix::Matrix(R,sparse = T),1,which = 'SA')$values
+  if(min.ev<0.1){
+    diag(R) = 1+abs(min.ev)+0.1
+    adj = sqrt(1+abs(min.ev)+0.1)
+    R = t(R/(rep(adj,nrow(R))))/rep(adj,nrow(R))
+  }
+
+  R
+
+}
+
+gene.R = readRDS('output/geneCorMat_gtexpancreas.rds')
+
+set.seed(12345)
+ii = sample(1:8724,1000)
+ii = sort(ii)
+gene.R.sub = gene.R[ii,ii]
+
+
+```
+
+100 pairs correlated
+
+```{r}
+set.seed(12345)
+R1 = pruneR(gene.R.sub,random = T,n=100)
+hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
+sum(R1[upper.tri(R1)]!=0)
+hist(rowSums(R1!=0)-1,breaks = 100)
+simu = readRDS('output/simu_corr_xin_G1000_corpair100.rds')
+ploter.temp(simu)
+```
+
+
+1000 pairs correlated
+
+```{r}
+set.seed(12345)
+R1 = pruneR(gene.R.sub,random = T,n=1000)
+hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
+sum(R1[upper.tri(R1)]!=0)
+hist(rowSums(R1!=0)-1,breaks = 100)
+simu = readRDS('output/simu_corr_xin_G1000_corpair1000.rds')
+ploter.temp(simu)
+```
+
+
+5000 pairs correlated
+
+```{r}
+set.seed(12345)
+R1 = pruneR(gene.R.sub,random = T,n=5000)
+hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
+sum(R1[upper.tri(R1)]!=0)
+hist(rowSums(R1!=0)-1,breaks = 100)
+simu = readRDS('output/simu_corr_xin_G1000_corpair5000.rds')
+ploter.temp(simu)
+```
+
+
+10000 pairs correlated
+
+```{r}
+set.seed(12345)
+R1 = pruneR(gene.R.sub,random = T,n=10000)
+hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
+sum(R1[upper.tri(R1)]!=0)
+hist(rowSums(R1!=0)-1,breaks = 100)
+simu = readRDS('output/simu_corr_xin_G1000_corpair10000.rds')
+ploter.temp(simu)
+```

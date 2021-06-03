@@ -87,7 +87,7 @@ gene.R.sub = gene.R[ii,ii]
 
 100 pairs correlated
 
-```{r}
+```{r,fig.width=8,fig.height=8}
 set.seed(12345)
 R1 = pruneR(gene.R.sub,random = T,n=100)
 hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
@@ -100,7 +100,7 @@ ploter.temp(simu)
 
 1000 pairs correlated
 
-```{r}
+```{r,fig.width=8,fig.height=8}
 set.seed(12345)
 R1 = pruneR(gene.R.sub,random = T,n=1000)
 hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
@@ -113,7 +113,7 @@ ploter.temp(simu)
 
 5000 pairs correlated
 
-```{r}
+```{r,fig.width=8,fig.height=8}
 set.seed(12345)
 R1 = pruneR(gene.R.sub,random = T,n=5000)
 hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
@@ -126,7 +126,7 @@ ploter.temp(simu)
 
 10000 pairs correlated
 
-```{r}
+```{r,fig.width=8,fig.height=8}
 set.seed(12345)
 R1 = pruneR(gene.R.sub,random = T,n=10000)
 hist(R1[upper.tri(R1)&R1!=0],breaks = 100)

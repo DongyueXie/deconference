@@ -1,12 +1,21 @@
-#'@param W variance, either a length G vector or a G*n_bulk matrix
-#'@param b beta for evaluating weights
+
+
+#'@param b beta for evaluating weights; if is null, use ols estimate.
 #'@param X reference matrix
 #'@param Y bulk data
-#'@param Vg variance
+#'@param Vg variance of X
 #'@param w.mode "equal", "res", "res+ref_var", "ref_var", "res+bvb", "bvb"
+#'@param adj.v whether adjust for Vg
+#'@param nu an adjustment when calculating weights
+#'@param nu.q if nu is null, use the nu.q quantile of w.mode
+#'@param marker name of marker genes
+#'@param scale.y whether scale y to sum to 100
+#'@param X_array individual X matrices from reference data
+#'@param hc.type calculate variance hc0, hc2,hc3, or const for constant variance
+#'@param use.weight.for.var whether use weights for calculating variance.
 
 wols = function(X,Y,
-                Vg=NULL,
+                Vg,
                 b=NULL,
                 w.mode = "res",
                 adj.v = FALSE,
@@ -14,7 +23,7 @@ wols = function(X,Y,
                 nu.q = 0.05,
                 marker = NULL,
                 scale.y = FALSE,
-                X_array = NULL,
+                X_array,
                 hc.type = 'hc0',
                 use.weight.for.var=TRUE
 ){
@@ -24,7 +33,7 @@ wols = function(X,Y,
     X = X[marker.x.idx,]
     marker.y.idx = match(marker,rownames(Y))
     marker.y.idx = marker.y.idx[complete.cases(marker.y.idx)]
-    Y = Y[marker.y.idx,]
+    Y = Y[marker.y.idx,,drop=FALSE]
     marker.vg.idx = match(marker,rownames(Vg))
     marker.vg.idx = marker.vg.idx[complete.cases(marker.vg.idx)]
     Vg = Vg[marker.vg.idx,]
@@ -40,7 +49,7 @@ wols = function(X,Y,
   rm0 = which(rowSums(X)==0)
   if(length(rm0)>0){
     X = X[-rm0,]
-    Y = Y[-rm0,]
+    Y = Y[-rm0,,drop=FALSE]
     Vg = Vg[-rm0,]
     X_array = X_array[-rm0,,]
   }
@@ -195,6 +204,7 @@ wols = function(X,Y,
     }
 
     A_inv = solve(A-V)
+    #browser()
     bhat = A_inv%*%t(Xw)%*%yw
     bhat = pmax(bhat,0)
 
@@ -227,6 +237,8 @@ wols = function(X,Y,
         Sigma_j = crossprod(c(ri)/sqrt(1-pmax(pmin(hi,1-1/n),0))*wj*Xj+Vbi)
       }else if(hc.type == 'hc3'){
         Sigma_j = crossprod(c(ri)/(1-pmax(pmin(hi,1-1/n),0))*wj*Xj+Vbi)
+      }else if(hc.type == 'const'){
+        Sigma_j = crossprod(Xj*wj*sqrt(sum(ri^2)/(n-K)))
       }
 
       covb = A_inv%*%Sigma_j%*%A_inv
@@ -271,6 +283,8 @@ wols = function(X,Y,
         Sigma_j = crossprod(c(ri)/sqrt(1-pmax(pmin(hi,1-1/n),0))*Xj+Vbi)
       }else if(hc.type == 'hc3'){
         Sigma_j = crossprod(c(ri)/(1-pmax(pmin(hi,1-1/n),0))*Xj+Vbi)
+      }else if(hc.type == 'const'){
+        Sigma_j = crossprod(Xj*sqrt(sum(ri^2)/(n-K)))
       }
 
       covb = A_inv%*%Sigma_j%*%A_inv
@@ -304,4 +318,17 @@ wols = function(X,Y,
        X_array=X_array,
        var.res=var.res,
        var.ref=var.ref)
+}
+
+
+
+#'@param design.mat output from scRef_multi_proc, in which X is the reference matrix.
+#'@param datax output from set_data_decon, in which y is the bulk data matrix.
+#'@param b betas, K by n_bulk.
+
+
+diag.cov = function(X){
+  #center X
+  X = scale(X,center=TRUE,scale=F)
+  colSums(X^2)/(nrow(X)-1)
 }

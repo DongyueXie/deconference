@@ -366,13 +366,15 @@ J_sum2one = function(b,K){
 estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            w=NULL,
                            hc.type='hc3',a=ncol(X)+4,
-                           correction=TRUE,S=NULL,
+                           correction=FALSE,
+                           S=NULL,
                            calc_cov=TRUE,
                            verbose=FALSE,
                            X_array = NULL,
                            ref_weights = TRUE,
                            beta.to.use = "equal",
-                           beta.true = NULL){
+                           beta.true = NULL,
+                           R=NULL){
 
   #browser()
 
@@ -465,9 +467,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   if(verbose){
     message("estimating proportions")
   }
-  Q = (A-V)/G
+  Q = (A-V)
   Qinv = solve(Q)
-  beta_tilde_hat = pmax(Qinv%*%t(Xw)%*%yw,0)/G
+  beta_tilde_hat = pmax(Qinv%*%t(Xw)%*%yw,0)
   ## Fuller's correction
   if(correction){
 
@@ -504,7 +506,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   #browser()
 
   Q_inv = kronecker(diag(nb),Qinv)
-  H = t(t(X%*%Qinv%*%t(X))*w)/G
+  #H = t(t(X%*%Qinv%*%t(X))*w)/G
+  h = rowSums((X%*%Qinv)*X)*w
   # Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
   # #Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
   # Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
@@ -580,8 +583,12 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   #   }
   # }
   # Sigma = (Sigma+t(Sigma)-Sigma_ii)/G/G
-  Sigma = get_SIGMA(y=y,X=X,w=w,beta=beta_tilde_hat,V=Vw,H=H,nb=nb,G=G,K=K,lambda=lambda,verbose=verbose,calc_cov=calc_cov,hc.type=hc.type)
+  Sigma = get_SIGMA(y=y,X=X,w=w,beta=beta_tilde_hat,V=Vw,h=h,nb=nb,
+                    G=G,K=K,lambda=lambda,verbose=verbose,
+                    calc_cov=calc_cov,hc.type=hc.type,
+                    R=R)
   covb = Q_inv%*%Sigma%*%Q_inv
+  #browser()
 
   beta_tilde_hat = cbind(beta_tilde_hat)
 
@@ -625,8 +632,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
               Q=Q,
               V=V,
               A=A,
-              #h=h,
-              H=H,
+              h=h,
+              #H=H,
               lambda=lambda0,
               input = input))
 
@@ -635,7 +642,11 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 
 
-get_SIGMA = function(y,X,w,beta,V,H,nb,G,K,lambda,verbose,calc_cov,hc.type){
+
+
+
+#'@description allow correlations among samples.
+get_SIGMA = function(y,X,w,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
 
 
 
@@ -643,7 +654,16 @@ get_SIGMA = function(y,X,w,beta,V,H,nb,G,K,lambda,verbose,calc_cov,hc.type){
   #Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
   Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
 
+  res = y - X%*%beta
+
   #browser()
+
+  if(!is.null(R)){
+    cor.idx = which(R!=0,arr.ind = T)
+    cor.idx = t(apply(cor.idx,1,sort))
+    cor.idx = cor.idx[!duplicated(cor.idx),]
+    cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
+  }
 
 
   if(verbose){
@@ -651,8 +671,6 @@ get_SIGMA = function(y,X,w,beta,V,H,nb,G,K,lambda,verbose,calc_cov,hc.type){
   }
 
 
-
-  h = diag(H)
   h = pmax(pmin(h,1-1/G),0)
   for(i in 1:nb){
 
@@ -666,7 +684,7 @@ get_SIGMA = function(y,X,w,beta,V,H,nb,G,K,lambda,verbose,calc_cov,hc.type){
     if(ncol(V)==K){
       Vbi = (V)%*%diag(c(beta[,i]))*lambda
     }
-    ri = y[,i] - H%*%y[,i]
+    ri = res[,i]
 
 
     for(j in i:nb){
@@ -679,6 +697,13 @@ get_SIGMA = function(y,X,w,beta,V,H,nb,G,K,lambda,verbose,calc_cov,hc.type){
           Sigma_ij = crossprod(c(ri)/sqrt(1-h)*w*X+Vbi)
         }else if(hc.type == 'hc3'){
           Sigma_ij = crossprod(c(ri)/(1-h)*w*X+Vbi)
+        }
+
+        if(!is.null(R)){
+          l1.temp = (c(ri)*w*X+Vbi)[cor.idx[,1],,drop=FALSE]
+          l2.temp = (c(ri)*w*X+Vbi)[cor.idx[,2],,drop=FALSE]
+          Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
+
         }
 
         Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
@@ -694,13 +719,19 @@ get_SIGMA = function(y,X,w,beta,V,H,nb,G,K,lambda,verbose,calc_cov,hc.type){
             Vbj = (V)%*%diag(c(beta[,j]))*lambda
           }
 
-          rj = y[,j] - H%*%y[,j]
+          rj = res[,j]
           if(hc.type == 'hc0'){
             Sigma_ij = crossprod(c(ri)*w*X+Vbi,c(rj)*w*X+Vbj)
           }else if(hc.type == 'hc2'){
             Sigma_ij = crossprod(c(ri)/sqrt(1-h)*w*X+Vbi,c(rj)/sqrt(1-h)*w*X+Vbj)
           }else if(hc.type == 'hc3'){
             Sigma_ij = crossprod(c(ri)/(1-h)*w*X+Vbi,c(rj)/(1-h)*w*X+Vbj)
+          }
+
+          if(!is.null(R)){
+            Sigma_ij = Sigma_ij
+            + crossprod((c(ri)*w*X+Vbi)[cor.idx[,1],,drop=FALSE],(c(rj)*w*X+Vbj)[cor.idx[,2],,drop=FALSE])
+            + crossprod((c(ri)*w*X+Vbi)[cor.idx[,2],,drop=FALSE],(c(rj)*w*X+Vbj)[cor.idx[,1],,drop=FALSE])
           }
 
         }
@@ -711,11 +742,13 @@ get_SIGMA = function(y,X,w,beta,V,H,nb,G,K,lambda,verbose,calc_cov,hc.type){
 
     }
   }
-  Sigma = (Sigma+t(Sigma)-Sigma_ii)/G/G
+  Sigma = (Sigma+t(Sigma)-Sigma_ii)
 
   Sigma
 
 }
+
+
 
 
 

@@ -42,28 +42,31 @@ ploter_multibulk = function(results){
 
   plot(log(results$mse_adj),type='p',ylim = range(log(c(results$mse_adj,results$mse_unadj))),col=2,ylab='log(mse)',xlab='coefs',main='mse')
   lines(log(results$mse_unadj),type='p',pch=2,col=4)
+  legend('bottomright',c('adjusted','unadj'),col=c(2,4),pch=c(1,2))
 
 
-  plot(results$covergae_adj,ylim = range(c(results$covergae_adj,results$covergae_unadj,results$covergae_unadj_cv,1)),
-       col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of p')
-  lines(results$covergae_unadj,type='b',pch=2,col=4)
-  lines(results$covergae_unadj_cv,type='b',pch=2,col=3)
+  plot(results$coverage_adj_hc0,
+       ylim = range(c(results$coverage_adj_hc0,results$coverage_unadj_hc0,results$coverage_unadj_cv,1)),
+       col=2,ylab='coverage',xlab='coefs',main='coverage of p',type='b')
+  lines(results$coverage_unadj_hc0,type='b',pch=2,col=4)
+  lines(results$coverage_unadj_cv,type='b',pch=2,col=3)
   abline(h=0.95,lty=2)
 
-  plot(results$covergae_diff_adj,ylim = range(c(results$covergae_diff_adj,results$covergae_diff_unadj,results$covergae_diff_unadj_cv,1)),
+  plot(results$coverage_diff_adj_hc0,ylim = range(c(results$coverage_diff_adj_hc0,results$coverage_diff_unadj_hc0,results$coverage_diff_unadj_cv,1)),
        col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of difference')
-  lines(results$covergae_diff_unadj,type='b',pch=2,col=4)
-  lines(results$covergae_diff_unadj_cv,type='b',pch=2,col=3)
+  lines(results$coverage_diff_unadj_hc0,type='b',pch=2,col=4)
+  lines(results$coverage_diff_unadj_cv,type='b',pch=2,col=3)
   abline(h=0.95,lty=2)
 
-  p_order = order(abs(results$p-results$p2))
+  #p_order = order(abs(results$p-results$p2))
 
-  plot(results$power_adj[p_order],ylim = range(c(results$power_adj,results$power_unadj,results$power_unadj_cv)),
+  plot(results$power_adj_hc0,ylim = range(c(results$power_adj_hc0,results$power_unadj_hc0,results$power_unadj_cv)),
        col=2,ylab="power",xlab='',main='power')
-  lines(results$power_unadj[p_order],type='p',pch=2,col=4)
-  lines(results$power_unadj_cv[p_order],type='p',pch=2,col=3)
+  lines(results$power_unadj_hc0,type='p',pch=2,col=4)
+  lines(results$power_unadj_cv,type='p',pch=2,col=3)
+  abline(h=0.05,lty=2)
 
-  legend('topleft',c('adjusted','unadj_hc0',"unadj_lm"),col=c(2,4,3),pch=c(1,2,2))
+  legend('bottomright',c('adjusted_hc0','unadj_hc0',"unadj_const"),col=c(2,4,3),pch=c(1,2,2))
 
   par(mfrow=c(1,1))
 

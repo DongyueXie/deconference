@@ -29,7 +29,7 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
   yw = cbind(y*sqrt(w))
   A = t(Xw)%*%Xw
   A_inv = solve(A)
-  Hat_mat = Xw%*%A_inv%*%t(Xw)
+  #Hat_mat = Xw%*%A_inv%*%t(Xw)
   beta_tilde_hat = pmax(A_inv%*%t(Xw)%*%yw,0)
   beta_tilde_hat = cbind(beta_tilde_hat)
   beta_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
@@ -40,7 +40,9 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
   }
 
   # perform ols estimator of variance
-  resid_var = t(yw)%*%(diag(G)-Hat_mat)%*%yw/(G-K)
+  #resid_var = t(yw)%*%(diag(G)-Hat_mat)%*%yw/(G-K)
+  res = y - X%*%beta_tilde_hat
+  resid_var = crossprod(y,res)/(G-K)
   covb = kronecker(resid_var,A_inv)
 
 
@@ -162,24 +164,30 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
   for(i in 1:nb){
     #Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = A_inv
 
-    Hi = t(t(X%*%A_inv%*%t(X))*w)
-    hi = diag(Hi)
-    ri = y[,i] - Hi%*%y[,i]
+    #Hi = t(t(X%*%A_inv%*%t(X))*w)
+    #hi = diag(Hi)
+
+
+    h = rowSums((X%*%A_inv)*X)*w
+    ri = res[,i]
 
     for(j in i:nb){
 
       if(j==i){
 
-        Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(hi,1-1/G),0))*w*X)
+        Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(h,1-1/G),0))*w*X)
 
         Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
       }else{
-        Hj = t(t(X%*%A_inv%*%t(X))*w)
-        hj = diag(Hj)
-        rj = y[,j] - Hi%*%y[,j]
+        #Hj = t(t(X%*%A_inv%*%t(X))*w)
+        #hj = diag(Hj)
+        #rj = y[,j] - Hi%*%y[,j]
 
-        Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(hi,1-1/G),0))*w*X,
-                             c(rj)/(1-pmax(pmin(hj,1-1/G),0))*w*X)
+        #hj = rowSums((X%*%A_inv)*X)*w
+        rj = res[,j]
+
+        Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(h,1-1/G),0))*w*X,
+                             c(rj)/(1-pmax(pmin(h,1-1/G),0))*w*X)
       }
 
 

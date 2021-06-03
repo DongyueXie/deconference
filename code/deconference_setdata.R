@@ -10,7 +10,7 @@ set_data_decon = function(y=NULL,Y,
     common_genes = intersect(rownames(y),rownames(Y))
     y_geneidx = match(common_genes,rownames(y))
     Y_geneidx = match(common_genes,rownames(Y))
-    y = y[y_geneidx,]
+    y = y[y_geneidx,,drop=FALSE]
     Y = Y[Y_geneidx,]
   }
 
@@ -23,7 +23,7 @@ set_data_decon = function(y=NULL,Y,
     if(!is.null(y)){
       marker_gene = intersect(marker_gene,common_genes)
       gene_idx = match(marker_gene,rownames(y))
-      y = y[gene_idx,]
+      y = y[gene_idx,,drop=FALSE]
     }
     gene_idx = match(marker_gene,rownames(Y))
     # omit.idx = which(is.na(gene_idx))
@@ -61,7 +61,7 @@ set_data_decon = function(y=NULL,Y,
 
   }else{
 
-    if(is.null(cell_type_idx)&is.null(indi_idx)&class(Y) == "SingleCellExperiment"){
+    if(is.null(cell_type_idx)&is.null(indi_idx)&class(Y)[1] == "SingleCellExperiment"){
       cell_type_idx = Y$cell_type
       indi_idx = Y$individual
       Y = counts(Y)
@@ -127,7 +127,7 @@ set_data_decon = function(y=NULL,Y,
           w = w[-rm.gene]
         }
         if(!is.null(y)){
-          y = y[-rm.gene,]
+          y = y[-rm.gene,,drop=FALSE]
         }
       }
     }
@@ -205,6 +205,7 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types
   S_var = c()
   # need to estimate var(X)
 
+  tau2.est = matrix(nrow=G,ncol=K)
 
   #browser()
   for(k in 1:K){
@@ -250,16 +251,19 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types
         stop('estimator should be either separate or aggregate')
       }
 
+      tau2.est[,k] = pmax(Nk*Vg[,k]-X[,k]*sum(1/colSums(Yk))/Nk,0)
     }
+
   }
 
   colnames(X) = cell_types
   colnames(Vg) = cell_types
 
+
   if(scale.x){
-    return(list(X=X*G,Vg=Vg*G^2,S=S,S_var=S_var,Sigma=NULL))
+    return(list(X=X*G,Vg=Vg*G^2,S=S,S_var=S_var,Sigma=NULL,tau2.est=tau2.est*G^2))
   }else{
-    return(list(X=X,Vg=Vg,S=S,S_var=S_var,Sigma=NULL))
+    return(list(X=X,Vg=Vg,S=S,S_var=S_var,Sigma=NULL,tau2.est=tau2.est))
   }
 
 }
@@ -269,7 +273,7 @@ scRef1_proc = function(Y,cell_type_idx,estimator='separate',tau2=NULL,cell_types
 #'@param eps a gene might have no expression in any cells of an individual so it's relative expression's standard error will be (0+eps)
 #'@param est_sigma2 Indicate whether estiamte sigma^2, the variance of gene relative expresison across individuals. If yes, a PM method will be used; If not, will directly use sample variance-covariance matrix(if diag_cov, then use the diagnal of sample cov).
 #'@param meta_var variance of hat{mu}, either 'plug_in' or 'adjust'
-#'@param meta_mode 'universal': one sigma^2 for all X;'by_celltype': one sigma^2 for each cell type; 'local': one sigma^2 for each gene and cell type; 'smooth': fit a local polynomial to mean-var per cell type.
+#'@param meta_mode 'universal': one sigma^2 for all X;'by_celltype': one sigma^2 for each cell type; 'local': one sigma^2 for each gene and cell type; 'naive'
 #'@return design matrix X and its variance matrix Vg
 scRef_multi_proc = function(Y,cell_type_idx,indi_idx,
                             estimator='separate',
@@ -352,7 +356,7 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,
 
   if(!is.null(sigma2)){
     X = matrix(nrow = G,ncol = K)
-    Vg = matrix(nrow = G,ncol = K)
+    V = matrix(nrow = G,ncol = K)
 
     for(g in 1:G){
       for(k in 1:K){
@@ -361,7 +365,7 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,
         #browser()
         pm_out = meta_analysis(x,v,sigma2=sigma2[g,k],meta_var='plug_in')
         X[g,k] = pm_out$mu_hat
-        Vg[g,k] = pm_out$var_mu_hat
+        V[g,k] = pm_out$var_mu_hat
       }
     }
     Sigma = sigma2
@@ -493,19 +497,21 @@ scRef_multi_proc = function(Y,cell_type_idx,indi_idx,
 
   # ## method 2: glm
   #
-  S_mat_dataframe = data.frame(y = c(S_mat),
-                               indi = factor(rep(indis,ncol(S_mat))),
-                               type = factor(rep(cell_types,each = nrow(S_mat)),levels = cell_types))
-  fit = try(MASS::glm.nb(y~.,S_mat_dataframe),silent = TRUE)
-  if(class(fit)[1]=='try-error'){
-
-    fit = glm(y~.,S_mat_dataframe,family = 'poisson')
-
-  }
+  # S_mat_dataframe = data.frame(y = c(S_mat),
+  #                              indi = factor(rep(indis,ncol(S_mat))),
+  #                              type = factor(rep(cell_types,each = nrow(S_mat)),levels = cell_types))
+  # fit = try(MASS::glm.nb(y~.,S_mat_dataframe),silent = TRUE)
+  # if(class(fit)[1]=='try-error'){
+  #
+  #   fit = glm(y~.,S_mat_dataframe,family = 'poisson')
+  #
+  # }
+  #
+  # S_glm = S
+  # S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
+  # names(S_glm) = cell_types
 
   S_glm = S
-  S_glm[which(!is.nan(S))] = c(1,exp(fit$coefficients[-c(1:nrow(S_mat))]))
-  names(S_glm) = cell_types
 
   return(list(X=X,Vg=V,Sigma=Sigma,
               S=S,S_mat=S_mat,S_glm=S_glm,

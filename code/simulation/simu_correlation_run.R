@@ -62,10 +62,10 @@ pruneR = function(R,n=nrow(R),random=F){
   R = R.up+t(R.up)
   diag(R) = 1
   # make sure R is positive definite
-  min.ev = RSpectra::eigs(Matrix(R,sparse = T),1,which = 'SA')$values
+  min.ev = RSpectra::eigs(Matrix::Matrix(R,sparse = T),1,which = 'SA')$values
   if(min.ev<0.1){
     diag(R) = 1+abs(min.ev)+0.1
-    adj = sqrt(abs(min.ev)+0.1)
+    adj = sqrt(1+abs(min.ev)+0.1)
     R = t(R/(rep(adj,nrow(R))))/rep(adj,nrow(R))
   }
 
@@ -73,11 +73,20 @@ pruneR = function(R,n=nrow(R),random=F){
 
 }
 
-set.seed(12345)
-R1 = pruneR(gene.R,random = T)
 
-hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
-sum(R1[upper.tri(R1)]!=0)/(nrow(R1)*(nrow(R1)+1)/2-nrow(R1))
+## 8724 is too large, sub-sample 1000 genes
+
+set.seed(12345)
+ii = sample(1:8724,1000)
+ii = sort(ii)
+ref.sub = ref[ii,]
+sigma2.sub=sigma2[ii,]
+gene.R.sub = gene.R[ii,ii]
+
+
+#hist(R1[upper.tri(R1)&R1!=0],breaks = 100)
+#sum(R1[upper.tri(R1)]!=0)/(nrow(R1)*(nrow(R1)+1)/2-nrow(R1))
+#RSpectra::eigs(Matrix::Matrix(R1,sparse = T),1,which = 'SA')$values
 
 K = 4
 #set.seed(12345)
@@ -95,10 +104,40 @@ b2 = c(0.1,0.2,0.5,0.2)
 nb = 10
 b.m = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
 set.seed(12345)
-simu = simu_corr_simple(ref,b.m,nreps=10,sigma2=sigma2,R=R1,n_indi = 10,verbose = F,printevery = 1)
-saveRDS(simu,file='output/simu_twosample_xin_nb10.rds')
+R1 = pruneR(gene.R.sub,random = T,n=1000)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=R1,n_indi = 10,verbose = F,printevery = 1)
+
+
+
+saveRDS(simu,file='output/simu_corr_xin_G1000_corpair1000.rds')
 rm(simu)
 
+
+set.seed(12345)
+R1 = pruneR(gene.R.sub,random = T,n=5000)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=R1,n_indi = 10,verbose = F,printevery = 1)
+
+
+
+saveRDS(simu,file='output/simu_corr_xin_G1000_corpair5000.rds')
+rm(simu)
+
+set.seed(12345)
+R1 = pruneR(gene.R.sub,random = T,n=10000)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=R1,n_indi = 10,verbose = F,printevery = 1)
+
+
+
+saveRDS(simu,file='output/simu_corr_xin_G1000_corpair10000.rds')
+rm(simu)
+
+
+#######
+#simu.check = simu_twosample(ref.sub,b.m,nreps=10,tau2=sigma2.sub/100,sigma2=sigma2.sub,sc_lib_size = 0.1,n_indi = 10,nk=100,verbose = F,printevery = 1)
+######
 
 
 

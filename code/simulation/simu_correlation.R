@@ -98,19 +98,27 @@ simu_correlation = function(ref,b,
 
     # generate bulk data
 
-    mb = matrix(nrow=G,ncol=n_bulk)
-    for(i in 1:n_bulk){
 
-     X_b = matrix(nrow=G,ncol=K)
-     for(k in 1:K){
-       X_b[,k] = sim_MLN(1,ref[,k],sqrt(sigma2[,k]),R)
-     }
-
-      mb[,i] = X_b%*%b[,i]
-
-
+    mb = 0
+    for(k in 1:K){
+      mb = mb + b[k,]*sim_MLN(n_bulk,ref[,k],sqrt(sigma2[,k]),R)
     }
+    mb = t(mb)
     thetab = apply(mb,2,function(z){z/sum(z)})
+
+    # mb = matrix(nrow=G,ncol=n_bulk)
+    # for(i in 1:n_bulk){
+    #
+    #  X_b = matrix(nrow=G,ncol=K)
+    #  for(k in 1:K){
+    #    X_b[,k] = sim_MLN(1,ref[,k],sqrt(sigma2[,k]),R)
+    #  }
+    #
+    #   mb[,i] = X_b%*%b[,i]
+    #
+    #
+    # }
+    # thetab = apply(mb,2,function(z){z/sum(z)})
 
 
     y = matrix(rpois(G*n_bulk,bulk_lib_size*G*thetab),nrow=G)
@@ -470,19 +478,26 @@ simu_corr_simple = function(ref,b,
 
     # generate bulk data
 
-    mb = matrix(nrow=G,ncol=n_bulk)
-    for(i in 1:n_bulk){
-
-      X_b = matrix(nrow=G,ncol=K)
-      for(k in 1:K){
-        X_b[,k] = sim_MLN(1,ref[,k],sqrt(sigma2[,k]),R)
-      }
-
-      mb[,i] = X_b%*%b[,i]
-
-
+    mb = 0
+    for(k in 1:K){
+      mb = mb + b[k,]*sim_MLN(n_bulk,ref[,k],sqrt(sigma2[,k]),R)
     }
+    mb = t(mb)
     thetab = apply(mb,2,function(z){z/sum(z)})
+
+    # mb = matrix(nrow=G,ncol=n_bulk)
+    # for(i in 1:n_bulk){
+    #
+    #   X_b = matrix(nrow=G,ncol=K)
+    #   for(k in 1:K){
+    #     X_b[,k] = sim_MLN(1,ref[,k],sqrt(sigma2[,k]),R)
+    #   }
+    #
+    #   mb[,i] = X_b%*%b[,i]
+    #
+    #
+    # }
+    # thetab = apply(mb,2,function(z){z/sum(z)})
 
 
     y = matrix(rpois(G*n_bulk,bulk_lib_size*G*thetab),nrow=G)
@@ -496,16 +511,22 @@ simu_corr_simple = function(ref,b,
     ## generate reference matrices X
 
     X_array = array(dim=c(G,K,n_indi))
-    for(i in 1:n_indi){
 
-      X_i = matrix(nrow=G,ncol=K)
-      for(k in 1:K){
-        X_i[,k] = sim_MLN(1,ref[,k],sqrt(sigma2[,k]),R)
-      }
-
-      X_array[,,i] = X_i
-
+    for(k in 1:K){
+      x_k = sim_MLN(n_indi,ref[,k],sqrt(sigma2[,k]),R)
+      X_array[,k,] = t(x_k)
     }
+
+    # for(i in 1:n_indi){
+    #
+    #   X_i = matrix(nrow=G,ncol=K)
+    #   for(k in 1:K){
+    #     X_i[,k] = sim_MLN(1,ref[,k],sqrt(sigma2[,k]),R)
+    #   }
+    #
+    #   X_array[,,i] = X_i
+    #
+    # }
 
 
 

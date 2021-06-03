@@ -700,6 +700,7 @@ get_SIGMA = function(y,X,w,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
         }
 
         if(!is.null(R)){
+
           l1.temp = (c(ri)*w*X+Vbi)[cor.idx[,1],,drop=FALSE]
           l2.temp = (c(ri)*w*X+Vbi)[cor.idx[,2],,drop=FALSE]
           Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)

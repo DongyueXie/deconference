@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreece0035a9ffe68f718980ca974d2cab0fffe1e129targetblankce0035aa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/ce0035a9ffe68f718980ca974d2cab0fffe1e129" target="_blank">ce0035a</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree9685c0e785358dea645b253ace19ea72573dfd70targetblank9685c0ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/9685c0e785358dea645b253ace19ea72573dfd70" target="_blank">9685c0e</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreece0035a9ffe68f718980ca974d2cab0fffe1e129targetblankce0035aa" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree9685c0e785358dea645b253ace19ea72573dfd70targetblank9685c0ea" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/ce0035a9ffe68f718980ca974d2cab0fffe1e129" target="_blank">ce0035a</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/9685c0e785358dea645b253ace19ea72573dfd70" target="_blank">9685c0e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -602,6 +602,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/9685c0e785358dea645b253ace19ea72573dfd70/analysis/simu_correlation.Rmd" target="_blank">9685c0e</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+<td>
+wflow_publish(“analysis/simu_correlation.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/simu_correlation.html" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -703,50 +737,494 @@ gene.R.sub = gene.R[ii,ii]</code></pre>
 <pre class="r"><code>set.seed(12345)
 R1 = pruneR(gene.R.sub,random = T,n=100)
 hist(R1[upper.tri(R1)&amp;R1!=0],breaks = 100)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-2-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-2-1.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>sum(R1[upper.tri(R1)]!=0)</code></pre>
 <pre><code>[1] 100</code></pre>
 <pre class="r"><code>hist(rowSums(R1!=0)-1,breaks = 100)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-2-2.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-2">
+Past versions of unnamed-chunk-2-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-2-2.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>simu = readRDS(&#39;output/simu_corr_xin_G1000_corpair100.rds&#39;)
 ploter.temp(simu)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-2-3.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-3">
+Past versions of unnamed-chunk-2-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-2-3.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>1000 pairs correlated</p>
 <pre class="r"><code>set.seed(12345)
 R1 = pruneR(gene.R.sub,random = T,n=1000)
 hist(R1[upper.tri(R1)&amp;R1!=0],breaks = 100)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-3-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-3-1.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>sum(R1[upper.tri(R1)]!=0)</code></pre>
 <pre><code>[1] 1000</code></pre>
 <pre class="r"><code>hist(rowSums(R1!=0)-1,breaks = 100)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-3-2.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-2">
+Past versions of unnamed-chunk-3-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-3-2.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>simu = readRDS(&#39;output/simu_corr_xin_G1000_corpair1000.rds&#39;)
 ploter.temp(simu)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-3-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-3-3.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-3">
+Past versions of unnamed-chunk-3-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-3-3.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>5000 pairs correlated</p>
 <pre class="r"><code>set.seed(12345)
 R1 = pruneR(gene.R.sub,random = T,n=5000)
 hist(R1[upper.tri(R1)&amp;R1!=0],breaks = 100)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-4-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-4-1.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>sum(R1[upper.tri(R1)]!=0)</code></pre>
 <pre><code>[1] 5000</code></pre>
 <pre class="r"><code>hist(rowSums(R1!=0)-1,breaks = 100)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-4-2.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-2">
+Past versions of unnamed-chunk-4-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-4-2.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>simu = readRDS(&#39;output/simu_corr_xin_G1000_corpair5000.rds&#39;)
 ploter.temp(simu)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-4-3.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-3">
+Past versions of unnamed-chunk-4-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-4-3.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>10000 pairs correlated</p>
 <pre class="r"><code>set.seed(12345)
 R1 = pruneR(gene.R.sub,random = T,n=10000)
 hist(R1[upper.tri(R1)&amp;R1!=0],breaks = 100)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-5-1.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>sum(R1[upper.tri(R1)]!=0)</code></pre>
 <pre><code>[1] 10000</code></pre>
 <pre class="r"><code>hist(rowSums(R1!=0)-1,breaks = 100)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-5-2.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-2">
+Past versions of unnamed-chunk-5-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-5-2.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>simu = readRDS(&#39;output/simu_corr_xin_G1000_corpair10000.rds&#39;)
 ploter.temp(simu)</code></pre>
-<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation.Rmd/unnamed-chunk-5-3.png" width="768" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-3">
+Past versions of unnamed-chunk-5-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3c3ff1a2b7e0b507833a15cedc28a005ae8e92ff/docs/figure/simu_correlation.Rmd/unnamed-chunk-5-3.png" target="_blank">3c3ff1a</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-06-02
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

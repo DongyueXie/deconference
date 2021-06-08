@@ -1,0 +1,104 @@
+---
+title: "neuron data"
+author: "DongyueXie"
+date: "2021-06-03"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+
+## Introduction
+
+Take a look at the neuron data set from [Jerber et al](https://www.nature.com/articles/s41588-021-00801-6).
+
+The data set has more than 250k cells from 174 individuals, and 37k genes. Here we obtain the pseudo-bulk data by aggregating cells for each individual.
+
+```{r,eval=FALSE}
+library(anndata)
+day30 = anndata::read_h5ad('data/day30.h5')
+
+table(day30$obs$celltype)
+
+length(table(day30$obs$donor_id))
+
+dim(day30$raw)
+
+
+X = (day30$raw$X)
+cell_ann = day30$obs
+gene_ann = day30$var
+rm(day30)
+```
+
+
+
+We will use the raw data
+
+
+## Pseudobulk data
+
+Merge all cells per individual and get Pseudo-bulk
+
+```{r,eval=FALSE}
+ngene = 32738
+donor = unique(cell_ann$donor_id)
+day30bulk = matrix(nrow = ngene,ncol=length(donor))
+rownames(day30bulk) = rownames(gene_ann)
+colnames(day30bulk) = donor
+
+for(i in 1:length(donor)){
+  print(i)
+  donor.idx = which(cell_ann$donor_id==donor[i])
+  day30bulk[,i] = Matrix::colSums(X[donor.idx,])
+  saveRDS(day30bulk,file='data/day30bulk.rds')
+}
+
+# day30bulk = lapply(1:length(donor),function(i){
+#   print(i)
+#   donor.idx = which(day30$obs$donor_id==donor[i])
+#   donor.data = day30$raw[donor.idx,]
+#   # merge all cells
+#   Matrix::colSums(donor.data)
+# })
+# day30bulk = do.call(cbind,day30bulk)
+rm(day30bulk)
+```
+
+
+## Per cell bulk data
+
+```{r,eval=FALSE}
+celltypes = unique(cell_ann$celltype)
+
+for(k in 1:length(celltypes)){
+  
+  cell.idx = which(cell_ann$celltype==celltypes[k])
+  X.k = X[cell.idx,]
+  cell.k.ann = cell_ann[cell.idx,]
+  bulkmat = matrix(nrow=ngene,ncol = length(donor))
+  rownames(bulkmat) = rownames(gene_ann)
+  colnames(bulkmat) = donor
+  
+  for(i in 1:length(donor)){
+    
+    print(paste('cell type',k,'indi',i))
+    
+    donor.idx = which(cell.k.ann$donor_id==donor[i])
+    if(length(donor.idx)>0){
+      bulkmat[,i] = Matrix::colSums(X.k[donor.idx,,drop=FALSE])
+      saveRDS(bulkmat,file=paste('data/',celltypes[k],'bulk.rds',sep=''))
+    }
+
+  }
+
+}
+
+```
+
+
+
+
+

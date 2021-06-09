@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree464c0100878c31eaad90f1768726dfaf5879664ctargetblank464c010a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/464c0100878c31eaad90f1768726dfaf5879664c" target="_blank">464c010</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree052ee96313b05d28e67314f9b36e9d0430fa6592targetblank052ee96a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/052ee96313b05d28e67314f9b36e9d0430fa6592" target="_blank">052ee96</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree464c0100878c31eaad90f1768726dfaf5879664ctargetblank464c010a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree052ee96313b05d28e67314f9b36e9d0430fa6592targetblank052ee96a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/464c0100878c31eaad90f1768726dfaf5879664c" target="_blank">464c010</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/052ee96313b05d28e67314f9b36e9d0430fa6592" target="_blank">052ee96</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -533,7 +533,6 @@ Note that you need to be careful to ensure that all relevant files for the analy
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
-    Ignored:    analysis/figure/
 
 Untracked files:
     Untracked:  data/DAbulk.rds
@@ -543,11 +542,18 @@ Untracked files:
     Untracked:  data/Sertbulk.rds
     Untracked:  data/U_Neur1bulk.rds
     Untracked:  data/U_Neur2bulk.rds
+    Untracked:  data/U_Neurbulk.rds
     Untracked:  data/day30.h5
     Untracked:  data/day30.h5.zip
     Untracked:  data/day30bulk.rds
     Untracked:  data/day30sce.rds
     Untracked:  data/pancreas/
+    Untracked:  output/geneCor_DABulk_cpm.rds
+    Untracked:  output/geneCor_Epen1Bulk_cpm.rds
+    Untracked:  output/geneCor_FPPBulk_cpm.rds
+    Untracked:  output/geneCor_P_FPPBulk_cpm.rds
+    Untracked:  output/geneCor_SertBulk_cpm.rds
+    Untracked:  output/geneCor_U_NeurBulk_cpm.rds
     Untracked:  output/geneCor_gtexpancreas_tpm.rds
     Untracked:  output/geneCor_neuronBulk_cpm.rds
     Untracked:  renv.lock
@@ -593,6 +599,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/052ee96313b05d28e67314f9b36e9d0430fa6592/analysis/neuron_data_geneCor.Rmd" target="_blank">052ee96</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-06-08
+</td>
+<td>
+wflow_publish(“analysis/neuron_data_geneCor.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/06bdd7e2942b2dd1256fbe70903f1a03c776e74a/docs/neuron_data_geneCor.html" target="_blank">06bdd7e</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-06-08
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -701,6 +741,91 @@ p = nrow(out$S)
 length(rej.idx) / (p*(p+1)/2-p)</code></pre>
 <pre><code>[1] 0.1162224</code></pre>
 <pre class="r"><code>rm(out)</code></pre>
+</div>
+<div id="per-cell-type" class="section level2">
+<h2>Per cell type</h2>
+<pre class="r"><code>celltypes = c(&#39;DA&#39;,&#39;Epen1&#39;,&quot;Sert&quot;,&quot;FPP&quot;,&quot;P_FPP&quot;,&quot;U_Neur&quot;)
+
+# obtain gene to use
+
+gene_to_use = 1
+
+for(k in 1:length(celltypes)){
+  cellname = celltypes[k]
+  print(paste(&#39;looking at cell type:&#39;, cellname))
+  file.path = paste(&#39;data/&#39;,cellname,&#39;bulk.rds&#39;,sep=&#39;&#39;)
+  
+  bulk = readRDS(file.path)
+  # remove NA
+  bulk = bulk[,-which(is.na(colsums(bulk)))]
+  gene_to_use = gene_to_use * apply(bulk, MARGIN = 1, FUN = function( row, exp_th, min_sam ) {
+    sum( row &gt; exp_th ) &gt;= min_sam
+  }, exp_th = 0.1, min_sam = 60 )
+}
+
+sum(gene_to_use)
+gene_to_use = which(gene_to_use==1)
+
+for(k in 1:length(celltypes)){
+  cellname = celltypes[k]
+  print(paste(&#39;looking at cell type:&#39;, cellname))
+  file.path = paste(&#39;data/&#39;,cellname,&#39;bulk.rds&#39;,sep=&#39;&#39;)
+  
+  bulk = readRDS(file.path)
+  # remove NA
+  bulk = bulk[,-which(is.na(colsums(bulk)))]
+  bulk = bulk[gene_to_use,]
+  
+  # transform to cpm
+  bulk = apply(bulk,2,function(z){z/sum(z)*1e6})
+  
+  out = multipletesting_correlation(t(as.matrix(bulk)),alpha=0.05)
+  saveRDS(out,file=paste(&#39;output/geneCor_&#39;,cellname,&#39;Bulk_cpm.rds&#39;,sep=&#39;&#39;))
+  rm(out)
+  # R = cov2cor(out$S)
+  # hist(R[upper.tri(R)],breaks = 100,main = &#39;histogram of correlations&#39;,xlab = &#39;correlations&#39;)
+  # rm(R)
+  # hist(out$Tvec,breaks = 100,main = &#39;histogram of test statistics&#39;)
+  # rej.idx = which(abs(out$Tvec)&gt;=out$thresh)
+  # p = nrow(out$S)
+  # print(paste(&quot;Proportion of correlated pairs&quot;,round(length(rej.idx) / (p*(p+1)/2-p),2)))
+  # rm(out)
+}</code></pre>
+<pre class="r"><code>celltypes = c(&#39;DA&#39;,&#39;Epen1&#39;,&quot;Sert&quot;,&quot;FPP&quot;,&quot;P_FPP&quot;,&quot;U_Neur&quot;)
+
+for(k in 1:length(celltypes)){
+  cellname = celltypes[k]
+  print(paste(&#39;looking at cell type:&#39;, cellname))
+  file.path = paste(&#39;output/geneCor_&#39;,cellname,&#39;Bulk_cpm.rds&#39;,sep=&#39;&#39;)
+  
+ out = readRDS(file.path)
+ R = cov2cor(out$S)
+ hist(R[upper.tri(R)],breaks = 100,main = &#39;histogram of correlations&#39;,xlab = &#39;correlations&#39;)
+ rm(R)
+ hist(out$Tvec,breaks = 100,main = &#39;histogram of test statistics&#39;)
+ rej.idx = which(abs(out$Tvec)&gt;=out$thresh)
+ p = nrow(out$S)
+ print(paste(&#39;Proportion of correlated pairs:&#39;,length(rej.idx) / (p*(p+1)/2-p)))
+ rm(out)
+}</code></pre>
+<pre><code>[1] &quot;looking at cell type: DA&quot;</code></pre>
+<p><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Proportion of correlated pairs: 0.0149727371525524&quot;
+[1] &quot;looking at cell type: Epen1&quot;</code></pre>
+<p><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Proportion of correlated pairs: 0.000368333343307895&quot;
+[1] &quot;looking at cell type: Sert&quot;</code></pre>
+<p><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Proportion of correlated pairs: 0.00265698595739417&quot;
+[1] &quot;looking at cell type: FPP&quot;</code></pre>
+<p><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Proportion of correlated pairs: 0.00330072879445597&quot;
+[1] &quot;looking at cell type: P_FPP&quot;</code></pre>
+<p><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-10.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Proportion of correlated pairs: 0.00469889722227442&quot;
+[1] &quot;looking at cell type: U_Neur&quot;</code></pre>
+<p><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/neuron_data_geneCor.Rmd/unnamed-chunk-6-12.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Proportion of correlated pairs: 5.408583767014e-05&quot;</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

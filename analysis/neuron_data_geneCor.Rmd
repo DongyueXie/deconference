@@ -102,3 +102,77 @@ rm(out)
 ```
 
 
+## Per cell type
+
+```{r,eval=FALSE}
+celltypes = c('DA','Epen1',"Sert","FPP","P_FPP","U_Neur")
+
+# obtain gene to use
+
+gene_to_use = 1
+
+for(k in 1:length(celltypes)){
+  cellname = celltypes[k]
+  print(paste('looking at cell type:', cellname))
+  file.path = paste('data/',cellname,'bulk.rds',sep='')
+  
+  bulk = readRDS(file.path)
+  # remove NA
+  bulk = bulk[,-which(is.na(colsums(bulk)))]
+  gene_to_use = gene_to_use * apply(bulk, MARGIN = 1, FUN = function( row, exp_th, min_sam ) {
+    sum( row > exp_th ) >= min_sam
+  }, exp_th = 0.1, min_sam = 60 )
+}
+
+sum(gene_to_use)
+gene_to_use = which(gene_to_use==1)
+
+for(k in 1:length(celltypes)){
+  cellname = celltypes[k]
+  print(paste('looking at cell type:', cellname))
+  file.path = paste('data/',cellname,'bulk.rds',sep='')
+  
+  bulk = readRDS(file.path)
+  # remove NA
+  bulk = bulk[,-which(is.na(colsums(bulk)))]
+  bulk = bulk[gene_to_use,]
+  
+  # transform to cpm
+  bulk = apply(bulk,2,function(z){z/sum(z)*1e6})
+  
+  out = multipletesting_correlation(t(as.matrix(bulk)),alpha=0.05)
+  saveRDS(out,file=paste('output/geneCor_',cellname,'Bulk_cpm.rds',sep=''))
+  rm(out)
+  # R = cov2cor(out$S)
+  # hist(R[upper.tri(R)],breaks = 100,main = 'histogram of correlations',xlab = 'correlations')
+  # rm(R)
+  # hist(out$Tvec,breaks = 100,main = 'histogram of test statistics')
+  # rej.idx = which(abs(out$Tvec)>=out$thresh)
+  # p = nrow(out$S)
+  # print(paste("Proportion of correlated pairs",round(length(rej.idx) / (p*(p+1)/2-p),2)))
+  # rm(out)
+}
+
+
+
+```
+
+```{r}
+celltypes = c('DA','Epen1',"Sert","FPP","P_FPP","U_Neur")
+
+for(k in 1:length(celltypes)){
+  cellname = celltypes[k]
+  print(paste('looking at cell type:', cellname))
+  file.path = paste('output/geneCor_',cellname,'Bulk_cpm.rds',sep='')
+  
+ out = readRDS(file.path)
+ R = cov2cor(out$S)
+ hist(R[upper.tri(R)],breaks = 100,main = 'histogram of correlations',xlab = 'correlations')
+ rm(R)
+ hist(out$Tvec,breaks = 100,main = 'histogram of test statistics')
+ rej.idx = which(abs(out$Tvec)>=out$thresh)
+ p = nrow(out$S)
+ print(paste('Proportion of correlated pairs:',length(rej.idx) / (p*(p+1)/2-p)))
+ rm(out)
+}
+```

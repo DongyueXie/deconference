@@ -1,0 +1,124 @@
+---
+title: "Correlated gene simulation, with banded correlation matrix"
+author: "Dongyue Xie"
+date: "2021-06-06"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+ploter.temp = function(results){
+
+  par(mfrow=c(2,2))
+
+  plot(results$coverage_adj_hc0,
+       ylim = range(c(results$coverage_adj_hc0,results$coverage_unadj_hc0,results$coverage_unadj_cv,1)),
+       col=2,ylab='coverage',xlab='coefs',main='coverage of p',type='b')
+  lines(results$coverage_unadj_hc0,type='b',pch=2,col=4)
+  lines(results$coverage_unadj_cv,type='b',pch=2,col=3)
+  abline(h=0.95,lty=2)
+
+  plot(results$coverage_diff_adj_hc0,ylim = range(c(results$coverage_diff_adj_hc0,results$coverage_diff_unadj_hc0,results$coverage_diff_unadj_cv,1)),
+       col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of difference')
+  lines(results$coverage_diff_unadj_hc0,type='b',pch=2,col=4)
+  lines(results$coverage_diff_unadj_cv,type='b',pch=2,col=3)
+  abline(h=0.95,lty=2)
+
+  #p_order = order(abs(results$p-results$p2))
+
+  plot(results$power_adj_hc0,ylim = range(c(results$power_adj_hc0,results$power_unadj_hc0,results$power_unadj_cv)),
+       col=2,ylab="power",xlab='',main='power')
+  lines(results$power_unadj_hc0,type='p',pch=2,col=4)
+  lines(results$power_unadj_cv,type='p',pch=2,col=3)
+  abline(h=0.05,lty=2)
+
+  legend('bottomright',c('adjusted_hc0','unadj_hc0',"unadj_const"),col=c(2,4,3),pch=c(1,2,2))
+
+  par(mfrow=c(1,1))
+
+}
+```
+Reference matrices and vairances are from Xin dataset with 1000 gene random selected.
+
+Simulate banded correlation matrix. 500 repetitions.
+
+```{r}
+library(corrplot)
+p = 30
+A = matrix(0,nrow=p,ncol=p)
+
+for(i in 1:p){
+  for(j in 1:p){
+    A[i,j] = max(1-abs(i-j)/5,0)
+  }
+}
+corrplot(A,method = 'circle')
+
+out = readRDS('output/simu_corr_xin_G1000_corband5.rds')
+ploter.temp(out)
+
+mean(out$coverage_unadj_hc0)
+mean(out$coverage_adj_hc0)
+```
+
+
+```{r}
+p = 30
+A = matrix(0,nrow=p,ncol=p)
+
+for(i in 1:p){
+  for(j in 1:p){
+    A[i,j] = max(1-abs(i-j)/10,0)
+  }
+}
+corrplot(A,method = 'circle')
+
+out = readRDS('output/simu_corr_xin_G1000_corband10.rds')
+ploter.temp(out)
+
+mean(out$coverage_unadj_hc0)
+mean(out$coverage_adj_hc0)
+```
+
+
+```{r}
+p = 50
+A = matrix(0,nrow=p,ncol=p)
+
+for(i in 1:p){
+  for(j in 1:p){
+    A[i,j] = max(1-abs(i-j)/50,0)
+  }
+}
+corrplot(A,method = 'circle')
+
+out = readRDS('output/simu_corr_xin_G1000_corband50.rds')
+ploter.temp(out)
+
+mean(out$coverage_unadj_hc0)
+mean(out$coverage_adj_hc0)
+```
+
+
+```{r}
+p = 100
+A = matrix(0,nrow=p,ncol=p)
+
+for(i in 1:p){
+  for(j in 1:p){
+    A[i,j] = max(1-abs(i-j)/100,0)
+  }
+}
+corrplot(A,method = 'circle')
+
+out = readRDS('output/simu_corr_xin_G1000_corband100.rds')
+#ploter.temp(out)
+
+mean(out$coverage_unadj_hc0)
+out$coverage_adj_hc0
+mean(out$coverage_adj_hc0,na.rm=T)
+```
+

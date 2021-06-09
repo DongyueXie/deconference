@@ -1,0 +1,104 @@
+---
+title: "Neuron data gene correlation"
+author: "DongyueXie"
+date: "2021-06-04"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+
+
+```{r}
+library(Matrix)
+library(Rfast)
+#'@param X sample by condition matrix
+#'@param 
+
+multipletesting_correlation = function(X,alpha=0.05){
+  n = nrow(X)
+  p = ncol(X)
+  
+  X.center = scale(X,center=TRUE,scale=FALSE)
+  S = cova(X.center,center = TRUE)
+  
+  # calc S2
+  
+  S2 = 0
+  for(k in 1:n){
+    S2 = S2+(tcrossprod(X.center[k,]))^2
+  }
+  
+  # calc T statistics
+  
+  Tmat = S*(n-1)/sqrt(S2+(2-n)*S^2)
+  
+  # find t
+  bp = sqrt(4*log(p)-2*log(log(p)))
+  a = (p^2-p)/2
+  Tvec = Tmat[lower.tri(Tmat)]
+  t_vec = sort(abs(Tvec),decreasing = FALSE)
+  nt = length(t_vec)
+  for(t in 1:nt){
+    temp = 2*(1-pnorm(t_vec[t]))*a/(nt-t+1)
+    if(temp<=alpha){
+      break
+    }
+  }
+  if(t_vec[t]>bp){
+    thresh = sqrt(4*log(p))
+  }else{
+    thresh = t_vec[t]
+  }
+  list(S=S,
+       S2=S2,
+       Tmat=Tmat,
+       Tvec = Tvec,
+       thresh=thresh,
+       alpha=alpha)
+}
+
+```
+
+## Bulk
+
+```{r,eval=FALSE}
+day30bulk = readRDS("data/day30bulk.rds")
+dim(day30bulk)
+day30bulk[1:5,1:5]
+hist(colSums(day30bulk),breaks = 100)
+
+# filter out genes 
+gene_to_use = apply(day30bulk, MARGIN = 1, FUN = function( row, exp_th, min_sam ) {
+  sum( row > exp_th ) >= min_sam
+}, exp_th = 0.1, min_sam = 60 )
+sum(gene_to_use)
+
+day30bulk = day30bulk[gene_to_use,]
+
+# transform to cpm
+day30bulk = apply(day30bulk,2,function(z){z/sum(z)*1e6})
+```
+
+
+```{r,eval=FALSE}
+out = multipletesting_correlation(t(as.matrix(day30bulk)),alpha=0.05)
+saveRDS(out,file="output/geneCor_neuronBulk_cpm.rds")
+#out_log = multipletesting_correlation(log(t(as.matrix(gtex.pancreas))+0.01),alpha=0.05)
+#saveRDS(out_log,file="output/geneCor_gtexpancreas_logtpm.rds")
+```
+
+```{r}
+out = readRDS('output/geneCor_neuronBulk_cpm.rds')
+R = cov2cor(out$S)
+hist(R[upper.tri(R)],breaks = 100,main = 'histogram of correlations',xlab = 'correlations')
+rm(R)
+hist(out$Tvec,breaks = 100,main = 'histogram of test statistics')
+rej.idx = which(abs(out$Tvec)>=out$thresh)
+p = nrow(out$S)
+length(rej.idx) / (p*(p+1)/2-p)
+rm(out)
+
+```
+
+

@@ -1,3 +1,495 @@
+
+
+
+#'@title Jacobian matrix of sum-to-1 scale function
+#'@param b beta_tilde_hat
+#'@param K length of beta_tilde_hat
+#'@return Jacobian matrix
+J_sum2one = function(b,K){
+  J = - (b)%*%t(rep(1,K))
+  diag(J) = diag(J) + sum(b)
+  J = J/sum(b)^2
+  J
+}
+
+
+#'@title another version, only one lambda for correction, and scale everything
+#'@param y a vector of bulk sample
+#'@param X reference matrix, estimated relative expression, gene by cell
+#'@param Vg variance matrix of X
+#'@param X_var_pop variance of true X among individuals
+#'@param marker_gene
+#'@param w gene weights
+#'@param hc.type hc3, hc2, or hc0
+#'@param alpha significance level
+#'@param a alpha in the Fuller's small sample correction
+#'@param correction whether perform fuller's small sample correction.
+#'@param S cell size
+#'@param X_array array of reference matrix from each ref individual
+#'@param use.weight.ref whether use reference matrices to calculate weights
+#'@param p.for.weight what p to use for weight calculation
+#'@param p.true the true cell type proportion
+#'@param R correlation matrix of genes
+#'@param true.beta true beta before normalizing to 1
+#'@param asyV.pos check if asymptotic Variance is positive definite
+#'@param Q.pos check if Q is positive definite
+
+
+estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
+                           w=NULL,
+                           hc.type='hc3',a=ncol(X)+4,
+                           correction=FALSE,
+                           S=NULL,
+                           calc_cov=TRUE,
+                           verbose=FALSE,
+                           X_array = NULL,
+                           use.weight.ref = FALSE,
+                           p.for.weight = "equal",
+                           p.true = NULL,
+                           R=NULL,
+                           true.beta = NULL,
+                           centeringXY = FALSE,
+                           asyV.pos = TRUE,
+                           Q.pos = TRUE
+                           ){
+
+  #browser()
+
+  #print(X)
+
+  if(length(w)==1){
+    w = rep(w,nrow(X))
+  }
+  G = nrow(X)
+  K = ncol(X)
+
+  # nb is the number of bulk sample
+  nb = ncol(y)
+  if(is.null(nb)){
+    nb=1
+  }
+
+  # generate weights
+
+  if(is.null(w)){
+
+    if(use.weight.ref){
+
+      if(p.for.weight == 'true'){
+
+      }else if(p.for.weight == 'equal'){
+
+
+        Sigma_sample = c()
+        for(i in 1:dim(X_array)[3]){
+          Sigma_sample = cbind(Sigma_sample,(X_array[,,i] - X)%*%rep(1/K,K))
+        }
+        cov.Xb = Rfast::cova(t(Sigma_sample))
+        w = 1/diag(cov.Xb)
+
+      }else if(p.for.weight == 'estimated'){
+
+      }
+
+    }else{
+
+      if(is.null(X_var_pop)){
+        w  = 1/(rowSums(X)/K+rowSums(Vg)/K^2)
+      }else{
+        w  = 1/(rowSums(X)/K+rowSums(X_var_pop)/K^2+rowSums(Vg)/K^2)
+      }
+
+    }
+
+  }
+  w = w/sum(w)*G
+
+  ## take cell size into account, and scale it to O(G)
+  if(is.null(S)){
+    S = rep(1,K)
+  }
+
+  # X, Vg scaled by G
+  input = list(X=X,Vg=Vg,y=y,w=w,Sigma=X_var_pop,S=S)
+
+  #browser()
+
+  #scale y
+  vy_temp = apply(y,2,function(z){z*(length(z)/sum(z))^2})
+  # if(!is.null(true.beta)){
+  #   true.beta = t(t(true.beta)*G/c(colSums(y)))
+  # }
+  # y = apply(y,2,function(z){z/sum(z)*length(z)})
+
+  #browser()
+
+  # scale X by G, mainly for numerical stability
+  #X = X*G
+  #Vg = Vg*G^2
+
+  # add library size to X
+  X = X%*%diag(S)
+  Xw = X*sqrt(w)
+  yw = cbind(y*sqrt(w))
+  if(centeringXY){
+    yw = apply(yw,2,scale,scale=FALSE)
+    Xw = apply(Xw,2,scale,scale=FALSE)
+  }
+  Vw = Vg*w
+  A = crossprod(Xw)
+  d_Vg = ncol(Vg)
+  if(d_Vg==K^2){
+    V = matrix(c(colSums(Vw)),ncol = K)
+  }else if(d_Vg==K){
+    #Vw = Vw%*%diag(S^2)
+    #Vw = Vw*(S^2)
+    V = diag(c(colSums(Vw)))
+  }else{
+    stop('check dimension of Vg')
+  }
+  V = diag(S)%*%V%*%diag(S)
+
+  #browser()
+  if(verbose){
+    message("estimating proportions")
+  }
+  Q = (A-V)
+  Qinv = solve(Q)
+
+
+  beta_tilde_hat = pmax(Qinv%*%t(Xw)%*%yw,0)
+
+  #browser()
+  ## Fuller's correction
+  if(correction){
+
+    if(verbose){
+      message("performing fuller's correction")
+    }
+
+    y_temp = rowSums(yw)
+
+    Z = cbind(y_temp,Xw)
+
+    S = matrix(0,nrow = K+1,ncol=K+1)
+    S[1,1] = sum(rowSums(vy_temp)*w)
+    S[-1,-1] = V
+
+    #browser()
+
+    lambda0 = min(eigen(solve(S)%*%crossprod(Z))$values)
+
+    if(lambda0>(1+1/G)){
+      lambda = (1-a/G)
+    }else{
+      lambda = (lambda0-1/G-a/G)
+    }
+    Q = (A - lambda*V)/G
+    Qinv = solve(Q)
+    beta_tilde_hat = pmax(Qinv%*%t(Xw)%*%yw,0)/G
+
+  }else{
+    lambda = 1
+    lambda0 = 1
+  }
+
+  #browser()
+
+  Q_inv = kronecker(diag(nb),Qinv)
+  #H = t(t(X%*%Qinv%*%t(X))*w)/G
+  #h = rowSums((X%*%Qinv)*X)*w
+  h = rowSums((Xw%*%Qinv)*Xw)
+
+  #browser()
+
+  Sigma = get_SIGMA2(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
+                    V=Vw,h=h,nb=nb,
+                    G=G,K=K,lambda=lambda,verbose=verbose,
+                    calc_cov=calc_cov,hc.type=hc.type,
+                    R=R)
+  covb = Q_inv%*%Sigma%*%Q_inv
+
+  # if(is.null(R)){
+  #   browser()
+  # }
+
+  #browser()
+
+  # if(!is.null(R)){
+  #   print(paste('adjusted for corr:',sum(diag(Sigma))))
+  # }else{
+  #   print(paste('not adjusted for corr:',sum(diag(Sigma))))
+  # }
+
+  #print("Looking at sum of Q_invSignaQ_inv")
+
+  # if(!is.null(R)){
+  #   print(paste('adjusted for corr:',sum(covb)*1000))
+  # }else{
+  #   print(paste('not adjusted for corr:',sum(covb)*1000))
+  # }
+
+  #print("Looking at diagonal of Q_invSignaQ_inv")
+
+  # if(!is.null(R)){
+  #   print(paste('adjusted for corr:',sum(diag(covb))))
+  # }else{
+  #   print(paste('not adjusted for corr:',sum(diag(covb))))
+  # }
+
+  #browser()
+
+
+
+
+  # delta method
+
+  # covb is a (nb*K)*(nb*K) cov matrix
+  # formulate Jacobian matrix
+
+  if(verbose){
+    message("performing delta method")
+  }
+
+  beta_tilde_hat = cbind(beta_tilde_hat)
+  J = matrix(0,nrow=(nb*K),ncol=(nb*K))
+
+  if(is.null(true.beta)){
+
+    for(i in 1:nb){
+      J[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = J_sum2one(beta_tilde_hat[,i],K)
+    }
+
+  }else{
+
+    for(i in 1:nb){
+      J[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = J_sum2one(true.beta[,i],K)
+    }
+
+  }
+
+
+
+  asyV = (J)%*%covb%*%t(J)
+  # if(asyV.pos){
+  #   diag(asyV) = pmax(diag(asyV),0)
+  # }
+
+  # if(!is.null(R)){
+  #   print(paste('adjusted for corr:',sum(asyV)))
+  # }else{
+  #   print(paste('not adjusted for corr:',sum(asyV)))
+  # }
+
+  # if(!is.null(R)){
+  #   print(paste('adjusted for corr:',sum(diag(asyV))))
+  # }else{
+  #   print(paste('not adjusted for corr:',sum(diag(asyV))))
+  # }
+
+  beta_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
+  beta_se = sqrt(diag(asyV))
+  beta_se = matrix(beta_se,ncol=nb)
+
+  if(verbose){
+    message("done")
+  }
+
+  #browser()
+  # rownames(beta_hat) = colnames(X)
+
+  return(list(beta_hat=beta_hat,
+              beta_se=beta_se,
+              cov_beta_hat = asyV,
+              beta_tilde_hat=beta_tilde_hat,
+              beta_tilde_se = matrix(sqrt(diag(covb)),ncol=nb),
+              cov_beta_tilde_hat = covb,
+              Sigma = Sigma,
+              #Sigma_ii = Sigma_ii/G^2,
+              J=J,
+              Q_inv = Qinv,
+              Q=Q,
+              V=V,
+              A=A,
+              h=h,
+              #H=H,
+              lambda=lambda0,
+              input = input))
+
+}
+
+
+
+
+
+#'@description allow correlations among samples, and use yw and Xw, not X and y
+get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
+
+
+
+  Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
+  Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
+
+  #browser()
+
+  res = y - X%*%beta
+
+
+
+  #browser()
+
+  if(!is.null(R)){
+    cor.idx = which(R!=0,arr.ind = T)
+    cor.idx = t(apply(cor.idx,1,sort))
+    cor.idx = cor.idx[!duplicated(cor.idx),]
+    cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
+  }
+
+
+  if(verbose){
+    message("calculating covariance matrix")
+  }
+
+
+  h = pmax(pmin(h,1-1/G),0)
+  for(i in 1:nb){
+
+    if(verbose){
+      message(paste("...covaraince",i,'to',nb))
+    }
+
+    if(ncol(V)==K^2){
+      Vbi = t(apply(V,1,function(z){v = matrix(z,ncol=K);v%*%beta[,i]}))*lambda
+    }
+    if(ncol(V)==K){
+      Vbi = (V)%*%diag(c(beta[,i]))*lambda
+    }
+    ri = res[,i]
+
+
+    for(j in i:nb){
+
+      if(j==i){
+
+        if(hc.type == 'hc0'){
+          Sigma_ij = crossprod(c(ri)*X+Vbi)
+        }else if(hc.type == 'hc2'){
+          Sigma_ij = crossprod(c(ri)/sqrt(1-h)*X+Vbi)
+        }else if(hc.type == 'hc3'){
+          Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi)
+        }
+
+        if(!is.null(R)){
+
+          l1.temp = (c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE]
+          l2.temp = (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE]
+          Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
+
+        }
+
+        ###########
+        # if(!is.null(R)){
+        #   print(paste('adjusted for corr:',sum(Sigma_ij)))
+        # }else{
+        #   print(paste('not adjusted for corr:',sum(Sigma_ij)))
+        # }
+
+        ############
+
+        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
+
+      }else{
+
+        if(calc_cov){
+
+          if(ncol(V)==K^2){
+            Vbj = t(apply(V,1,function(z){v = matrix(z,ncol=K);v%*%beta[,j]}))*lambda
+          }
+          if(ncol(V)==K){
+            Vbj = (V)%*%diag(c(beta[,j]))*lambda
+          }
+
+          rj = res[,j]
+          if(hc.type == 'hc0'){
+            Sigma_ij = crossprod(c(ri)*X+Vbi,c(rj)*X+Vbj)
+          }else if(hc.type == 'hc2'){
+            Sigma_ij = crossprod(c(ri)/sqrt(1-h)*X+Vbi,c(rj)/sqrt(1-h)*X+Vbj)
+          }else if(hc.type == 'hc3'){
+            Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi,c(rj)/(1-h)*X+Vbj)
+          }
+
+          if(!is.null(R)){
+            Sigma_ij = Sigma_ij
+            + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,2],,drop=FALSE])
+            + crossprod((c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,1],,drop=FALSE])
+          }
+
+        }
+
+      }
+
+      Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
+
+    }
+  }
+  Sigma = (Sigma+t(Sigma)-Sigma_ii)
+
+  Sigma
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+####################################################
+
+
+
+
+
+
+
+
+
 #'@param y a vector of bulk sample
 #'@param X reference matrix, estimated relative expression, gene by cell
 #'@param Vg variance matrix of X
@@ -163,9 +655,9 @@ estimation_func = function(y,X,Vg,X_var_pop=NULL,
     A_inv = array(solve(A-V),dim=c(K,K,nb))
   }
 
-    # M = crossprod(cbind(yw,Xw))
-    # B = diag(c(1/colSums(yw),1/diag(V)))
-    # lambda = min(eigen(M%*%B)$values)
+  # M = crossprod(cbind(yw,Xw))
+  # B = diag(c(1/colSums(yw),1/diag(V)))
+  # lambda = min(eigen(M%*%B)$values)
 
   #   if(lambda>(1+1/G)){
   #     A = A - (1-a/G)*V
@@ -329,321 +821,6 @@ estimation_func = function(y,X,Vg,X_var_pop=NULL,
 
 
 
-#'@title Jacobian matrix of sum-to-1 scale function
-#'@param b beta_tilde_hat
-#'@param K length of beta_tilde_hat
-#'@return Jacobian matrix
-J_sum2one = function(b,K){
-  J = - (b)%*%t(rep(1,K))
-  diag(J) = diag(J) + sum(b)
-  J = J/sum(b)^2
-  J
-}
-
-
-
-
-
-
-
-
-
-
-#'@title another version, only one lambda for correction, and scale everything
-#'@param y a vector of bulk sample
-#'@param X reference matrix, estimated relative expression, gene by cell
-#'@param Vg variance matrix of X
-#'@param X_var_pop variance of true X among individuals
-#'@param marker_gene
-#'@param w gene weights
-#'@param hc.type hc3, hc2, or hc0
-#'@param alpha significance level
-#'@param a alpha in the Fuller's small sample correction
-#'@param correction whether perform fuller's small sample correction.
-#'@param S cell size
-
-
-estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
-                           w=NULL,
-                           hc.type='hc3',a=ncol(X)+4,
-                           correction=FALSE,
-                           S=NULL,
-                           calc_cov=TRUE,
-                           verbose=FALSE,
-                           X_array = NULL,
-                           ref_weights = TRUE,
-                           beta.to.use = "equal",
-                           beta.true = NULL,
-                           R=NULL){
-
-  #browser()
-
-  #print(X)
-
-  if(length(w)==1){
-    w = rep(w,nrow(X))
-  }
-  G = nrow(X)
-  K = ncol(X)
-
-  # nb is the number of bulk sample
-  nb = ncol(y)
-  if(is.null(nb)){
-    nb=1
-  }
-
-  # generate weights
-
-  if(is.null(w)){
-
-    if(ref_weights){
-
-      if(beta.to.use == 'true'){
-
-      }else if(beta.to.use == 'equal'){
-
-
-        Sigma_sample = c()
-        for(i in 1:dim(X_array)[3]){
-          Sigma_sample = cbind(Sigma_sample,(X_array[,,i] - X)%*%rep(1/K,K))
-        }
-        cov.Xb = Rfast::cova(t(Sigma_sample))
-        w = 1/diag(cov.Xb)
-
-      }else if(beta.to.use == 'estimated'){
-
-      }
-
-    }else{
-
-      if(is.null(X_var_pop)){
-        w  = 1/(rowSums(X)/K+rowSums(Vg)/K^2)
-      }else{
-        w  = 1/(rowSums(X)/K+rowSums(X_var_pop)/K^2+rowSums(Vg)/K^2)
-      }
-
-    }
-
-  }
-  w = w/sum(w)*G
-
-  ## take cell size into account, and scale it to O(G)
-  if(is.null(S)){
-    S = rep(1,K)
-  }
-
-  # X, Vg scaled by G
-  input = list(X=X,Vg=Vg,y=y,w=w,Sigma=X_var_pop,S=S)
-
-  #browser()
-
-  #scale y
-  vy_temp = apply(y,2,function(z){z*(length(z)/sum(z))^2})
-  y = apply(y,2,function(z){z/sum(z)*length(z)})
-
-  # scale X by G, mainly for numerical stability
-  #X = X*G
-  #Vg = Vg*G^2
-
-  # add library size to X
-  X = X%*%diag(S)
-  Xw = X*sqrt(w)
-  yw = cbind(y*sqrt(w))
-  Vw = Vg*w
-  A = t(Xw)%*%Xw
-  d_Vg = ncol(Vg)
-  if(d_Vg==K^2){
-    V = matrix(c(colSums(Vw)),ncol = K)
-  }else if(d_Vg==K){
-    #Vw = Vw%*%diag(S^2)
-    #Vw = Vw*(S^2)
-    V = diag(c(colSums(Vw)))
-  }else{
-    stop('check dimension of Vg')
-  }
-  V = diag(S)%*%V%*%diag(S)
-
-  #browser()
-  if(verbose){
-    message("estimating proportions")
-  }
-  Q = (A-V)
-  Qinv = solve(Q)
-  beta_tilde_hat = pmax(Qinv%*%t(Xw)%*%yw,0)
-  ## Fuller's correction
-  if(correction){
-
-    if(verbose){
-      message("performing fuller's correction")
-    }
-
-    y_temp = rowSums(yw)
-
-    Z = cbind(y_temp,Xw)
-
-    S = matrix(0,nrow = K+1,ncol=K+1)
-    S[1,1] = sum(rowSums(vy_temp)*w)
-    S[-1,-1] = V
-
-    #browser()
-
-    lambda0 = min(eigen(solve(S)%*%crossprod(Z))$values)
-
-    if(lambda0>(1+1/G)){
-      lambda = (1-a/G)
-    }else{
-      lambda = (lambda0-1/G-a/G)
-    }
-    Q = (A - lambda*V)/G
-    Qinv = solve(Q)
-    beta_tilde_hat = pmax(Qinv%*%t(Xw)%*%yw,0)/G
-
-  }else{
-    lambda = 1
-    lambda0 = 1
-  }
-
-  #browser()
-
-  Q_inv = kronecker(diag(nb),Qinv)
-  #H = t(t(X%*%Qinv%*%t(X))*w)/G
-  h = rowSums((X%*%Qinv)*X)*w
-  # Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
-  # #Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
-  # Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
-  #
-  # #browser()
-  #
-  #
-  # if(verbose){
-  #   message("calculating covariance matrix")
-  # }
-  #
-  #
-  # #H = t(t(X%*%Qinv%*%t(X))*w)/G
-  # h = diag(H)
-  # h = pmax(pmin(h,1-1/G),0)
-  # for(i in 1:nb){
-  #
-  #   if(verbose){
-  #     message(paste("...covaraince",i,'to',nb))
-  #   }
-  #
-  #   #Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Qinv
-  #
-  #   if(d_Vg==K^2){
-  #     Vbi = t(apply(Vw,1,function(z){v = matrix(z,ncol=K);v%*%beta_tilde_hat[,i]}))*lambda
-  #   }
-  #   if(d_Vg==K){
-  #     Vbi = (Vw)%*%diag(c(beta_tilde_hat[,i]))*lambda
-  #   }
-  #   ri = y[,i] - H%*%y[,i]
-  #
-  #
-  #   for(j in i:nb){
-  #
-  #     if(j==i){
-  #
-  #       if(hc.type == 'hc0'){
-  #         Sigma_ij = crossprod(c(ri)*w*X+Vbi)
-  #       }else if(hc.type == 'hc2'){
-  #         Sigma_ij = crossprod(c(ri)/sqrt(1-h)*w*X+Vbi)
-  #       }else if(hc.type == 'hc3'){
-  #         Sigma_ij = crossprod(c(ri)/(1-h)*w*X+Vbi)
-  #       }
-  #
-  #       Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
-  #
-  #     }else{
-  #
-  #       if(calc_cov){
-  #
-  #         if(d_Vg==K^2){
-  #           Vbj = t(apply(Vw,1,function(z){v = matrix(z,ncol=K);v%*%beta_tilde_hat[,j]}))*lambda
-  #         }
-  #         if(d_Vg==K){
-  #           Vbj = (Vw)%*%diag(c(beta_tilde_hat[,j]))*lambda
-  #         }
-  #
-  #         rj = y[,j] - H%*%y[,j]
-  #         if(hc.type == 'hc0'){
-  #           Sigma_ij = crossprod(c(ri)*w*X+Vbi,c(rj)*w*X+Vbj)
-  #         }else if(hc.type == 'hc2'){
-  #           Sigma_ij = crossprod(c(ri)/sqrt(1-h)*w*X+Vbi,c(rj)/sqrt(1-h)*w*X+Vbj)
-  #         }else if(hc.type == 'hc3'){
-  #           Sigma_ij = crossprod(c(ri)/(1-h)*w*X+Vbi,c(rj)/(1-h)*w*X+Vbj)
-  #         }
-  #
-  #       }
-  #
-  #     }
-  #
-  #     Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
-  #
-  #   }
-  # }
-  # Sigma = (Sigma+t(Sigma)-Sigma_ii)/G/G
-  Sigma = get_SIGMA(y=y,X=X,w=w,beta=beta_tilde_hat,V=Vw,h=h,nb=nb,
-                    G=G,K=K,lambda=lambda,verbose=verbose,
-                    calc_cov=calc_cov,hc.type=hc.type,
-                    R=R)
-  covb = Q_inv%*%Sigma%*%Q_inv
-  #browser()
-
-  beta_tilde_hat = cbind(beta_tilde_hat)
-
-
-  # delta method
-
-  # covb is a (nb*K)*(nb*K) cov matrix
-  # formulate Jacobian matrix
-
-  if(verbose){
-    message("performing delta method")
-  }
-
-  J = matrix(0,nrow=(nb*K),ncol=(nb*K))
-  for(i in 1:nb){
-    J[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = J_sum2one(beta_tilde_hat[,i],K)
-  }
-
-  asyV = (J)%*%covb%*%t(J)
-
-  beta_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
-  beta_se = sqrt(diag(asyV))
-  beta_se = matrix(beta_se,ncol=nb)
-
-  if(verbose){
-    message("done")
-  }
-
-  #browser()
-  # rownames(beta_hat) = colnames(X)
-
-  return(list(beta_hat=beta_hat,
-              beta_se=beta_se,
-              cov_beta_hat = asyV,
-              beta_tilde_hat=beta_tilde_hat,
-              cov_beta_tilde_hat = covb,
-              Sigma = Sigma,
-              #Sigma_ii = Sigma_ii/G^2,
-              J=J,
-              Q_inv = Qinv,
-              Q=Q,
-              V=V,
-              A=A,
-              h=h,
-              #H=H,
-              lambda=lambda0,
-              input = input))
-
-}
-
-
-
-
-
-
 
 #'@description allow correlations among samples.
 get_SIGMA = function(y,X,w,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
@@ -707,6 +884,15 @@ get_SIGMA = function(y,X,w,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
 
         }
 
+        ###########
+        # if(!is.null(R)){
+        #   print(paste('adjusted for corr:',sum(Sigma_ij)))
+        # }else{
+        #   print(paste('not adjusted for corr:',sum(Sigma_ij)))
+        # }
+
+        ############
+
         Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
 
       }else{
@@ -748,10 +934,6 @@ get_SIGMA = function(y,X,w,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
   Sigma
 
 }
-
-
-
-
 
 
 

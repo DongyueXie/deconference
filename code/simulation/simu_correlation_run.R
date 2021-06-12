@@ -37,6 +37,7 @@ rm(design.mat.xin)
 gene.Cov = genecorr$S
 idx = match(inter.gene,genecorr$genes)
 gene.R = cov2cor(gene.Cov[idx,idx])
+saveRDS(gene.R,'output/geneCorMat_gtexpancreas.rds')
 rm(genecorr)
 
 # make gene.R sparser
@@ -133,6 +134,106 @@ simu = simu_corr_simple(ref.sub,b.m,nreps=100,
 
 saveRDS(simu,file='output/simu_corr_xin_G1000_corpair10000.rds')
 rm(simu)
+
+
+set.seed(12345)
+R1 = pruneR(gene.R.sub,random = T,n=100)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=R1,n_indi = 10,verbose = F,printevery = 1)
+
+
+
+saveRDS(simu,file='output/simu_corr_xin_G1000_corpair100.rds')
+
+
+set.seed(12345)
+R1 = pruneR(gene.R.sub,random = T,n=100000)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=R1,n_indi = 10,verbose = F,printevery = 1)
+
+
+
+saveRDS(simu,file='output/simu_corr_xin_G1000_corpair1e5.rds')
+
+
+## generate R manually
+
+p = 1000
+A = matrix(0,nrow=p,ncol=p)
+
+for(i in 1:p){
+  for(j in 1:p){
+    A[i,j] = max(1-abs(i-j)/5,0)
+  }
+}
+
+
+set.seed(12345)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=A,n_indi = 10,verbose = F,printevery = 1)
+saveRDS(simu,file='output/simu_corr_xin_G1000_corband5.rds')
+
+
+##############
+nb = 4
+b.m = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
+set.seed(12345)
+simu = simu_corr_simple(ref.sub2,b.m,nreps=2,
+                        sigma2=sigma2.sub,R=A,n_indi = 10,verbose = F,printevery = 1)
+#############
+
+
+
+
+
+p = 1000
+A = matrix(0,nrow=p,ncol=p)
+
+for(i in 1:p){
+  for(j in 1:p){
+    A[i,j] = max(1-abs(i-j)/10,0)
+  }
+}
+
+
+
+set.seed(12345)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=A,n_indi = 10,verbose = F,printevery = 1)
+saveRDS(simu,file='output/simu_corr_xin_G1000_corband10.rds')
+
+
+p = 1000
+A = matrix(0,nrow=p,ncol=p)
+
+for(i in 1:p){
+  for(j in 1:p){
+    A[i,j] = max(1-abs(i-j)/50,0)
+  }
+}
+
+
+
+set.seed(12345)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=A,n_indi = 10,verbose = F,printevery = 1)
+saveRDS(simu,file='output/simu_corr_xin_G1000_corband50.rds')
+
+p = 1000
+A = matrix(0,nrow=p,ncol=p)
+
+for(i in 1:p){
+  for(j in 1:p){
+    A[i,j] = max(1-abs(i-j)/100,0)
+  }
+}
+
+
+
+set.seed(12345)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,R=A,n_indi = 10,verbose = F,printevery = 1)
+saveRDS(simu,file='output/simu_corr_xin_G1000_corband100.rds')
 
 
 #######

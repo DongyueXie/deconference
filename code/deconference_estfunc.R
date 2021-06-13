@@ -46,7 +46,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            use.weight.ref = FALSE,
                            p.for.weight = "equal",
                            p.true = NULL,
-                           R=NULL,
+                           cor.idx=NULL,
                            true.beta = NULL,
                            centeringXY = FALSE,
                            asyV.pos = TRUE,
@@ -114,8 +114,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
   #browser()
 
-  #scale y
-  vy_temp = apply(y,2,function(z){z*(length(z)/sum(z))^2})
+
   # if(!is.null(true.beta)){
   #   true.beta = t(t(true.beta)*G/c(colSums(y)))
   # }
@@ -163,6 +162,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   ## Fuller's correction
   if(correction){
 
+    #scale y
+    vy_temp = apply(y,2,function(z){z*(length(z)/sum(z))^2})
+
     if(verbose){
       message("performing fuller's correction")
     }
@@ -206,7 +208,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                     V=Vw,h=h,nb=nb,
                     G=G,K=K,lambda=lambda,verbose=verbose,
                     calc_cov=calc_cov,hc.type=hc.type,
-                    R=R)
+                    cor.idx=cor.idx)
   covb = Q_inv%*%Sigma%*%Q_inv
 
   # if(is.null(R)){
@@ -323,7 +325,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 
 #'@description allow correlations among samples, and use yw and Xw, not X and y
-get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
+get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx){
 
 
 
@@ -338,12 +340,12 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
 
   #browser()
 
-  if(!is.null(R)){
-    cor.idx = which(R!=0,arr.ind = T)
-    cor.idx = t(apply(cor.idx,1,sort))
-    cor.idx = cor.idx[!duplicated(cor.idx),]
-    cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
-  }
+  # if(!is.null(R)){
+  #   cor.idx = which(R!=0,arr.ind = T)
+  #   cor.idx = t(apply(cor.idx,1,sort))
+  #   cor.idx = cor.idx[!duplicated(cor.idx),]
+  #   cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
+  # }
 
 
   if(verbose){
@@ -379,11 +381,14 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
           Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi)
         }
 
-        if(!is.null(R)){
+        if(!is.null(cor.idx)){
 
-          l1.temp = (c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE]
-          l2.temp = (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE]
-          Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
+          # l1.temp = (c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE]
+          # l2.temp = (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE]
+          # Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
+
+          Sigma_ij = Sigma_ij + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],
+                                          (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE])
 
         }
 
@@ -418,10 +423,13 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,R){
             Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi,c(rj)/(1-h)*X+Vbj)
           }
 
-          if(!is.null(R)){
+          if(!is.null(cor.idx)){
+            # Sigma_ij = Sigma_ij
+            # + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,2],,drop=FALSE])
+            # + crossprod((c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,1],,drop=FALSE])
+
             Sigma_ij = Sigma_ij
             + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,2],,drop=FALSE])
-            + crossprod((c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,1],,drop=FALSE])
           }
 
         }

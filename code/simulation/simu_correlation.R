@@ -12,11 +12,16 @@ sim_MLN = function(n,mu,s,R){
 }
 
 
+is.identity = function(X){
+  (sum(X)==nrow(X))
+}
 
 
 #'@description For simplicity, we only simulate data at individual level. - only generate X from U
 
-simu_corr_simple = function(ref,b,
+#'@param R correlation matrix, sparse form
+simu_corr_simple = function(ref,
+                            b,
                             R,
                             sigma2,
                             nreps = 100,
@@ -27,13 +32,14 @@ simu_corr_simple = function(ref,b,
                             alpha=0.05,
                             groups = c(rep(1,ncol(b)/2),rep(2,ncol(b)/2)),
                             centeringXY = FALSE,
-                            true.beta.for.Sigma=FALSE){
+                            true.beta.for.Sigma=FALSE,
+                            calc_cov = T){
 
   G = nrow(ref)
   K = ncol(ref)
   n_bulk = ncol(b)
   b = apply(b,2,function(z){z/sum(z)})
-
+  is.indep = is.identity(R)
 
   # est_adj = matrix(nrow=nreps,ncol=n_bulk*K)
   # se_adj = matrix(nrow=nreps,ncol=n_bulk*K)
@@ -76,21 +82,77 @@ simu_corr_simple = function(ref,b,
   diff_unadj_p_hc3 = matrix(nrow = nreps,ncol=K)
 
   gene_names = rownames(ref)
-
-
   true_betas = matrix(nrow=nreps,ncol=n_bulk*K)
+
+
+  ## pre calculate MLN and generate independent normals
+
+
+
+  n.ref = matrix(nrow=G,ncol=K)
+  n.Sigma.chol = list()
+  n.Sigma = matrix(nrow=G,ncol=K)
+  for(k in 1:K){
+    n.ref[,k] = log(ref[,k]^2/sqrt(ref[,k]^2+sigma2[,k]))
+    n.s = sqrt(log(1+sigma2[,k]^2/ref[,k]^2))
+    if(!is.indep){
+      n.Sigma.chol[[k]] = t(n.s*t(chol(R)))
+    }else{
+      n.Sigma[,k] = n.s^2
+    }
+  }
+
+
+  if(!is.indep){
+    cor.idx = which(R!=0,arr.ind = T)
+    #cor.idx = t(apply(cor.idx,1,sort))
+    #cor.idx = cor.idx[!duplicated(cor.idx),]
+    cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
+  }else{
+    cor.idx = NULL
+  }
+
+
   for(reps in 1:nreps){
 
     if(reps%%printevery==0){print(sprintf("running %d (out of %d)",reps,nreps))}
 
 
+
+    # generate individual reference matrices
+
+
+    X_array = array(dim=c(G,K,n_indi+n_bulk))
+
+    for(k in 1:K){
+      if(is.indep){
+        X_array[,k,] = exp(matrix(rnorm(G*(n_indi+n_bulk),n.ref[,k],sqrt(n.Sigma[,k])),ncol=n_indi+n_bulk))
+      }else{
+        X_array[,k,] = t(exp(mvnfast::rmvn(n_indi+n_bulk,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+      }
+    }
+
+    X_array_bulk = X_array[,,1:n_bulk]
+    X_array = X_array[,,-(1:n_bulk)]
+
+
+
     # generate bulk data
 
-    mb = 0
-    for(k in 1:K){
-      mb = mb + b[k,]*sim_MLN(n_bulk,ref[,k],sqrt(sigma2[,k]),R)
-    }
-    mb = t(mb)
+    # mb = 0
+    # for(k in 1:K){
+    #   if(!is.identity(R)){
+    #     mb = mb + b[k,]*exp(mvnfast::rmvn(n_bulk,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE))
+    #   }else{
+    #     mb = mb + b[k,]*exp(mvnfast::rmvn(n_bulk,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE))
+    #   }
+    #
+    #   #mb = mb + b[k,]*sim_MLN(n_bulk,ref[,k],sqrt(sigma2[,k]),R)
+    # }
+
+    mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
+
+    mb = do.call(cbind,mb)
     true.beta = t(t(b)*c(apply(mb,2,function(z){bulk_lib_size*G/sum(z)})))
     true_betas[reps,] = c(true.beta)
     thetab = apply(mb,2,function(z){z/sum(z)})
@@ -120,12 +182,12 @@ simu_corr_simple = function(ref,b,
 
     ## generate reference matrices X
 
-    X_array = array(dim=c(G,K,n_indi))
-
-    for(k in 1:K){
-      x_k = sim_MLN(n_indi,ref[,k],sqrt(sigma2[,k]),R)
-      X_array[,k,] = t(x_k)
-    }
+    # X_array = array(dim=c(G,K,n_indi))
+    #
+    # for(k in 1:K){
+    #   x_k = sim_MLN(n_indi,ref[,k],sqrt(sigma2[,k]),R)
+    #   X_array[,k,] = t(x_k)
+    # }
 
 
 
@@ -139,22 +201,22 @@ simu_corr_simple = function(ref,b,
 
     fit.adj.hc0 = estimation_func2(y=y,X=X,Vg=V,
                                    w=1,hc.type='hc0',correction=FALSE,
-                                   calc_cov=TRUE,verbose=verbose,
-                                   R=R,
+                                   calc_cov=calc_cov,verbose=verbose,
+                                   cor.idx=cor.idx,
                                    centeringXY=centeringXY,
                                    true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
 
-    fit.adj.hc3 = estimation_func2(y=y,X=X,Vg=V,
-                                   w=1,hc.type='hc3',correction=FALSE,
-                                   calc_cov=TRUE,verbose=verbose,
-                                   R=R,
-                                   centeringXY=centeringXY,
-                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+    # fit.adj.hc3 = estimation_func2(y=y,X=X,Vg=V,
+    #                                w=1,hc.type='hc3',correction=FALSE,
+    #                                calc_cov=calc_cov,verbose=verbose,
+    #                                cor.idx=cor.idx,
+    #                                centeringXY=centeringXY,
+    #                                true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
 
     fit.unadj.hc0 = estimation_func2(y=y,X=X,Vg=V,
                                      w=1,hc.type='hc0',correction=FALSE,
-                                     calc_cov=TRUE,verbose=verbose,
-                                     R=NULL,
+                                     calc_cov=calc_cov,verbose=verbose,
+                                     cor.idx=NULL,
                                      centeringXY=centeringXY,
                                      true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
 
@@ -162,13 +224,13 @@ simu_corr_simple = function(ref,b,
 
     est_adj[reps,] = c(fit.adj.hc0$beta_hat)
     se_adj_hc0[reps,] = c(fit.adj.hc0$beta_se)
-    se_adj_hc3[reps,] = c(fit.adj.hc3$beta_se)
+    #se_adj_hc3[reps,] = c(fit.adj.hc3$beta_se)
     diff_out_hc0 = two_group_test(fit.adj.hc0,groups)
-    diff_out_hc3 = two_group_test(fit.adj.hc3,groups)
+    #diff_out_hc3 = two_group_test(fit.adj.hc3,groups)
 
     beta_hat[reps,] = c(fit.adj.hc0$beta_tilde_hat)
     beta_se_adj_hc0[reps,] = c(fit.adj.hc0$beta_tilde_se)
-    beta_se_adj_hc3[reps,] = c(fit.adj.hc3$beta_tilde_se)
+    #beta_se_adj_hc3[reps,] = c(fit.adj.hc3$beta_tilde_se)
 
     #browser()
 
@@ -176,8 +238,8 @@ simu_corr_simple = function(ref,b,
     diff_adj_se_hc0[reps,] = c(diff_out_hc0$diff_se)
     diff_adj_p_hc0[reps,] = c(diff_out_hc0$p_value)
 
-    diff_adj_se_hc3[reps,] = c(diff_out_hc3$diff_se)
-    diff_adj_p_hc3[reps,] = c(diff_out_hc3$p_value)
+    #diff_adj_se_hc3[reps,] = c(diff_out_hc3$diff_se)
+    #diff_adj_p_hc3[reps,] = c(diff_out_hc3$p_value)
 
 
     #est_unadj[reps,] = c(fit_unadj$beta_hat)
@@ -227,11 +289,11 @@ simu_corr_simple = function(ref,b,
   coverage_adj_hc0 = ((rep(1,nreps)%*%t(c(b)))>=ci_l) & ((rep(1,nreps)%*%t(c(b)))<=ci_r)
   coverage_adj_hc0=apply(coverage_adj_hc0,2,mean,na.rm=TRUE)
 
-  ## hc3
-  ci_l = est_adj - qnorm(1-alpha/2)*se_adj_hc3
-  ci_r = est_adj + qnorm(1-alpha/2)*se_adj_hc3
-  coverage_adj_hc3 = ((rep(1,nreps)%*%t(c(b)))>=ci_l) & ((rep(1,nreps)%*%t(c(b)))<=ci_r)
-  coverage_adj_hc3=apply(coverage_adj_hc3,2,mean,na.rm=TRUE)
+  # ## hc3
+  # ci_l = est_adj - qnorm(1-alpha/2)*se_adj_hc3
+  # ci_r = est_adj + qnorm(1-alpha/2)*se_adj_hc3
+  # coverage_adj_hc3 = ((rep(1,nreps)%*%t(c(b)))>=ci_l) & ((rep(1,nreps)%*%t(c(b)))<=ci_r)
+  # coverage_adj_hc3=apply(coverage_adj_hc3,2,mean,na.rm=TRUE)
 
 
   # unadj
@@ -261,10 +323,10 @@ simu_corr_simple = function(ref,b,
   coverage_diff_adj_hc0 = ((rep(1,nreps)%*%t(c(b%*%diff_out_hc0$a)))>=ci_l) & ((rep(1,nreps)%*%t(c(b%*%diff_out_hc0$a)))<=ci_r)
   coverage_diff_adj_hc0=apply(coverage_diff_adj_hc0,2,mean,na.rm=TRUE)
 
-  ci_l = diff_adj - qnorm(1-alpha/2)*diff_adj_se_hc3
-  ci_r = diff_adj + qnorm(1-alpha/2)*diff_adj_se_hc3
-  coverage_diff_adj_hc3 = ((rep(1,nreps)%*%t(c(b%*%diff_out_hc0$a)))>=ci_l) & ((rep(1,nreps)%*%t(c(b%*%diff_out_hc0$a)))<=ci_r)
-  coverage_diff_adj_hc3=apply(coverage_diff_adj_hc3,2,mean,na.rm=TRUE)
+  # ci_l = diff_adj - qnorm(1-alpha/2)*diff_adj_se_hc3
+  # ci_r = diff_adj + qnorm(1-alpha/2)*diff_adj_se_hc3
+  # coverage_diff_adj_hc3 = ((rep(1,nreps)%*%t(c(b%*%diff_out_hc0$a)))>=ci_l) & ((rep(1,nreps)%*%t(c(b%*%diff_out_hc0$a)))<=ci_r)
+  # coverage_diff_adj_hc3=apply(coverage_diff_adj_hc3,2,mean,na.rm=TRUE)
 
   ci_l = diff_adj - qnorm(1-alpha/2)*diff_unadj_se_hc0
   ci_r = diff_adj + qnorm(1-alpha/2)*diff_unadj_se_hc0
@@ -282,7 +344,7 @@ simu_corr_simple = function(ref,b,
   # coverage_diff_unadj_hc3 = apply(coverage_diff_unadj_hc3,2,mean)
 
   power_adj_hc0 = apply(diff_adj_p_hc0<=alpha,2,mean,na.rm=TRUE)
-  power_adj_hc3 = apply(diff_adj_p_hc3<=alpha,2,mean,na.rm=TRUE)
+  # power_adj_hc3 = apply(diff_adj_p_hc3<=alpha,2,mean,na.rm=TRUE)
   power_unadj_hc0 = apply(diff_unadj_p_hc0<=alpha,2,mean,na.rm=TRUE)
   #power_unadj_cv = apply(diff_unadj_p_cv<=alpha,2,mean)
   #power_unadj_hc3 = apply(diff_unadj_p_hc3<=alpha,2,mean)
@@ -290,7 +352,7 @@ simu_corr_simple = function(ref,b,
 
   return(list(b=b,
               coverage_diff_adj_hc0=coverage_diff_adj_hc0,
-              coverage_diff_adj_hc3=coverage_diff_adj_hc3,
+              #coverage_diff_adj_hc3=coverage_diff_adj_hc3,
               coverage_diff_unadj_hc0 = coverage_diff_unadj_hc0,
               #coverage_diff_unadj_cv = coverage_diff_unadj_cv,
               #coverage_diff_unadj_hc3 = coverage_diff_unadj_hc3,
@@ -299,13 +361,13 @@ simu_corr_simple = function(ref,b,
               #beta_hat_cov_unadj_cv = beta_hat_cov_unadj_cv,
               #beta_hat_cov_unadj_hc3 = beta_hat_cov_unadj_hc3,
               power_adj_hc0=power_adj_hc0,
-              power_adj_hc3=power_adj_hc3,
+              #power_adj_hc3=power_adj_hc3,
               power_unadj_hc0=power_unadj_hc0,
               #power_unadj_cv=power_unadj_cv,
               #power_unadj_hc3=power_unadj_hc3,
 
               diff_adj_p_hc0 = diff_adj_p_hc0,
-              diff_adj_p_hc3 = diff_adj_p_hc3,
+              #diff_adj_p_hc3 = diff_adj_p_hc3,
 
               diff_unadj_p_hc0=diff_unadj_p_hc0,
               #diff_unadj_p_cv=diff_unadj_p_cv,
@@ -315,7 +377,7 @@ simu_corr_simple = function(ref,b,
               #diff_unadj=diff_unadj,
 
               diff_adj_se_hc0=diff_adj_se_hc0,
-              diff_adj_se_hc3=diff_adj_se_hc3,
+              #diff_adj_se_hc3=diff_adj_se_hc3,
 
               diff_unadj_se_hc0=diff_unadj_se_hc0,
               #diff_unadj_se_cv=diff_unadj_se_cv,
@@ -332,20 +394,20 @@ simu_corr_simple = function(ref,b,
               # se_est_unadj=se_est_unadj,
 
               coverage_adj_hc0=coverage_adj_hc0,
-              coverage_adj_hc3=coverage_adj_hc3,
+              #coverage_adj_hc3=coverage_adj_hc3,
               coverage_unadj_hc0=coverage_unadj_hc0,
               #coverage_unadj_cv=coverage_unadj_cv,
               #coverage_unadj_hc3=coverage_unadj_hc3,
 
               se_adj_hc0 = se_adj_hc0,
-              se_adj_hc3 = se_adj_hc3,
+              #se_adj_hc3 = se_adj_hc3,
               se_unadj_hc0 = se_unadj_hc0,
               #se_unadj_cv = se_unadj_cv,
               est_adj = est_adj,
 
               beta_hat = beta_hat,
               beta_se_adj_hc0=beta_se_adj_hc0,
-              beta_se_adj_hc3=beta_se_adj_hc3,
+              #beta_se_adj_hc3=beta_se_adj_hc3,
               true_betas = true_betas,
               #est_unadj = est_unadj,
               simu_param = list(ref=ref,b=b,

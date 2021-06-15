@@ -172,6 +172,7 @@ simu_corr_simple = function(ref,
     # thetab = apply(mb,2,function(z){z/sum(z)})
 
 
+    #browser()
     y = matrix(rpois(G*n_bulk,bulk_lib_size*G*thetab),nrow=G)
     rownames(y) = gene_names
 

@@ -1,9 +1,19 @@
+
+
+#'@param gene_thresh remove genes that have expression in very few cells(less than 5% of total cells for example)
+#'@param max_count_quantile_celltype
+#'@param max_count_quantile_indi
+
 set_data_decon = function(y=NULL,Y,
                           ref_type = 'multi_sc',
                           marker_gene = NULL,
-                          cell_type_idx=NULL,indi_idx = NULL,cell_types=NULL,
+                          cell_type_idx=NULL,indi_idx = NULL,
+                          cell_types=NULL,
                           tau2 = NULL,sigma2 = NULL,
-                          w=NULL,gene_thresh=0.05,max_count_quantile=0.99,filter.gene=TRUE){
+                          w=NULL,gene_thresh=0.05,
+                          max_count_quantile_celltype=0.99,
+                          max_count_quantile_indi = 0.99,
+                          filter.gene=TRUE){
 
   if(!is.null(y)){
     y = cbind(y)
@@ -95,9 +105,9 @@ set_data_decon = function(y=NULL,Y,
 
     rm.gene = which(rowSums(Y!=0)<gene_thresh)
 
-    # remove union of genes that expressed more than max_count_quantle each cell type
+    # remove union of genes that expressed more than max_count_quantile_celltype each cell type
 
-    if(!is.null(max_count_quantile)){
+    if(!is.null(max_count_quantile_celltype)){
 
       rm.gene.high = c()
       for(k in 1:K){
@@ -105,12 +115,32 @@ set_data_decon = function(y=NULL,Y,
         cell_k_idx = which(cell_type_idx==cell_types[k])
         if(length(cell_k_idx)!=0){
           gene_counts = rowSums(Y[,cell_k_idx])
-          rm.gene.high = c(rm.gene.high,which(gene_counts>quantile(gene_counts,max_count_quantile)))
+          rm.gene.high = c(rm.gene.high,which(gene_counts>quantile(gene_counts,max_count_quantile_celltype)))
         }
 
       }
 
       rm.gene = unique(c(rm.gene,rm.gene.high))
+
+    }
+
+    if(!is.null(max_count_quantile_indi)){
+
+      rm.gene.indi = c()
+
+      indi_name = levels(indi_idx)
+
+      for(j in 1:length(indi_name)){
+
+        indi_j_idx = which(indi_idx==indi_name[j])
+        if(length(indi_j_idx)!=0){
+          gene_counts = rowSums(Y[,indi_j_idx])
+          rm.gene.indi = c(rm.gene.indi,which(gene_counts>quantile(gene_counts,max_count_quantile_indi)))
+        }
+
+      }
+
+      rm.gene = unique(c(rm.gene,rm.gene.indi))
 
     }
 

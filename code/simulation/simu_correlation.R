@@ -132,6 +132,8 @@ simu_corr_simple = function(ref,
       }
     }
 
+    #browser()
+
     X_array_bulk = X_array[,,1:n_bulk]
     X_array = X_array[,,-(1:n_bulk)]
 

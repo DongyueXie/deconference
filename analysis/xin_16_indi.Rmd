@@ -1,0 +1,121 @@
+---
+title: "xin data 16 individual simulation"
+author: "Dongyue Xie"
+date: "2021-06-14"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r,warning=F,message=F}
+source('code/deconference_main.R')
+source('code/utils.R')
+source('code/wols.R')
+source('code/simulation/simu_correlation.R')
+```
+
+```{r}
+xin_raw <- readRDS("data/pancreas/xin_raw.rds")
+cell_types = c('alpha', 'beta', 'delta','gamma')
+K = length(cell_types)
+rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+rm.indi.idx = which(xin_raw$individual%in%rm.indi)
+
+datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types, 
+                           gene_thresh = 0.05,max_count_quantile_celltype = 0.95,
+                           max_count_quantile_indi = 0.95,
+                           w=1)
+design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,
+                                  datax.xin$indi_idx,estimator="separate",
+                                  est_sigma2 = F)
+
+
+```
+
+```{r}
+X <- design.mat.xin$X_array
+
+
+beta <- c(0.1,0.1, 0.3, 0.5) ## true beta for every one
+
+y <- apply(X, 3, function(mat) mat %*% beta)
+mu <- rowMeans(X, dims = 2)
+```
+
+```{r}
+library(sandwich)
+est.beta <- apply(y, 2, function(v) {
+  temp <- lm(v ~ mu + 0)
+  sw.sd <- sqrt(diag(vcovHC(temp, type="HC3")))
+  std.sd <- sqrt(diag(vcov(temp)))
+  temp <- pmax(temp$coef, 0)
+  return(signif(c(temp/sum(temp), (temp - beta) / std.sd, (temp - beta) / sw.sd), 2))
+})
+rownames(est.beta) <- c("Est1", "Est2", "Est3","Est4", "dev1.OLS", "dev2.OLS", "dev3.OLS","dev4.OLS", "dev1.sandwich", "dev2.sandwich", "dev3.sandwich","dev4.sandwich")
+rSE <- signif(sqrt(colSums((est.beta[1:4, ] - beta)^2)), 1)
+rbind(est.beta, rSE)
+```
+
+
+
+```{r}
+X.perm <- X
+for (i in 1:nrow(X)){X.perm[i, , ] <- X.perm[i, , sample.int(14)]}
+y.perm <- apply(X.perm, 3, function(mat) mat %*% beta)
+mu.perm <- rowMeans(X.perm, dims = 2)
+```
+
+```{r}
+est.beta.perm <- apply(y.perm, 2, function(v) {
+  temp <- lm(v ~ mu.perm + 0)
+  sw.sd <- sqrt(diag(vcovHC(temp, type="HC3")))
+  std.sd <- sqrt(diag(vcov(temp)))
+  temp <- pmax(temp$coef, 0)
+  return(signif(c(temp/sum(temp), (temp - beta) / std.sd, (temp - beta) / sw.sd), 2))
+})
+rownames(est.beta.perm) <- c("Est1", "Est2", "Est3","Est4", "dev1.OLS", "dev2.OLS", "dev3.OLS","dev4.OLS", "dev1.sandwich", "dev2.sandwich", "dev3.sandwich","dev4.sandwich")
+rSE <- signif(sqrt(colSums((est.beta.perm[1:4, ] - beta)^2)), 1)
+rbind(est.beta.perm, rSE)
+```
+
+
+check the distance of X, X.perm to their mean $U$,
+
+```{r}
+apply(X,3,function(z){sqrt(sum((z-mu)^2))})
+```
+
+```{r}
+apply(X.perm,3,function(z){sqrt(sum((z-mu)^2))})
+```
+
+
+adjust for measurement error:
+
+```{r}
+V = t(apply(X,c(1),function(z){(cov(t(z),use = 'pairwise.complete.obs'))}))/14
+
+fit.adj.hc0 = estimation_func2(y=y,X=mu,Vg=V,
+                                   w=1,hc.type='hc0',correction=FALSE,
+                                   calc_cov=F,verbose=F,
+                                   cor.idx=NULL,
+                                   centeringXY=F,
+                                   true.beta = NULL)
+
+print("estimated proportion")
+round(fit.adj.hc0$beta_hat,3)
+
+print("rooted square error")
+round(apply(fit.adj.hc0$beta_hat,2,function(z){sqrt(sum((z-beta)^2))}),3)
+
+print("estimated sd")
+round(fit.adj.hc0$beta_se,3)
+
+print("wald statistic")
+round((fit.adj.hc0$beta_hat - beta%*%t(rep(1,14)))/fit.adj.hc0$beta_se,2)
+```
+
+
+

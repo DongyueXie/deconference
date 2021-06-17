@@ -1,0 +1,247 @@
+---
+title: "multiple reference"
+author: "DongyueXie"
+date: "2021-06-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE,message = FALSE)
+```
+
+```{r}
+library(SingleCellExperiment)
+library(scater)
+library(GEOquery)
+library(MuSiC)
+library(Biobase)
+
+source('code/deconference_main.R')
+
+create_sce_from_counts = function(counts, colData, rowData = NULL) {
+  if(is.null(rowData)) {
+    sceset <- SingleCellExperiment(assays = list(counts = as.matrix(counts)),
+                                   colData = colData)
+  } else {
+    sceset <- SingleCellExperiment(assays = list(counts = as.matrix(counts)),
+                                   colData = colData,
+                                   rowData = rowData)
+  }
+  # this function writes to logcounts slot
+  #exprs(sceset) <- log2(calculateCPM(sceset, use.size.factors = FALSE) + 1)
+  # use gene names as feature symbols
+  rowData(sceset)$feature_symbol <- rownames(sceset)
+  # remove features with duplicated names
+  if(is.null(rowData)) {
+    sceset <- sceset[!duplicated(rowData(sceset)$feature_symbol), ]
+  }
+  # QC
+  #isSpike(sceset, "ERCC") <- grepl("^ERCC-", rownames(sceset))
+  #sceset <- calculateQCMetrics(sceset, feature_controls = list("ERCC" = isSpike(sceset, "ERCC")))
+  return(sceset)
+}
+
+# baron <- readRDS("data/pancreas/baron.rds")
+# muraro <- readRDS("data/pancreas/muraro.rds")
+# seger <- readRDS("~/deconference/data/pancreas/segerstolpe_raw2rpk.rds")
+# enge = readRDS("data/pancreas/enge_raw2rpk.rds")
+# xin = readRDS('data/pancreas/xin_raw2rpk.rds')
+# 
+# seger_raw = readRDS('data/pancreas/segerstolpe_raw.rds')
+
+# 4
+baron <- readRDS("data/pancreas/baron.rds")
+
+# 4
+muraro <- readRDS("data/pancreas/muraro.rds")
+
+# 10
+seger <- readRDS("data/pancreas/segerstolpe_raw.rds")
+
+# 8
+enge = readRDS("data/pancreas/enge_raw.rds")
+
+# 18
+xin = readRDS('data/pancreas/xin_raw.rds')
+
+createBulk_tech.noise = function(X_array, b, gene_names, ls_per_gene = 500,seed=12345){
+  
+  G = dim(X_array)[1]
+  K = dim(X_array)[2]
+  Ni = dim(X_array)[3]
+    
+  if(is.null(dim(b))){
+    y = apply(X_array,3,function(z){z%*%b})
+  }else{
+    y = matrix(nrow=G,ncol=Ni)
+    for(i in 1:Ni){
+      y[,i] = X_array[,,i]%*%b[,i]
+    }
+  }
+  y = y/colSums(y)*ls_per_gene*G
+  set.seed(seed)
+  y = matrix(rpois(prod(dim(y)),y),nrow=nrow(y),ncol=ncol(y))
+  rownames(y) = gene_names
+  colnames(y) = 1:ncol(y)
+  list(y=y,b=b*ls_per_gene)
+}
+
+cell_types = c('alpha', 'beta', 'delta', 'gamma')
+K = length(cell_types)
+rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+rm.indi.idx = which(xin$individual%in%rm.indi)
+
+datax.xin = set_data_decon(Y = xin[,-rm.indi.idx],cell_types = cell_types, 
+                           gene_thresh = 0.05,max_count_quantile_celltype = 0.95,
+                           max_count_quantile_indi = 0.95,
+                           w=1)
+design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,
+                                  datax.xin$indi_idx,estimator="separate",
+                                  est_sigma2 = F)
+Xin_X_array = design.mat.xin$X_array
+
+b = c(0.1,0.1,0.3,0.5)
+Xin_bulk = createBulk_tech.noise(Xin_X_array,b,datax.xin$genes)
+
+bulk.obj = create_sce_from_counts(Xin_bulk$y,
+                                  colData = DataFrame(individual = 1:14,
+                                                      condition = rep(1,14)))
+
+# XinT2Deset <- readRDS("data/MuSiC/XinT2Deset.rds")
+# XinT2D.construct.full = bulk_construct(XinT2Deset, clusters = 'cellType', samples = 'SubjectName')
+# XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+# knitr::kable(list(t0=table(XinT2Deset$SubjectName, XinT2Deset$cellType),t1=round(as.matrix(XinT2D.construct.full$prop.real),2)),
+#              caption = 'cell counts and proportinos in each individual',
+#              booktabs = TRUE, valign = 't')
+# bulk.obj = create_sce_from_counts(exprs(XinT2D.construct.full$Bulk.counts),
+#                                   colData = DataFrame(individual = XinT2D.construct.full$Bulk.counts$SubjectName,
+#                                                       condition = XinT2D.construct.full$Bulk.counts$Disease))
+# #cell_types = c('alpha','acinar','beta','delta','ductal','gamma')
+# 
+# genes <- read.csv("data/GSE81547Enge/hca/genes.csv")
+#ref.obj = list(baron=baron,muraro=muraro,seger=seger,enge=enge)
+#ref = multi_ref_proc(ref.obj,bulk.obj,genes,cell_types)
+
+#fit1 = deconference_multi_ref(ref$ref.obj,ref$bulk.obj,cell_types = cell_types,genes=genes)
+
+#round(t(fit1$beta_hat),2)
+```
+
+
+```{r, results='asis'}
+
+summary_real = function(out,true_b){
+  
+  # compare fitted vs true
+  b_hat = t(out$beta_hat)
+  rownames(b_hat) = rownames(true_b)
+  colnames(b_hat) = colnames(true_b)
+  print(knitr::kable(
+  list(t0 = round(b_hat,2), t1 = round(true_b,2)),
+  caption = 'estimated vs true beta',
+  booktabs = TRUE, valign = 't'))
+  
+  
+  ci_length = t(round(out$beta_se,2))
+  colnames(ci_length) = colnames(true_b)
+  rownames(ci_length) = rownames(true_b)
+  print(knitr::kable(ci_length,caption = 'beta hat se'))
+  
+  # summary statistics
+  rmse = sqrt(mean((t(out$beta_hat)-true_b)^2))
+  mad = mean(abs(t(out$beta_hat)-true_b))
+  r2 = cor(c(t(out$beta_hat)),c(true_b))
+  ss = rbind(c(rmse,mad,r2))
+  colnames(ss) = c('rmse','mad','r2')
+  rownames(ss) = NULL
+  
+  print(knitr::kable(ss,caption='error measure'))
+  
+  # coverage, length of CI
+  ci = build_ci(out)
+  coverage = c(true_b>=t(ci$ci_l))&(true_b<=t(ci$ci_r))
+  
+  print(knitr::kable(coverage,caption='coverage'))
+
+  # # two group test
+  # 
+  # groups = c(rep(1,12),rep(2,6))
+  # g1 = which(groups==1)
+  # g2 = which(groups==2)
+  # test2 = two_group_test(out,groups)
+  # 
+  # test_out = rbind(round(colMeans(true_b[g1,]) - colMeans(true_b[g2,]),3),
+  #                  round(test2$diff_group,3),
+  #                  round(sqrt(diag(test2$V_tilde)),3),
+  #                  round(test2$p_value,3))
+  # rownames(test_out) = c('true diff','estimated diff','se','p value')
+  # print(knitr::kable(test_out,caption= ' two group test'))
+  
+}
+
+
+# library(MuSiC)
+# library(Biobase)
+# XinT2Deset <- readRDS("data/MuSiC/XinT2Deset.rds")
+# XinT2D.construct.full = bulk_construct(XinT2Deset, clusters = 'cellType', samples = 'SubjectName')
+# XinT2D.construct.full$prop.real = relative.ab(XinT2D.construct.full$num.real, by.col = FALSE)
+# knitr::kable(list(t0=table(XinT2Deset$SubjectName, XinT2Deset$cellType),t1=round(as.matrix(XinT2D.construct.full$prop.real),2)),
+#              caption = 'cell counts and proportinos in each individual',
+#              booktabs = TRUE, valign = 't')
+```
+
+use all 4 datasets
+
+```{r}
+
+cell_types = c('alpha','beta','delta','gamma')
+
+#genes <- read.csv("data/GSE81547Enge/hca/genes.csv")
+ref.obj = list(baron=baron,muraro=muraro,seger=seger,enge=enge)
+ref = set_data_multiref(ref.obj,bulk.obj,cell_types=cell_types)
+```
+
+```{r, results='asis'}
+true_b = t(b%*%t(rep(1,14)))
+fit2 = deconference_multi_ref(ref$ref.obj,ref$bulk.obj,cell_types = cell_types,est_sigma2 = F,calc_cov=F,hc.type = 'hc0')
+#save(fit2,file='output/multiref_all.RData')
+#load('output/multiref_all.RData')
+summary_real(fit2,true_b)
+```
+
+
+
+use only segerstople
+
+```{r, results='asis'}
+fit3 = deconference_multi_ref(ref$ref.obj[3],ref$bulk.obj,cell_types = cell_types,est_sigma2 = F,calc_cov=F,hc.type = 'hc0')
+#save(fit3,file='output/multiref_seger.RData')
+#load('output/multiref_seger.RData')
+summary_real(fit3,true_b)
+```
+
+
+use only baron
+
+```{r, results='asis'}
+fit4 = deconference_multi_ref(ref$ref.obj[1],ref$bulk.obj,cell_types = cell_types,est_sigma2 = F,calc_cov=F,hc.type = 'hc0')
+#save(fit4,file='output/multiref_baron.RData')
+#load('output/multiref_baron.RData')
+summary_real(fit4,true_b)
+```
+
+
+use only muraro
+
+```{r, results='asis'}
+fit5 = deconference_multi_ref(ref$ref.obj[2],ref$bulk.obj,cell_types = cell_types,est_sigma2 = F,calc_cov=F,hc.type = 'hc0')
+#save(fit5,file='output/multiref_muraro.RData')
+#load('output/multiref_muraro.RData')
+summary_real(fit5,true_b)
+```
+
+

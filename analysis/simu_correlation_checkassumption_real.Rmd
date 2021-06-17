@@ -1,0 +1,280 @@
+---
+title: "Check variance estimate and normality in simulation, when correlation presents, xin data"
+author: "Dongyue Xie"
+date: "2021-06-10"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Simulated 1000 gene, 4 cell type, 4 bulk individuals
+
+```{r,warning=F,message=F}
+source('code/deconference_main.R')
+source('code/utils.R')
+source('code/wols.R')
+source('code/simulation/simu_correlation.R')
+
+ploter.temp = function(results){
+
+  par(mfrow=c(2,2))
+
+  plot(results$coverage_adj_hc0,
+       ylim = range(c(results$coverage_adj_hc0,results$coverage_unadj_hc0,results$coverage_unadj_cv,1),na.rm = T),
+       col=2,ylab='coverage',xlab='coefs',main='coverage of p',type='b')
+  lines(results$coverage_unadj_hc0,type='b',pch=2,col=4)
+  lines(results$coverage_unadj_cv,type='b',pch=2,col=3)
+  abline(h=0.95,lty=2)
+
+  plot(results$coverage_diff_adj_hc0,ylim = range(c(results$coverage_diff_adj_hc0,results$coverage_diff_unadj_hc0,results$coverage_diff_unadj_cv,1),na.rm = T),
+       col=2,type='b',ylab='coverage',xlab='coefs',main='coverage of difference')
+  lines(results$coverage_diff_unadj_hc0,type='b',pch=2,col=4)
+  lines(results$coverage_diff_unadj_cv,type='b',pch=2,col=3)
+  abline(h=0.95,lty=2)
+
+  #p_order = order(abs(results$p-results$p2))
+
+  plot(results$power_adj_hc0,ylim = range(c(results$power_adj_hc0,results$power_unadj_hc0,results$power_unadj_cv),na.rm = T),
+       col=2,ylab="power",xlab='',main='power')
+  lines(results$power_unadj_hc0,type='p',pch=2,col=4)
+  lines(results$power_unadj_cv,type='p',pch=2,col=3)
+  abline(h=0.05,lty=2)
+
+  legend('bottomright',c('adjusted_hc0','unadj_hc0',"unadj_const"),col=c(2,4,3),pch=c(1,2,2))
+
+  par(mfrow=c(1,1))
+
+}
+```
+
+```{r}
+
+xin_raw <- readRDS("data/pancreas/xin_raw.rds")
+cell_types = c('alpha', 'beta', 'delta', 'gamma')
+K = length(cell_types)
+rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+rm.indi.idx = which(xin_raw$individual%in%rm.indi)
+
+datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types, gene_thresh = 0.05,max_count_quantile_celltype = 0.95,max_count_quantile_indi=0.95,w=1)
+design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,datax.xin$indi_idx,estimator="separate",est_sigma2 = TRUE,meta_mode = 'local',smooth.sigma = FALSE)
+ref = design.mat.xin$X
+sigma2 = design.mat.xin$Sigma
+
+ref = ref+1/nrow(ref)
+sigma2 = sigma2 + 1/nrow(ref)
+
+G = 1000
+set.seed(12345)
+ii = sample(1:nrow(design.mat.xin$X),G)
+ii = sort(ii)
+ref.sub = ref[ii,]
+sigma2.sub=sigma2[ii,]
+
+
+# K = 4
+# set.seed(12345)
+# ref = matrix(rnorm(G*K),nrow=G)
+# ref = abs(ref)
+# ref = apply(ref, 2, function(z){z/sum(z)})*G
+# sigma2 = ref/2
+# rownames(ref) = 1:G
+b1 = c(0.1,0.1,0.3,0.5)
+b2 = c(0.1,0.2,0.5,0.2)
+nb = 4
+b.m = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
+```
+
+```{r}
+p = G
+A = matrix(0,nrow=p,ncol=p)
+d = 50
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+```
+
+
+```{r}
+set.seed(12345)
+simu = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,
+                        R=A,n_indi = 10,
+                        verbose = F,
+                        printevery = 1e5)
+# alpha = 0.05
+# ci_l = simu$est_adj - qnorm(1-alpha/2)*simu$se_adj_hc3
+# ci_r = simu$est_adj + qnorm(1-alpha/2)*simu$se_adj_hc3
+# coverage_adj_hc3 = ((rep(1,500)%*%t(c(b.m)))>=ci_l) & ((rep(1,500)%*%t(c(b.m)))<=ci_r)
+# coverage_adj_hc3=apply(coverage_adj_hc3,2,mean,na.rm=TRUE)
+# simu$coverage_adj_hc3 = coverage_adj_hc3
+#simu = readRDS('output/simu_correlation_checkassumption_betahat.rds')
+```
+
+
+```{r}
+simu$mean_est_adj
+simu$mse_adj
+```
+
+Coverage, adjusted for correlation
+```{r}
+simu$coverage_adj_hc0
+mean(simu$coverage_adj_hc0,na.rm=TRUE)
+```
+
+Coverage, not adjusted for correlation
+```{r}
+simu$coverage_unadj_hc0
+mean(simu$coverage_unadj_hc0)
+```
+
+
+```{r}
+ploter.temp(simu)
+```
+
+Check normality 
+
+```{r,fig.width=12,fig.height=12}
+par(mfrow=c(4,4))
+apply(simu$est_adj,2,function(z){qqnorm(z);qqline(z)})
+```
+
+
+Check variance of $\hat p$, estimated proportion
+
+```{r}
+par(mfrow=c(1,1))
+plot(apply(simu$est_adj,2,sd),type='b',ylim=range(c(apply(simu$est_adj,2,sd),apply(simu$se_adj_hc0,2,mean,na.rm=T))))
+lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
+lines(apply(simu$se_unadj_hc0,2,mean,na.rm=T),type='b',col=4)
+legend('bottomright',c('true p_hat se','estimated with cor','estimated without cor'),lty=c(1,1,1),pch=c(1,1,1),col=c(1,3,4))
+```
+
+
+Also check the variance of $\hat\beta$, estimated scaled proportion(before normalizing to sum to 1)
+
+```{r}
+par(mfrow=c(1,1))
+plot(apply(simu$beta_hat,2,sd),type='b',ylim=range(c(apply(simu$beta_hat,2,sd),apply(simu$beta_se_adj_hc0,2,mean,na.rm=T))))
+lines(apply(simu$beta_se_adj_hc0,2,mean,na.rm=TRUE),type='b',col=3)
+legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
+```
+
+Look at the coverage of $\hat\beta$: also under-covered
+
+```{r}
+alpha = 0.05
+ci_l = simu$beta_hat - qnorm(1-alpha/2)*simu$beta_se_adj_hc0
+ci_r = simu$beta_hat + qnorm(1-alpha/2)*simu$beta_se_adj_hc0
+coverage_adj_hc0 = (simu$true_betas>=ci_l) & (simu$true_betas<=ci_r)
+coverage_adj_hc0=apply(coverage_adj_hc0,2,mean,na.rm=T)
+coverage_adj_hc0
+mean(coverage_adj_hc0,na.rm=T)
+```
+
+## Does this due to the plug-in beta hat?
+
+Let's calculate the variance using true beta
+
+```{r}
+set.seed(12345)
+simu_trueb = simu_corr_simple(ref.sub,b.m,nreps=100,
+                        sigma2=sigma2.sub,
+                        R=A,n_indi = 10,
+                        verbose = F,
+                        printevery = 1e5,
+                        true.beta.for.Sigma = TRUE)
+# 
+# alpha = 0.05
+# ci_l = simu_trueb$est_adj - qnorm(1-alpha/2)*simu_trueb$se_adj_hc0
+# ci_r = simu_trueb$est_adj + qnorm(1-alpha/2)*simu_trueb$se_adj_hc0
+# coverage_adj_hc0 = ((rep(1,500)%*%t(c(b.m)))>=ci_l) & ((rep(1,500)%*%t(c(b.m)))<=ci_r)
+# coverage_adj_hc0=apply(coverage_adj_hc0,2,mean,na.rm=TRUE)
+# simu_trueb$coverage_adj_hc0 = coverage_adj_hc0
+
+#simu_trueb = readRDS('output/simu_correlation_checkassumption_truebeta.rds')
+```
+
+Coverage, adjusted for correlation
+```{r}
+simu_trueb$coverage_adj_hc0
+mean(simu_trueb$coverage_adj_hc0,na.rm=T)
+```
+
+Coverage, not adjusted for correlation
+```{r}
+simu_trueb$coverage_unadj_hc0
+mean(simu_trueb$coverage_unadj_hc0)
+```
+
+Check variance of $\hat p$, estimated proportion
+
+```{r}
+par(mfrow=c(1,1))
+plot(apply(simu_trueb$est_adj,2,sd),type='b',ylim=range(c(apply(simu_trueb$est_adj,2,sd),apply(simu_trueb$se_adj_hc0,2,mean,na.rm=T))))
+lines(apply(simu_trueb$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
+legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
+```
+
+
+Also check the variance of $\hat\beta$, estimated scaled proportion(before normalizing to sum to 1)
+
+```{r}
+par(mfrow=c(1,1))
+plot(apply(simu_trueb$beta_hat,2,sd),type='b',ylim=range(c(apply(simu_trueb$beta_hat,2,sd),apply(simu_trueb$beta_se_adj_hc0,2,mean,na.rm=T))))
+lines(apply(simu_trueb$beta_se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
+legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
+```
+
+Look at the coverage of $\hat\beta$: covered
+
+```{r}
+alpha = 0.05
+ci_l = simu_trueb$beta_hat - qnorm(1-alpha/2)*simu_trueb$beta_se_adj_hc0
+ci_r = simu_trueb$beta_hat + qnorm(1-alpha/2)*simu_trueb$beta_se_adj_hc0
+coverage_adj_hc0 = (simu_trueb$true_betas>=ci_l) & (simu_trueb$true_betas<=ci_r)
+coverage_adj_hc0=apply(coverage_adj_hc0,2,mean,na.rm=T)
+coverage_adj_hc0
+mean(coverage_adj_hc0)
+```
+
+## check data generation
+
+```{r}
+n.ref = matrix(nrow=G,ncol=K)
+n.Sigma.chol = list()
+n.Sigma = matrix(nrow=G,ncol=K)
+  for(k in 1:K){
+    n.ref[,k] = log(ref.sub[,k]^2/sqrt(ref.sub[,k]^2+sigma2.sub[,k]))
+    n.s = sqrt(log(1+sigma2.sub[,k]^2/ref.sub[,k]^2))
+    n.Sigma.chol[[k]] = t(n.s*t(chol(A)))
+  }
+
+X_array = array(dim=c(G,K,100))
+
+    for(k in 1:K){
+     
+        X_array[,k,] = t(exp(mvnfast::rmvn(100,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+      
+    }
+    
+Xm = apply(X_array,c(1,2),mean)
+
+plot(Xm[,1],ref.sub[,1])
+plot(Xm[,2],ref.sub[,2])
+plot(Xm[,3],ref.sub[,3])
+plot(Xm[,4],ref.sub[,4])
+
+```
+
+
+
+

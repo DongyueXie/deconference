@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree05ddaf527d939fd52749ae850453e21217dc5ecatargetblank05ddaf5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/05ddaf527d939fd52749ae850453e21217dc5eca" target="_blank">05ddaf5</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1383fa7f8d8da5538bd8089362c7ff14b3b930ectargetblank1383fa7a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/1383fa7f8d8da5538bd8089362c7ff14b3b930ec" target="_blank">1383fa7</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree05ddaf527d939fd52749ae850453e21217dc5ecatargetblank05ddaf5a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1383fa7f8d8da5538bd8089362c7ff14b3b930ectargetblank1383fa7a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/05ddaf527d939fd52749ae850453e21217dc5eca" target="_blank">05ddaf5</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/1383fa7f8d8da5538bd8089362c7ff14b3b930ec" target="_blank">1383fa7</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -535,6 +535,7 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
+    Untracked:  analysis/simu_correlation_checkvariance_real_hc3.Rmd
     Untracked:  data/DAbulk.rds
     Untracked:  data/Epen1bulk.rds
     Untracked:  data/FPPbulk.rds
@@ -557,11 +558,13 @@ Untracked files:
     Untracked:  output/geneCor_U_NeurBulk_cpm.rds
     Untracked:  output/geneCor_gtexpancreas_tpm.rds
     Untracked:  output/geneCor_neuronBulk_cpm.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_trueb.rds
     Untracked:  renv.lock
     Untracked:  renv/
 
 Unstaged changes:
     Modified:   .Rprofile
+    Modified:   code/deconference_estfunc.R
     Modified:   output/simu_correlation_checkavariance_betahat_d500_xin.rds
     Modified:   output/simu_correlation_checkavariance_betahat_d50_xin.rds
 
@@ -602,6 +605,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/1383fa7f8d8da5538bd8089362c7ff14b3b930ec/analysis/simu_correlation_checkvariance_real.Rmd" target="_blank">1383fa7</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-06-19
+</td>
+<td>
+wflow_publish(“analysis/simu_correlation_checkvariance_real.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/b50fa83174f10d377affd753d017a44b608bebb6/docs/simu_correlation_checkvariance_real.html" target="_blank">b50fa83</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-06-19
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -872,6 +909,39 @@ legend(&#39;bottomright&#39;,c(&#39;true p_hat se&#39;,&#39;estimated with cor&#
 <pre><code> [1] 0.010557604 0.006706677 0.006296227 0.012698281 0.011536049 0.008235172
  [7] 0.009411469 0.020801691 0.009354508 0.011648356 0.011883385 0.008295774
 [13] 0.009872688 0.014555272 0.011506235 0.009585905</code></pre>
+<p>Use true beta for calculating the variance</p>
+<pre class="r"><code># set.seed(12345)
+# simu = simu_corr_simple(ref,b.m,nreps=100,
+#                         sigma2=sigma2,
+#                         R=A,n_indi = 10,
+#                         verbose = F,
+#                         printevery = 1,
+#                         true.beta.for.Sigma = TRUE)
+# saveRDS(simu,file=&#39;output/simu_correlation_checkavariance_betahat_d500_xin_trueb.rds&#39;)
+simu = readRDS(&#39;output/simu_correlation_checkavariance_betahat_d500_xin_trueb.rds&#39;)</code></pre>
+<pre class="r"><code>ploter.temp(simu)</code></pre>
+<p><img src="figure/simu_correlation_checkvariance_real.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Coverage, adjusted for correlation</p>
+<pre class="r"><code>simu$coverage_adj_hc0</code></pre>
+<pre><code> [1] 0.960000 0.980000 0.960000 0.990000 0.980000 0.979798 1.000000 0.960000
+ [9] 1.000000 0.970000 0.950000 0.980000 0.980000 0.950000 0.940000 0.970000</code></pre>
+<pre class="r"><code>mean(simu$coverage_adj_hc0,na.rm=TRUE)</code></pre>
+<pre><code>[1] 0.9718624</code></pre>
+<p>Coverage, not adjusted for correlation</p>
+<pre class="r"><code>simu$coverage_unadj_hc0</code></pre>
+<pre><code> [1] 0.47 0.40 0.49 0.48 0.47 0.33 0.44 0.39 0.39 0.45 0.41 0.39 0.39 0.40 0.46
+[16] 0.41</code></pre>
+<pre class="r"><code>mean(simu$coverage_unadj_hc0)</code></pre>
+<pre><code>[1] 0.423125</code></pre>
+<p>Check variance of <span class="math inline">\(\hat p\)</span>, estimated proportion</p>
+<pre class="r"><code>par(mfrow=c(1,1))
+plot(apply(simu$est_adj,2,sd),type=&#39;b&#39;,ylim=range(c(apply(simu$est_adj,2,sd),
+                                                    apply(simu$se_adj_hc0,2,mean,na.rm=T),
+                                                    apply(simu$se_unadj_hc0,2,mean,na.rm=T))))
+lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type=&#39;b&#39;,col=3)
+lines(apply(simu$se_unadj_hc0,2,mean,na.rm=T),type=&#39;b&#39;,col=4)
+legend(&#39;bottomright&#39;,c(&#39;true p_hat se&#39;,&#39;estimated with cor&#39;,&#39;estimated without cor&#39;),lty=c(1,1,1),pch=c(1,1,1),col=c(1,3,4))</code></pre>
+<p><img src="figure/simu_correlation_checkvariance_real.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

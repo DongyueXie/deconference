@@ -140,22 +140,14 @@ mean(simu$coverage_unadj_hc0)
 
 
 Check variance of $\hat p$, estimated proportion
-
 ```{r}
 par(mfrow=c(1,1))
-plot(apply(simu$est_adj,2,sd),type='b',ylim=range(c(apply(simu$est_adj,2,sd),apply(simu$se_adj_hc0,2,mean,na.rm=T))))
+plot(apply(simu$est_adj,2,sd),type='b',ylim=range(c(apply(simu$est_adj,2,sd),
+                                                    apply(simu$se_adj_hc0,2,mean,na.rm=T),
+                                                    apply(simu$se_unadj_hc0,2,mean,na.rm=T))))
 lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
-legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
-```
-
-The reason is probably: In the generation of $X$, it's mean is different from $U$ due to the large variance.
-
-```{r}
-simu$mean_est_adj
-```
-
-```{r}
-simu$mse_adj
+lines(apply(simu$se_unadj_hc0,2,mean,na.rm=T),type='b',col=4)
+legend('bottomright',c('true p_hat se','estimated with cor','estimated without cor'),lty=c(1,1,1),pch=c(1,1,1),col=c(1,3,4))
 ```
 
 ```{r,fig.width=12,fig.height=12}
@@ -163,140 +155,10 @@ par(mfrow=c(4,4))
 apply(simu$est_adj,2,function(z){qqnorm(z);qqline(z)})
 ```
 
-### filter out large variances
-
-filter out large variances
-
-```{r}
-# remove sigma2 that's too large
-rm.idx = apply(sigma2,2,function(z){which(z>=quantile(z,0.80))})
-rm.idx = unique(c(rm.idx))
-ref = ref[-rm.idx,]
-sigma2 = sigma2[-rm.idx,]
-
-
-dim(ref)
-```
-
-```{r}
-apply(sigma2,2,function(z){round(quantile(z),3)})
-```
-
-```{r}
-G = nrow(ref)
-K = 4
-d = 50
-A = matrix(0,nrow=G,ncol=G)
-
-for(i in 1:G){
-  for(j in i:min(i+d,G)){
-    A[i,j] = max(1-abs(i-j)/d,0)
-  }
-}
-A = A+t(A) - diag(G)
-library(Matrix)
-A = Matrix(A,sparse = TRUE)
-```
-
-```{r}
-# set.seed(12345)
-# simu = simu_corr_simple(ref,b.m,nreps=100,
-#                         sigma2=sigma2,
-#                         R=A,n_indi = 10,
-#                         verbose = F,
-#                         printevery = 1)
-# saveRDS(simu,file='output/simu_correlation_checkavariance_betahat_d50_xin_sigma2small.rds')
-simu = readRDS('output/simu_correlation_checkavariance_betahat_d50_xin_sigma2small.rds')
-```
-
-```{r}
-ploter.temp(simu)
-```
-
-Coverage, adjusted for correlation
-```{r}
-simu$coverage_adj_hc0
-mean(simu$coverage_adj_hc0,na.rm=TRUE)
-```
-
-Coverage, not adjusted for correlation
-```{r}
-simu$coverage_unadj_hc0
-mean(simu$coverage_unadj_hc0)
-```
-
-
-Check variance of $\hat p$, estimated proportion
-
-```{r}
-par(mfrow=c(1,1))
-plot(apply(simu$est_adj,2,sd),type='b',ylim=c(0,0.16))
-lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
-legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
-```
-
-
-### filter out large variances, and then divide them by 2
-
-
-```{r}
-apply(sigma2/2,2,function(z){round(quantile(z),3)})
-```
-
-
-```{r}
-# set.seed(12345)
-# simu = simu_corr_simple(ref,b.m,nreps=100,
-#                         sigma2=sigma2/2,
-#                         R=A,n_indi = 10,
-#                         verbose = F,
-#                         printevery = 1)
-# saveRDS(simu,file='output/simu_correlation_checkavariance_betahat_d50_xin_sigma2smaller.rds')
-simu = readRDS('output/simu_correlation_checkavariance_betahat_d50_xin_sigma2smaller.rds')
-```
-
-```{r}
-ploter.temp(simu)
-```
-
-Coverage, adjusted for correlation
-```{r}
-simu$coverage_adj_hc0
-mean(simu$coverage_adj_hc0,na.rm=TRUE)
-```
-
-Coverage, not adjusted for correlation
-```{r}
-simu$coverage_unadj_hc0
-mean(simu$coverage_unadj_hc0)
-```
-
-
-Check variance of $\hat p$, estimated proportion
-
-```{r}
-par(mfrow=c(1,1))
-plot(apply(simu$est_adj,2,sd),type='b',ylim=c(0,0.06))
-lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
-legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
-```
 
 
 ## each gene correlated with 500 genes
 
-
-```{r}
-
-ref = design.mat.xin$X
-sigma2 = design.mat.xin$Sigma
-ref = ref+1/nrow(ref)
-sigma2 = sigma2 + 1/nrow(ref)
-
-```
-
-```{r}
-apply(sigma2,2,function(z){round(quantile(z),3)})
-```
 
 ```{r}
 G = nrow(ref)
@@ -349,9 +211,12 @@ Check variance of $\hat p$, estimated proportion
 
 ```{r}
 par(mfrow=c(1,1))
-plot(apply(simu$est_adj,2,sd),type='b',ylim=range(c(apply(simu$est_adj,2,sd),apply(simu$se_adj_hc0,2,mean,na.rm=T))))
+plot(apply(simu$est_adj,2,sd),type='b',ylim=range(c(apply(simu$est_adj,2,sd),
+                                                    apply(simu$se_adj_hc0,2,mean,na.rm=T),
+                                                    apply(simu$se_unadj_hc0,2,mean,na.rm=T))))
 lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
-legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
+lines(apply(simu$se_unadj_hc0,2,mean,na.rm=T),type='b',col=4)
+legend('bottomright',c('true p_hat se','estimated with cor','estimated without cor'),lty=c(1,1,1),pch=c(1,1,1),col=c(1,3,4))
 ```
 
 
@@ -362,128 +227,3 @@ simu$mean_est_adj
 ```{r}
 simu$mse_adj
 ```
-
-### filter out large variances
-
-filter out large variances
-
-```{r}
-# remove sigma2 that's too large
-rm.idx = apply(sigma2,2,function(z){which(z>=quantile(z,0.80))})
-rm.idx = unique(c(rm.idx))
-ref = ref[-rm.idx,]
-sigma2 = sigma2[-rm.idx,]
-
-
-dim(ref)
-```
-
-```{r}
-apply(sigma2,2,function(z){round(quantile(z),3)})
-```
-
-```{r}
-G = nrow(ref)
-K = 4
-d = 500
-A = matrix(0,nrow=G,ncol=G)
-
-for(i in 1:G){
-  for(j in i:min(i+d,G)){
-    A[i,j] = max(1-abs(i-j)/d,0)
-  }
-}
-A = A+t(A) - diag(G)
-library(Matrix)
-A = Matrix(A,sparse = TRUE)
-```
-
-```{r}
-# set.seed(12345)
-# simu = simu_corr_simple(ref,b.m,nreps=100,
-#                         sigma2=sigma2,
-#                         R=A,n_indi = 10,
-#                         verbose = F,
-#                         printevery = 1)
-# saveRDS(simu,file='output/simu_correlation_checkavariance_betahat_d500_xin_sigma2small.rds')
-simu = readRDS('output/simu_correlation_checkavariance_betahat_d500_xin_sigma2small.rds')
-```
-
-```{r}
-ploter.temp(simu)
-```
-
-Coverage, adjusted for correlation
-```{r}
-simu$coverage_adj_hc0
-mean(simu$coverage_adj_hc0,na.rm=TRUE)
-```
-
-Coverage, not adjusted for correlation
-```{r}
-simu$coverage_unadj_hc0
-mean(simu$coverage_unadj_hc0)
-```
-
-
-Check variance of $\hat p$, estimated proportion
-
-```{r}
-par(mfrow=c(1,1))
-plot(apply(simu$est_adj,2,sd),type='b',ylim=c(0,0.16))
-lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
-legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
-```
-
-
-### filter out large variances, and then divide them by 2
-
-
-```{r}
-apply(sigma2/2,2,function(z){round(quantile(z),3)})
-```
-
-
-```{r}
-# set.seed(12345)
-# simu = simu_corr_simple(ref,b.m,nreps=100,
-#                         sigma2=sigma2/2,
-#                         R=A,n_indi = 10,
-#                         verbose = F,
-#                         printevery = 1)
-# saveRDS(simu,file='output/simu_correlation_checkavariance_betahat_d500_xin_sigma2smaller.rds')
-simu = readRDS('output/simu_correlation_checkavariance_betahat_d500_xin_sigma2smaller.rds')
-```
-
-```{r}
-ploter.temp(simu)
-```
-
-Coverage, adjusted for correlation
-```{r}
-simu$coverage_adj_hc0
-mean(simu$coverage_adj_hc0,na.rm=TRUE)
-```
-
-Coverage, not adjusted for correlation
-```{r}
-simu$coverage_unadj_hc0
-mean(simu$coverage_unadj_hc0)
-```
-
-
-Check variance of $\hat p$, estimated proportion
-
-```{r}
-par(mfrow=c(1,1))
-plot(apply(simu$est_adj,2,sd),type='b',ylim=c(0,0.06))
-lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
-legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
-```
-
-
-
-
-
-
-

@@ -197,13 +197,11 @@ simu_twosample = function(ref,b,
 
     fit.adj.hc0 = estimation_func2(y=data.obj$y,X=dmat$X,Vg=dmat$Vg,dmat$Sigma,
                            w=1,hc.type='hc0',correction=FALSE,
-                           S=dmat$S,calc_cov=TRUE,verbose=verbose,
-                           ref_weights = FALSE)
+                           S=dmat$S,calc_cov=TRUE,verbose=verbose)
 
     fit.adj.hc3 = estimation_func2(y=data.obj$y,X=dmat$X,Vg=dmat$Vg,dmat$Sigma,
                                    w=1,hc.type='hc3',correction=FALSE,
-                                   S=dmat$S,calc_cov=TRUE,verbose=verbose,
-                                   ref_weights = FALSE)
+                                   S=dmat$S,calc_cov=TRUE,verbose=verbose)
 
     fit_unadj = unadjusted_lm(fit.adj.hc0$input$y,fit.adj.hc0$input$X,w=fit.adj.hc0$input$w,groups = groups)
 

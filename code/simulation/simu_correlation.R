@@ -1,4 +1,3 @@
-
 #'@description generate multivariate log-normal random variable.
 #'@param n number of samples
 #'@param mu mean of the log normal distributed variable
@@ -92,11 +91,12 @@ simu_corr_simple = function(ref,
   n.ref = matrix(nrow=G,ncol=K)
   n.Sigma.chol = list()
   n.Sigma = matrix(nrow=G,ncol=K)
+  chol.R = chol(R)
   for(k in 1:K){
     n.ref[,k] = log(ref[,k]^2/sqrt(ref[,k]^2+sigma2[,k]))
-    n.s = sqrt(log(1+sigma2[,k]^2/ref[,k]^2))
+    n.s = sqrt(log(1+sigma2[,k]/ref[,k]^2))
     if(!is.indep){
-      n.Sigma.chol[[k]] = t(n.s*t(chol(R)))
+      n.Sigma.chol[[k]] = t(n.s*t(chol.R))
     }else{
       n.Sigma[,k] = n.s^2
     }

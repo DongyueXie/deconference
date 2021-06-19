@@ -45,9 +45,9 @@ deconference = function(data.obj,
                         calc_cov=TRUE,
                         a=10,
                         verbose=FALSE,
-                        ref_weights = TRUE,
-                        beta.to.use = "equal",
-                        beta.true = NULL){
+                        use.weight.ref = TRUE,
+                        p.for.weight = "equal",
+                        p.true = NULL){
 
   ref_type = data.obj$ref_type
   w = data.obj$w
@@ -97,17 +97,17 @@ deconference = function(data.obj,
     out = estimation_func2(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,
                           w=w,hc.type=hc.type,correction=correction,a=a,
                           S=design.mat$S,calc_cov=calc_cov,verbose=verbose,
-                          ref_weights = ref_weights,
-                          beta.to.use = beta.to.use,
-                          beta.true = beta.true)
+                          use.weight.ref = use.weight.ref,
+                          p.for.weight = p.for.weight,
+                          p.true = p.true)
   }
   if(cellsize_est=='glm'){
     out = estimation_func2(y=y,X=design.mat$X,Vg=design.mat$Vg,design.mat$Sigma,
                           w=w,hc.type=hc.type,correction=correction,a=a,
                           S=design.mat$S_glm,calc_cov=calc_cov,verbose=verbose,
-                          ref_weights = ref_weights,
-                          beta.to.use = beta.to.use,
-                          beta.true = beta.true)
+                          use.weight.ref = use.weight.ref,
+                          p.for.weight = p.for.weight,
+                          p.true = p.true)
   }
 
   rownames(out$beta_hat) = colnames(design.mat$X)

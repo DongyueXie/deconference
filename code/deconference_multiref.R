@@ -60,15 +60,20 @@ preprocess_sc = function(Y,
   Y = Y[,temp_idx]
   K = length(cell_types)
 
-  if(protocol=='nonUMI'&(!is.null(gene_length))){
-    cm_gene = intersect(rownames(Y),names(gene_length))
-    gene_y_idx = match(cm_gene,rownames(Y))
-    gene_len_idx = match(cm_gene,names(gene_length))
-    Y = Y[gene_y_idx,]
-    gene_len = gene_length[gene_len_idx]
-    gene_len = gene_len/sum(gene_len)*length(gene_len)
-    counts(Y) = counts(Y)/gene_len
+  if(!is.null(protocol)){
+
+    if(protocol=='nonUMI'&(!is.null(gene_length))){
+      cm_gene = intersect(rownames(Y),names(gene_length))
+      gene_y_idx = match(cm_gene,rownames(Y))
+      gene_len_idx = match(cm_gene,names(gene_length))
+      Y = Y[gene_y_idx,]
+      gene_len = gene_length[gene_len_idx]
+      gene_len = gene_len/sum(gene_len)*length(gene_len)
+      counts(Y) = counts(Y)/gene_len
+    }
+
   }
+
 
   if(gene_thresh<1){
     gene_thresh = round(gene_thresh*ncol(Y))

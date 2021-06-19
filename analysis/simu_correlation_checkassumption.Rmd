@@ -1,5 +1,5 @@
 ---
-title: "Check variance estimate and normality in simulation, when correlation presents"
+title: "Check variance estimate and normality in simulation, when correlation presents, simulated U"
 author: "Dongyue Xie"
 date: "2021-06-10"
 output: workflowr::wflow_html
@@ -65,7 +65,7 @@ b.m = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
 ```
 
 ```{r}
-p = 1000
+p = G
 A = matrix(0,nrow=p,ncol=p)
 
 for(i in 1:p){
@@ -77,19 +77,14 @@ for(i in 1:p){
 
 
 ```{r}
-# set.seed(12345)
-# simu = simu_corr_simple(ref,b.m,nreps=500,
-#                         sigma2=sigma2,
-#                         R=A,n_indi = 10,
-#                         verbose = F,
-#                         printevery = 1)
-# alpha = 0.05
-# ci_l = simu$est_adj - qnorm(1-alpha/2)*simu$se_adj_hc3
-# ci_r = simu$est_adj + qnorm(1-alpha/2)*simu$se_adj_hc3
-# coverage_adj_hc3 = ((rep(1,500)%*%t(c(b.m)))>=ci_l) & ((rep(1,500)%*%t(c(b.m)))<=ci_r)
-# coverage_adj_hc3=apply(coverage_adj_hc3,2,mean,na.rm=TRUE)
-# simu$coverage_adj_hc3 = coverage_adj_hc3
-simu = readRDS('output/simu_correlation_checkassumption_betahat.rds')
+set.seed(12345)
+simu = simu_corr_simple(ref,b.m,nreps=100,
+                        sigma2=sigma2,
+                        R=A,n_indi = 10,
+                        verbose = F,
+                        printevery = 1e5)
+
+#simu = readRDS('output/simu_correlation_checkassumption_betahat.rds')
 ```
 
 Coverage, adjusted for correlation
@@ -156,22 +151,16 @@ mean(coverage_adj_hc0,na.rm=T)
 Let's calculate the variance using true beta
 
 ```{r}
-# set.seed(12345)
-# simu_trueb = simu_corr_simple(ref,b.m,nreps=500,
-#                         sigma2=sigma2,
-#                         R=A,n_indi = 10,
-#                         verbose = F,
-#                         printevery = 1,
-#                         true.beta.for.Sigma = TRUE)
-# 
-# alpha = 0.05
-# ci_l = simu_trueb$est_adj - qnorm(1-alpha/2)*simu_trueb$se_adj_hc0
-# ci_r = simu_trueb$est_adj + qnorm(1-alpha/2)*simu_trueb$se_adj_hc0
-# coverage_adj_hc0 = ((rep(1,500)%*%t(c(b.m)))>=ci_l) & ((rep(1,500)%*%t(c(b.m)))<=ci_r)
-# coverage_adj_hc0=apply(coverage_adj_hc0,2,mean,na.rm=TRUE)
-# simu_trueb$coverage_adj_hc0 = coverage_adj_hc0
+set.seed(12345)
+simu_trueb = simu_corr_simple(ref,b.m,nreps=100,
+                        sigma2=sigma2,
+                        R=A,n_indi = 10,
+                        verbose = F,
+                        printevery = 1e5,
+                        true.beta.for.Sigma = TRUE)
 
-simu_trueb = readRDS('output/simu_correlation_checkassumption_truebeta.rds')
+
+#simu_trueb = readRDS('output/simu_correlation_checkassumption_truebeta.rds')
 ```
 
 Coverage, adjusted for correlation

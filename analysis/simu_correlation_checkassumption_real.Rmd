@@ -9,7 +9,7 @@ editor_options:
 
 ## Introduction
 
-Simulated 1000 gene, 4 cell type, 4 bulk individuals
+randomly subsample 1000 gene, 4 cell type, 4 bulk individuals
 
 ```{r,warning=F,message=F}
 source('code/deconference_main.R')
@@ -152,7 +152,9 @@ Check variance of $\hat p$, estimated proportion
 
 ```{r}
 par(mfrow=c(1,1))
-plot(apply(simu$est_adj,2,sd),type='b',ylim=range(c(apply(simu$est_adj,2,sd),apply(simu$se_adj_hc0,2,mean,na.rm=T))))
+plot(apply(simu$est_adj,2,sd),type='b',ylim=range(c(apply(simu$est_adj,2,sd),
+                                                    apply(simu$se_adj_hc0,2,mean,na.rm=T),
+                                                    apply(simu$se_unadj_hc0,2,mean,na.rm=T))))
 lines(apply(simu$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
 lines(apply(simu$se_unadj_hc0,2,mean,na.rm=T),type='b',col=4)
 legend('bottomright',c('true p_hat se','estimated with cor','estimated without cor'),lty=c(1,1,1),pch=c(1,1,1),col=c(1,3,4))
@@ -219,9 +221,13 @@ Check variance of $\hat p$, estimated proportion
 
 ```{r}
 par(mfrow=c(1,1))
-plot(apply(simu_trueb$est_adj,2,sd),type='b',ylim=range(c(apply(simu_trueb$est_adj,2,sd),apply(simu_trueb$se_adj_hc0,2,mean,na.rm=T))))
+plot(apply(simu_trueb$est_adj,2,sd),type='b',
+     ylim=range(c(apply(simu_trueb$est_adj,2,sd),
+                  apply(simu_trueb$se_adj_hc0,2,mean,na.rm=T),
+                  apply(simu_trueb$se_unadj_hc0,2,mean,na.rm=T))))
 lines(apply(simu_trueb$se_adj_hc0,2,mean,na.rm=T),type='b',col=3)
-legend('bottomright',c('true p_hat se','estimated'),lty=c(1,1),pch=c(1,1),col=c(1,3))
+lines(apply(simu_trueb$se_unadj_hc0,2,mean,na.rm=T),type='b',col=4)
+legend('bottomright',c('true p_hat se','estimated with cor','estimated without cor'),lty=c(1,1,1),pch=c(1,1,1),col=c(1,3,4))
 ```
 
 
@@ -254,7 +260,7 @@ n.Sigma.chol = list()
 n.Sigma = matrix(nrow=G,ncol=K)
   for(k in 1:K){
     n.ref[,k] = log(ref.sub[,k]^2/sqrt(ref.sub[,k]^2+sigma2.sub[,k]))
-    n.s = sqrt(log(1+sigma2.sub[,k]^2/ref.sub[,k]^2))
+    n.s = sqrt(log(1+sigma2.sub[,k]/ref.sub[,k]^2))
     n.Sigma.chol[[k]] = t(n.s*t(chol(A)))
   }
 

@@ -1,0 +1,33 @@
+---
+title: "simu_twoSample"
+author: "Dongyue Xie"
+date: "2021-05-07"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Two group of bulk samples, $b_1 = (0.1,0.1,0.3,0.5)$, $b_2 = (0.1,0.2,0.5,0.2)$, and $b_1-b_2 = c(0.0, -0.1, -0.2,  0.3)$.
+
+```{r,fig.width=8,fig.height=8}
+source('code/ploter.R')
+
+simu <- readRDS("output/simu_twosample_xin_nb10.rds")
+
+ploter_multibulk(simu)
+
+simu <- readRDS("output/simu_twosample_xin_nb50.rds")
+
+ploter_multibulk(simu)
+
+simu <- readRDS("output/simu_twosample_seger_nb10.rds")
+
+ploter_multibulk(simu)
+
+simu <- readRDS("output/simu_twosample_baron_nb10.rds")
+
+ploter_multibulk(simu)
+
+```

@@ -137,7 +137,7 @@ dim(ref)
 ```
 
 
-```{r}
+```{r,fig.width=10,fig.height=5}
 # set.seed(12345)
 # simu = simu_corr_simple(ref,b.m,nreps=100,
 #                         sigma2=sigma2,

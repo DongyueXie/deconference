@@ -50,7 +50,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            true.beta = NULL,
                            centeringXY = FALSE,
                            asyV.pos = TRUE,
-                           Q.pos = TRUE
+                           Q.pos = TRUE,
+                           only.scale.pos.res=FALSE
                            ){
 
   #browser()
@@ -208,7 +209,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                     V=Vw,h=h,nb=nb,
                     G=G,K=K,lambda=lambda,verbose=verbose,
                     calc_cov=calc_cov,hc.type=hc.type,
-                    cor.idx=cor.idx)
+                    cor.idx=cor.idx,
+                    only.scale.pos.res=only.scale.pos.res)
   covb = Q_inv%*%Sigma%*%Q_inv
 
   # if(is.null(R)){
@@ -325,7 +327,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 
 #'@description allow correlations among samples, and use yw and Xw, not X and y
-get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx){
+#'#'@param only.scale.pos.res only apply hc adjustment to positive empirical covariance, when accounting for correlation?
+get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx,only.scale.pos.res){
 
 
 
@@ -336,6 +339,15 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
 
   res = y - X%*%beta
 
+
+  h = pmax(pmin(h,1-1/G),0)
+  if(hc.type == 'hc0'){
+    res.hc = res
+  }else if(hc.type == 'hc2'){
+    res.hc = res/sqrt(1-h)
+  }else if(hc.type == 'hc3'){
+    res.hc = res/(1-h)
+  }
 
 
   #browser()
@@ -353,7 +365,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
   }
 
 
-  h = pmax(pmin(h,1-1/G),0)
+
   for(i in 1:nb){
 
     if(verbose){
@@ -366,20 +378,24 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
     if(ncol(V)==K){
       Vbi = (V)%*%diag(c(beta[,i]))*lambda
     }
-    ri = res[,i]
+    ri = res.hc[,i]
 
 
     for(j in i:nb){
 
       if(j==i){
 
-        if(hc.type == 'hc0'){
-          Sigma_ij = crossprod(c(ri)*X+Vbi)
-        }else if(hc.type == 'hc2'){
-          Sigma_ij = crossprod(c(ri)/sqrt(1-h)*X+Vbi)
-        }else if(hc.type == 'hc3'){
-          Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi)
-        }
+        score.temp = (c(ri)*X+Vbi)
+
+        Sigma_ij = crossprod(score.temp)
+
+        # if(hc.type == 'hc0'){
+        #   Sigma_ij = crossprod(c(ri)*X+Vbi)
+        # }else if(hc.type == 'hc2'){
+        #   Sigma_ij = crossprod(c(ri)/sqrt(1-h)*X+Vbi)
+        # }else if(hc.type == 'hc3'){
+        #   Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi)
+        # }
 
         if(!is.null(cor.idx)){
 
@@ -387,8 +403,36 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
           # l2.temp = (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE]
           # Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
 
-          Sigma_ij = Sigma_ij + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],
-                                          (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE])
+          if(only.scale.pos.res){
+            # find pos res prod
+
+            score.temp.no.hc = (c(res[,i])*X+Vbi)
+            # ecov = 0
+            # for(cc in 1:dim(cor.idx)[1]){
+            #   res.prod = ri[cor.idx[cc,][1]] * ri[cor.idx[cc,][2]]
+            #   if(res.prod>0){
+            #     ecov = ecov + tcrossprod(score.temp[cor.idx[cc,][1],],score.temp[cor.idx[cc,][2],])
+            #   }else{
+            #     ecov = ecov + tcrossprod(score.temp.no.hc[cor.idx[cc,][1],],
+            #                              score.temp.no.hc[cor.idx[cc,][2],])
+            #   }
+            # }
+
+            res.prod = ri[cor.idx[,1]] * ri[cor.idx[,2]]
+            s.idx = which(res.prod>0)
+
+            Sigma_ij = Sigma_ij+
+              crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])+
+              crossprod((score.temp.no.hc)[cor.idx[-s.idx,1],,drop=FALSE],(score.temp.no.hc)[cor.idx[-s.idx,2],,drop=FALSE])
+
+
+
+
+          }else{
+            Sigma_ij = Sigma_ij + crossprod((score.temp)[cor.idx[,1],,drop=FALSE],
+                                            (score.temp)[cor.idx[,2],,drop=FALSE])
+          }
+
 
         }
 
@@ -414,14 +458,15 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
             Vbj = (V)%*%diag(c(beta[,j]))*lambda
           }
 
-          rj = res[,j]
-          if(hc.type == 'hc0'){
-            Sigma_ij = crossprod(c(ri)*X+Vbi,c(rj)*X+Vbj)
-          }else if(hc.type == 'hc2'){
-            Sigma_ij = crossprod(c(ri)/sqrt(1-h)*X+Vbi,c(rj)/sqrt(1-h)*X+Vbj)
-          }else if(hc.type == 'hc3'){
-            Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi,c(rj)/(1-h)*X+Vbj)
-          }
+          rj = res.hc[,j]
+          Sigma_ij = crossprod(c(ri)*X+Vbi,c(rj)*X+Vbj)
+          # if(hc.type == 'hc0'){
+          #   Sigma_ij = crossprod(c(ri)*X+Vbi,c(rj)*X+Vbj)
+          # }else if(hc.type == 'hc2'){
+          #   Sigma_ij = crossprod(c(ri)/sqrt(1-h)*X+Vbi,c(rj)/sqrt(1-h)*X+Vbj)
+          # }else if(hc.type == 'hc3'){
+          #   Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi,c(rj)/(1-h)*X+Vbj)
+          # }
 
           if(!is.null(cor.idx)){
             # Sigma_ij = Sigma_ij

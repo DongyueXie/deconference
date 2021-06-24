@@ -29,10 +29,12 @@ simu_corr_simple = function(ref,
                             printevery=10,
                             verbose=FALSE,
                             alpha=0.05,
+                            alpha.cor = 0.1,
                             groups = c(rep(1,ncol(b)/2),rep(2,ncol(b)/2)),
                             centeringXY = FALSE,
                             true.beta.for.Sigma=FALSE,
-                            calc_cov = T){
+                            calc_cov = T,
+                            est_cor = TRUE){
 
   G = nrow(ref)
   K = ncol(ref)
@@ -102,15 +104,18 @@ simu_corr_simple = function(ref,
     }
   }
 
-
-  if(!is.indep){
-    cor.idx = which(R!=0,arr.ind = T)
-    #cor.idx = t(apply(cor.idx,1,sort))
-    #cor.idx = cor.idx[!duplicated(cor.idx),]
-    cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
-  }else{
-    cor.idx = NULL
+  if(!est_cor){
+    if(!is.indep){
+      cor.idx = which(R!=0,arr.ind = T)
+      #cor.idx = t(apply(cor.idx,1,sort))
+      #cor.idx = cor.idx[!duplicated(cor.idx),]
+      cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
+    }else{
+      cor.idx = NULL
+    }
   }
+
+
 
 
   for(reps in 1:nreps){
@@ -192,6 +197,12 @@ simu_corr_simple = function(ref,
     #   X_array[,k,] = t(x_k)
     # }
 
+
+    if(est_cor){
+
+      cor.idx = get_cor_pairs(X_array,alpha=alpha.cor)
+
+    }
 
 
     # fit model

@@ -122,10 +122,10 @@ A = A+t(A) - diag(G)
 library(Matrix)
 A = Matrix(A,sparse = TRUE)
 
-dim(ref)
+A.indicator = A>0
 ```
 
-100 individuals, alpha = 0.1
+## 100 individuals, alpha = 0.1
 
 
 ```{r,fig.width=12,fig.height=6}
@@ -144,7 +144,25 @@ simu100 = readRDS('output/simu_correlation_checkavariance_betahat_d50_xin_est_co
 ploter.coverage(simu100)
 ```
 
-100 individuals, alpha = 0.5
+```{r}
+#check power
+temp1 = (sum(A.indicator)-G)
+temp2 = (sum(A)-G)
+powers = c()
+powers_scale = c()
+for (i in 1:simu100$simu_param$nreps) {
+  A.hat.indicator = sparseMatrix(i = simu100$cor.idx.all[[i]][,1],
+                                 j = simu100$cor.idx.all[[i]][,2],x=1,dims = c(G,G))
+  powers[i] = sum(A.indicator*A.hat.indicator)/temp1
+  powers_scale[i] = sum(A*A.hat.indicator)/temp2
+}
+
+plot(powers,ylim=c(0,1),main = 'power')
+plot(powers_scale,ylim=c(0,1),main = 'sum(declared.cor)/sum(cor)')
+
+```
+
+## 100 individuals, alpha = 0.5
 
 
 ```{r,fig.width=12,fig.height=6}
@@ -163,9 +181,23 @@ simu100 = readRDS('output/simu_correlation_checkavariance_betahat_d50_xin_est_co
 ploter.coverage(simu100)
 ```
 
+```{r}
+powers = c()
+powers_scale = c()
+for (i in 1:simu100$simu_param$nreps) {
+  A.hat.indicator = sparseMatrix(i = simu100$cor.idx.all[[i]][,1],
+                                 j = simu100$cor.idx.all[[i]][,2],x=1,dims = c(G,G))
+  powers[i] = sum(A.indicator*A.hat.indicator)/temp1
+  powers_scale[i] = sum(A*A.hat.indicator)/temp2
+}
+
+plot(powers,ylim=c(0,1),main = 'power')
+plot(powers_scale,ylim=c(0,1),main = 'sum(declared.cor)/sum(cor)')
+```
 
 
-100 individuals, thresholding
+
+## 100 individuals, thresholding
 
 
 ```{r,fig.width=12,fig.height=6}
@@ -185,3 +217,17 @@ simu100 = readRDS('output/simu_correlation_checkavariance_betahat_d50_xin_est_co
 ploter.coverage(simu100)
 ```
 
+
+```{r}
+powers = c()
+powers_scale = c()
+for (i in 1:simu100$simu_param$nreps) {
+  A.hat.indicator = sparseMatrix(i = simu100$cor.idx.all[[i]][,1],
+                                 j = simu100$cor.idx.all[[i]][,2],x=1,dims = c(G,G))
+  powers[i] = sum(A.indicator*A.hat.indicator)/temp1
+  powers_scale[i] = sum(A*A.hat.indicator)/temp2
+}
+
+plot(powers,ylim=c(0,1),main = 'power')
+plot(powers_scale,ylim=c(0,1),main = 'sum(declared.cor)/sum(cor)')
+```

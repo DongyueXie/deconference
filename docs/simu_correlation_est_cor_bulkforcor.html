@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreede8f418649e23fd53c4058689bae4ee082a38a09targetblankde8f418a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/de8f418649e23fd53c4058689bae4ee082a38a09" target="_blank">de8f418</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree540aed90ec0ec04e95949a76ce8d3c0370321ba6targetblank540aed9a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/540aed90ec0ec04e95949a76ce8d3c0370321ba6" target="_blank">540aed9</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreede8f418649e23fd53c4058689bae4ee082a38a09targetblankde8f418a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree540aed90ec0ec04e95949a76ce8d3c0370321ba6targetblank540aed9a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/de8f418649e23fd53c4058689bae4ee082a38a09" target="_blank">de8f418</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/540aed90ec0ec04e95949a76ce8d3c0370321ba6" target="_blank">540aed9</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -616,6 +616,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/540aed90ec0ec04e95949a76ce8d3c0370321ba6/analysis/simu_correlation_est_cor_bulkforcor.Rmd" target="_blank">540aed9</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-06-30
+</td>
+<td>
+wflow_publish(“analysis/simu_correlation_est_cor_bulkforcor.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/97dc9aff68c1d474ee345598adc1bdef7e24be22/docs/simu_correlation_est_cor_bulkforcor.html" target="_blank">97dc9af</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-06-30
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -744,9 +778,10 @@ A = A+t(A) - diag(G)
 library(Matrix)
 A = Matrix(A,sparse = TRUE)
 
-dim(ref)</code></pre>
-<pre><code>[1] 9496    4</code></pre>
-<p>100 individuals, alpha = 0.1</p>
+A.indicator = A&gt;0</code></pre>
+</div>
+<div id="individuals-alpha-0.1" class="section level2">
+<h2>100 individuals, alpha = 0.1</h2>
 <pre class="r"><code># set.seed(12345)
 # simu = simu_corr_simple(ref,b.m,nreps=100,
 #                         sigma2=sigma2,
@@ -760,7 +795,25 @@ dim(ref)</code></pre>
 simu100 = readRDS(&#39;output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha01.rds&#39;)
 ploter.coverage(simu100)</code></pre>
 <p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-4-1.png" width="1152" style="display: block; margin: auto;" /></p>
-<p>100 individuals, alpha = 0.5</p>
+<pre class="r"><code>#check power
+temp1 = (sum(A.indicator)-G)
+temp2 = (sum(A)-G)
+powers = c()
+powers_scale = c()
+for (i in 1:simu100$simu_param$nreps) {
+  A.hat.indicator = sparseMatrix(i = simu100$cor.idx.all[[i]][,1],
+                                 j = simu100$cor.idx.all[[i]][,2],x=1,dims = c(G,G))
+  powers[i] = sum(A.indicator*A.hat.indicator)/temp1
+  powers_scale[i] = sum(A*A.hat.indicator)/temp2
+}
+
+plot(powers,ylim=c(0,1),main = &#39;power&#39;)</code></pre>
+<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(powers_scale,ylim=c(0,1),main = &#39;sum(declared.cor)/sum(cor)&#39;)</code></pre>
+<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="individuals-alpha-0.5" class="section level2">
+<h2>100 individuals, alpha = 0.5</h2>
 <pre class="r"><code># set.seed(12345)
 # simu2 = simu_corr_simple(ref,b.m,nreps=100,
 #                         sigma2=sigma2,
@@ -773,8 +826,23 @@ ploter.coverage(simu100)</code></pre>
 # saveRDS(simu2,&#39;output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha05.rds&#39;)
 simu100 = readRDS(&#39;output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha05.rds&#39;)
 ploter.coverage(simu100)</code></pre>
-<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-5-1.png" width="1152" style="display: block; margin: auto;" /></p>
-<p>100 individuals, thresholding</p>
+<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-6-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>powers = c()
+powers_scale = c()
+for (i in 1:simu100$simu_param$nreps) {
+  A.hat.indicator = sparseMatrix(i = simu100$cor.idx.all[[i]][,1],
+                                 j = simu100$cor.idx.all[[i]][,2],x=1,dims = c(G,G))
+  powers[i] = sum(A.indicator*A.hat.indicator)/temp1
+  powers_scale[i] = sum(A*A.hat.indicator)/temp2
+}
+
+plot(powers,ylim=c(0,1),main = &#39;power&#39;)</code></pre>
+<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(powers_scale,ylim=c(0,1),main = &#39;sum(declared.cor)/sum(cor)&#39;)</code></pre>
+<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="individuals-thresholding" class="section level2">
+<h2>100 individuals, thresholding</h2>
 <pre class="r"><code># set.seed(12345)
 # simu3 = simu_corr_simple(ref,b.m,nreps=100,
 #                         sigma2=sigma2,
@@ -788,7 +856,20 @@ ploter.coverage(simu100)</code></pre>
 # saveRDS(simu3,&#39;output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_thresh.rds&#39;)
 simu100 = readRDS(&#39;output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_thresh.rds&#39;)
 ploter.coverage(simu100)</code></pre>
-<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-6-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-8-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>powers = c()
+powers_scale = c()
+for (i in 1:simu100$simu_param$nreps) {
+  A.hat.indicator = sparseMatrix(i = simu100$cor.idx.all[[i]][,1],
+                                 j = simu100$cor.idx.all[[i]][,2],x=1,dims = c(G,G))
+  powers[i] = sum(A.indicator*A.hat.indicator)/temp1
+  powers_scale[i] = sum(A*A.hat.indicator)/temp2
+}
+
+plot(powers,ylim=c(0,1),main = &#39;power&#39;)</code></pre>
+<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(powers_scale,ylim=c(0,1),main = &#39;sum(declared.cor)/sum(cor)&#39;)</code></pre>
+<p><img src="figure/simu_correlation_est_cor_bulkforcor.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

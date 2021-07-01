@@ -51,7 +51,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            centeringXY = FALSE,
                            asyV.pos = TRUE,
                            Q.pos = TRUE,
-                           only.scale.pos.res=FALSE
+                           only.scale.pos.res=FALSE,
+                           nfold=10
                            ){
 
   #browser()
@@ -210,7 +211,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                     G=G,K=K,lambda=lambda,verbose=verbose,
                     calc_cov=calc_cov,hc.type=hc.type,
                     cor.idx=cor.idx,
-                    only.scale.pos.res=only.scale.pos.res)
+                    only.scale.pos.res=only.scale.pos.res,
+                    nfold=nfold)
   covb = Q_inv%*%Sigma%*%Q_inv
 
   # if(is.null(R)){
@@ -328,7 +330,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 #'@description allow correlations among samples, and use yw and Xw, not X and y
 #'#'@param only.scale.pos.res only apply hc adjustment to positive empirical covariance, when accounting for correlation?
-get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx,only.scale.pos.res){
+get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx,only.scale.pos.res,nfold){
 
 
 
@@ -347,7 +349,11 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
     res.hc = res/sqrt(1-h)
   }else if(hc.type == 'hc3'){
     res.hc = res/(1-h)
+  }else if(hc.type=='jackknife'){
+    res.hc = get_jack_res(y,X,V,nfold=nfold)
   }
+
+
 
 
   #browser()
@@ -492,7 +498,37 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
 }
 
 
+get_jack_res = function(y,X,V,nfold = 10){
+  n = nrow(y)
+  n_bulk = ncol(y)
+  K = ncol(X)
 
+  d_Vg = ncol(V)
+
+
+
+  res = matrix(nrow=n,ncol=n_bulk)
+  folds = cut(1:n,breaks = nfold,labels = F)
+
+  for(f in 1:nfold){
+    idx = which(folds==f)
+    X.temp = X[-idx,]
+    y.temp = y[-idx,]
+    if(d_Vg==K^2){
+      V.temp = matrix(c(colSums(V[-idx,])),ncol = K)
+    }else if(d_Vg==K){
+      V.temp = diag(c(colSums(V[-idx,])))
+    }else{
+      stop('check dimension of V')
+    }
+
+    bhat = pmax(solve(crossprod(X.temp)-V.temp)%*%t(X.temp)%*%y.temp,0)
+    res[idx,] = y[idx,] - X[idx,]%*%bhat
+  }
+
+  res
+
+}
 
 
 

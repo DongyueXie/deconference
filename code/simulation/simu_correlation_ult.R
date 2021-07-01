@@ -1,5 +1,5 @@
 
-
+source('code/simulation/get_cor_pairs.R')
 
 #'@description For simplicity, we only simulate data at individual level. - only generate X from U;
 
@@ -20,10 +20,18 @@ simu_corr_simple = function(ref,
                             true.beta.for.Sigma=FALSE,
                             calc_cov = T,
                             est_cor = TRUE,
-                            only.scale.pos.res = FALSE){
+                            only.scale.pos.res = FALSE,
+                            n_bulk_for_cor = 100,
+                            cor_method = 'testing',
+                            nfold = 10){
 
   is.identity = function(X){
     (sum(X)==nrow(X))
+  }
+
+  genp = function(K){
+    p = runif(K)
+    p/sum(p)
   }
 
   G = nrow(ref)
@@ -50,19 +58,23 @@ simu_corr_simple = function(ref,
   p_hat_se_adj_hc0 = matrix(nrow=nreps,ncol=n_bulk*K)
   p_hat_se_adj_hc2 = matrix(nrow=nreps,ncol=n_bulk*K)
   p_hat_se_adj_hc3 = matrix(nrow=nreps,ncol=n_bulk*K)
+  p_hat_se_adj_jack = matrix(nrow=nreps,ncol=n_bulk*K)
 
   beta_hat = matrix(nrow=nreps,ncol=n_bulk*K)
   beta_se_adj_hc0 = matrix(nrow=nreps,ncol=n_bulk*K)
   beta_se_adj_hc2 = matrix(nrow=nreps,ncol=n_bulk*K)
   beta_se_adj_hc3 = matrix(nrow=nreps,ncol=n_bulk*K)
+  beta_se_adj_jack = matrix(nrow=nreps,ncol=n_bulk*K)
 
   diff_hat = matrix(nrow=nreps,ncol=K)
   diff_adj_se_hc0 = matrix(nrow=nreps,ncol=K)
   diff_adj_se_hc2 = matrix(nrow=nreps,ncol=K)
   diff_adj_se_hc3 = matrix(nrow=nreps,ncol=K)
+  diff_adj_se_jack = matrix(nrow=nreps,ncol=K)
   diff_adj_p_hc0 = matrix(nrow = nreps,ncol=K)
   diff_adj_p_hc2 = matrix(nrow = nreps,ncol=K)
   diff_adj_p_hc3 = matrix(nrow = nreps,ncol=K)
+  diff_adj_p_jack = matrix(nrow = nreps,ncol=K)
 
   p_hat_se_unadj_hc0 = matrix(nrow=nreps,ncol=n_bulk*K)
   p_hat_se_unadj_hc2 = matrix(nrow=nreps,ncol=n_bulk*K)
@@ -105,6 +117,7 @@ simu_corr_simple = function(ref,
     }else{
       cor.idx = NULL
     }
+    n_bulk_for_cor = 0
   }
 
   cor.idx.all = list()
@@ -121,24 +134,28 @@ simu_corr_simple = function(ref,
     # generate individual reference matrices
 
 
-    X_array = array(dim=c(G,K,n_indi+n_bulk))
+    n.temp = n_indi+n_bulk+n_bulk_for_cor
+    X_array = array(dim=c(G,K,n.temp))
 
     for(k in 1:K){
       if(is.indep){
-        X_array[,k,] = exp(matrix(rnorm(G*(n_indi+n_bulk),n.ref[,k],sqrt(n.Sigma[,k])),ncol=n_indi+n_bulk))
+        X_array[,k,] = exp(matrix(rnorm(G*n.temp,n.ref[,k],sqrt(n.Sigma[,k])),ncol=n.temp))
       }else{
-        X_array[,k,] = t(exp(mvnfast::rmvn(n_indi+n_bulk,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+        X_array[,k,] = t(exp(mvnfast::rmvn(n.temp,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
       }
     }
 
     #browser()
 
     X_array_bulk = X_array[,,1:n_bulk]
-    X_array = X_array[,,-(1:n_bulk)]
+
+    X_array_ref = X_array[,,(n_bulk+1):(n_bulk+n_indi)]
+
+    X_array_bulk_for_cor = X_array[,,-(1:(n_bulk+n_indi))]
+
 
 
     mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
-
     mb = do.call(cbind,mb)
     true.beta = t(t(b)*c(apply(mb,2,function(z){bulk_lib_size*G/sum(z)})))
     true_betas[reps,] = c(true.beta)
@@ -168,7 +185,14 @@ simu_corr_simple = function(ref,
 
     if(est_cor){
 
-      cor.idx = get_cor_pairs(X_array,alpha=alpha.cor)
+      # generate bulk data for estimating correlation
+
+      mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
+      thetab = apply(mb,2,function(z){z/sum(z)})
+      bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
+      rownames(bulk_for_cor) = gene_names
+
+      cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
 
       cor.idx.all[[reps]] = cor.idx
 
@@ -178,8 +202,8 @@ simu_corr_simple = function(ref,
 
     #browser()
 
-    X = apply(X_array,c(1,2),mean,na.rm=TRUE)
-    V = t(apply(X_array,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_indi
+    X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+    V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_indi
 
 
     fit.adj.hc0 = estimation_func2(y=y,X=X,Vg=V,
@@ -205,6 +229,15 @@ simu_corr_simple = function(ref,
                                    centeringXY=centeringXY,
                                    true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
                                    only.scale.pos.res=only.scale.pos.res)
+
+    fit.adj.jack = estimation_func2(y=y,X=X,Vg=V,
+                                   w=1,hc.type='jackknife',correction=FALSE,
+                                   calc_cov=calc_cov,verbose=verbose,
+                                   cor.idx=cor.idx,
+                                   centeringXY=centeringXY,
+                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+                                   only.scale.pos.res=only.scale.pos.res,
+                                   nfold = nfold)
 
     fit.unadj.hc0 = estimation_func2(y=y,X=X,Vg=V,
                                      w=1,hc.type='hc0',correction=FALSE,
@@ -234,6 +267,7 @@ simu_corr_simple = function(ref,
     p_hat_se_adj_hc0[reps,] = c(fit.adj.hc0$beta_se)
     p_hat_se_adj_hc2[reps,] = c(fit.adj.hc2$beta_se)
     p_hat_se_adj_hc3[reps,] = c(fit.adj.hc3$beta_se)
+    p_hat_se_adj_jack[reps,] = c(fit.adj.jack$beta_se)
 
 
 
@@ -241,6 +275,7 @@ simu_corr_simple = function(ref,
     beta_se_adj_hc0[reps,] = c(fit.adj.hc0$beta_tilde_se)
     beta_se_adj_hc2[reps,] = c(fit.adj.hc2$beta_tilde_se)
     beta_se_adj_hc3[reps,] = c(fit.adj.hc3$beta_tilde_se)
+    beta_se_adj_jack[reps,] = c(fit.adj.jack$beta_tilde_se)
 
 
     #browser()
@@ -257,6 +292,10 @@ simu_corr_simple = function(ref,
     diff_out_hc3 = two_group_test(fit.adj.hc3,groups)
     diff_adj_se_hc3[reps,] = c(diff_out_hc3$diff_se)
     diff_adj_p_hc3[reps,] = c(diff_out_hc3$p_value)
+
+    diff_out_jack = two_group_test(fit.adj.jack,groups)
+    diff_adj_se_jack[reps,] = c(diff_out_jack$diff_se)
+    diff_adj_p_jack[reps,] = c(diff_out_jack$p_value)
 
 
     #est_unadj[reps,] = c(fit_unadj$beta_hat)
@@ -325,6 +364,12 @@ simu_corr_simple = function(ref,
   coverage_adj_hc3 = ((rep(1,nreps)%*%t(c(b)))>=ci_l) & ((rep(1,nreps)%*%t(c(b)))<=ci_r)
   coverage_adj_hc3=apply(coverage_adj_hc3,2,mean,na.rm=TRUE)
 
+  ## jack
+  ci_l = p_hat - qnorm(1-alpha/2)*p_hat_se_adj_jack
+  ci_r = p_hat + qnorm(1-alpha/2)*p_hat_se_adj_jack
+  coverage_adj_jack = ((rep(1,nreps)%*%t(c(b)))>=ci_l) & ((rep(1,nreps)%*%t(c(b)))<=ci_r)
+  coverage_adj_jack=apply(coverage_adj_jack,2,mean,na.rm=TRUE)
+
 
   # unadj
 
@@ -369,6 +414,12 @@ simu_corr_simple = function(ref,
   coverage_diff_adj_hc3 = ((rep(1,nreps)%*%t(c(b%*%diff_out_hc3$a)))>=ci_l) & ((rep(1,nreps)%*%t(c(b%*%diff_out_hc3$a)))<=ci_r)
   coverage_diff_adj_hc3=apply(coverage_diff_adj_hc3,2,mean,na.rm=TRUE)
 
+  ### jack
+  ci_l = diff_hat - qnorm(1-alpha/2)*diff_adj_se_jack
+  ci_r = diff_hat + qnorm(1-alpha/2)*diff_adj_se_jack
+  coverage_diff_adj_jack = ((rep(1,nreps)%*%t(c(b%*%diff_out_jack$a)))>=ci_l) & ((rep(1,nreps)%*%t(c(b%*%diff_out_jack$a)))<=ci_r)
+  coverage_diff_adj_jack=apply(coverage_diff_adj_jack,2,mean,na.rm=TRUE)
+
 
 
   ## unadjust
@@ -396,6 +447,7 @@ simu_corr_simple = function(ref,
   power_adj_hc0 = apply(diff_adj_p_hc0<=alpha,2,mean,na.rm=TRUE)
   power_adj_hc2 = apply(diff_adj_p_hc2<=alpha,2,mean,na.rm=TRUE)
   power_adj_hc3 = apply(diff_adj_p_hc3<=alpha,2,mean,na.rm=TRUE)
+  power_adj_jack = apply(diff_adj_p_jack<=alpha,2,mean,na.rm=TRUE)
   power_unadj_hc0 = apply(diff_unadj_p_hc0<=alpha,2,mean,na.rm=TRUE)
   power_unadj_hc2 = apply(diff_unadj_p_hc2<=alpha,2,mean,na.rm=TRUE)
   power_unadj_hc3 = apply(diff_unadj_p_hc3<=alpha,2,mean,na.rm=TRUE)
@@ -405,6 +457,7 @@ simu_corr_simple = function(ref,
               coverage_diff_adj_hc0=coverage_diff_adj_hc0,
               coverage_diff_adj_hc2=coverage_diff_adj_hc2,
               coverage_diff_adj_hc3=coverage_diff_adj_hc3,
+              coverage_diff_adj_jack=coverage_diff_adj_jack,
               coverage_diff_unadj_hc0 = coverage_diff_unadj_hc0,
               coverage_diff_unadj_hc2 = coverage_diff_unadj_hc2,
               coverage_diff_unadj_hc3 = coverage_diff_unadj_hc3,
@@ -412,6 +465,7 @@ simu_corr_simple = function(ref,
               power_adj_hc0=power_adj_hc0,
               power_adj_hc2=power_adj_hc2,
               power_adj_hc3=power_adj_hc3,
+              power_adj_jack=power_adj_jack,
               power_unadj_hc0=power_unadj_hc0,
               power_unadj_hc2=power_unadj_hc2,
               power_unadj_hc3=power_unadj_hc3,
@@ -419,6 +473,7 @@ simu_corr_simple = function(ref,
               diff_adj_p_hc0 = diff_adj_p_hc0,
               diff_adj_p_hc2 = diff_adj_p_hc2,
               diff_adj_p_hc3 = diff_adj_p_hc3,
+              diff_adj_p_jack = diff_adj_p_jack,
 
               diff_unadj_p_hc0=diff_unadj_p_hc0,
               diff_unadj_p_hc2=diff_unadj_p_hc2,
@@ -430,6 +485,7 @@ simu_corr_simple = function(ref,
               diff_adj_se_hc0=diff_adj_se_hc0,
               diff_adj_se_hc2=diff_adj_se_hc2,
               diff_adj_se_hc3=diff_adj_se_hc3,
+              diff_adj_se_jack=diff_adj_se_jack,
 
               diff_unadj_se_hc0=diff_unadj_se_hc0,
               diff_unadj_se_hc2=diff_unadj_se_hc2,
@@ -448,6 +504,7 @@ simu_corr_simple = function(ref,
               coverage_adj_hc0=coverage_adj_hc0,
               coverage_adj_hc2=coverage_adj_hc2,
               coverage_adj_hc3=coverage_adj_hc3,
+              coverage_adj_jack=coverage_adj_jack,
               coverage_unadj_hc0=coverage_unadj_hc0,
               coverage_unadj_hc2=coverage_unadj_hc2,
               coverage_unadj_hc3=coverage_unadj_hc3,
@@ -455,6 +512,7 @@ simu_corr_simple = function(ref,
               p_hat_se_adj_hc0 = p_hat_se_adj_hc0,
               p_hat_se_adj_hc2 = p_hat_se_adj_hc2,
               p_hat_se_adj_hc3 = p_hat_se_adj_hc3,
+              p_hat_se_adj_jack = p_hat_se_adj_jack,
 
               p_hat_se_unadj_hc0 = p_hat_se_unadj_hc0,
               p_hat_se_unadj_hc2 = p_hat_se_unadj_hc2,
@@ -466,12 +524,13 @@ simu_corr_simple = function(ref,
               beta_se_adj_hc0=beta_se_adj_hc0,
               beta_se_adj_hc2=beta_se_adj_hc2,
               beta_se_adj_hc3=beta_se_adj_hc3,
+              beta_se_adj_jack=beta_se_adj_jack,
               cor.idx.all=cor.idx.all,
 
               true_betas = true_betas,
               simu_param = list(b=b,
                                 bulk_lib_size = bulk_lib_size,
-                                nreps=nreps,alpha=alpha)))
+                                nreps=nreps,alpha=alpha,nfold=nfold)))
 
 
 

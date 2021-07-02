@@ -266,10 +266,10 @@ plot(powers_scale,ylim=c(0,1),main = 'sum(declared.cor)/sum(cor)')
 
 
 
-
-
-```{r,eval=F}
 # d = 500
+
+```{r}
+
 G = nrow(ref)
 K = 4
 d = 500
@@ -288,25 +288,25 @@ A.indicator = A>0
 ```
 
 
-```{r,fig.width=12,fig.height=6,eval=F}
+```{r,fig.width=12,fig.height=6}
 
-set.seed(12345)
-simu2 = simu_corr_simple(ref,b.m,nreps=100,
-                        sigma2=sigma2,
-                        R=A,n_indi = 10,
-                        verbose = F,
-                        printevery = 1,
-                        est_cor = TRUE,
-                        alpha.cor = 0.5,
-                        n_bulk_for_cor = 100,
-                        cor_method = 'testing')
-saveRDS(simu2,'output/simu_correlation_checkavariance_betahat_d500_xin_est_cor_100bulkforcor_alpha05_addjack.rds')
-# simu100 = readRDS('output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha05.rds')
-# ploter.coverage(simu100)
-# ploter.jack(simu100)
+# set.seed(12345)
+# simu2 = simu_corr_simple(ref,b.m,nreps=100,
+#                         sigma2=sigma2,
+#                         R=A,n_indi = 10,
+#                         verbose = F,
+#                         printevery = 1,
+#                         est_cor = TRUE,
+#                         alpha.cor = 0.5,
+#                         n_bulk_for_cor = 100,
+#                         cor_method = 'testing')
+# saveRDS(simu2,'output/simu_correlation_checkavariance_betahat_d500_xin_est_cor_100bulkforcor_alpha05_addjack.rds')
+simu100 = readRDS('output/simu_correlation_checkavariance_betahat_d500_xin_est_cor_100bulkforcor_alpha05_addjack.rds')
+ploter.coverage(simu100)
+ploter.jack(simu100)
 ```
 
-```{r,eval=F}
+```{r}
 powers = c()
 powers_scale = c()
 for (i in 1:simu100$simu_param$nreps) {

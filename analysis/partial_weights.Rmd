@@ -9,7 +9,11 @@ editor_options:
 
 ## Introduction
 
+ $y_g = x_g^T\beta+\epsilon_g = u_g^T\beta + (x_g-u_g)^T\beta+\epsilon_g$.
  
+ $Var((x_g-u_g)^T\beta) = \beta^T\Sigma_g\beta$.
+ 
+ weights = 1/sum($\Sigma_g$).
 
 ```{r}
 mse = function(x,y){mean((x-y)^2)}

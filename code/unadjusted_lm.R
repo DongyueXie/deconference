@@ -1,5 +1,5 @@
 #'@title unadjusted method, either using ols or sandwich for variance estimation
-unadjusted_lm = function(y,X,w=NULL,groups=NULL){
+unadjusted_lm = function(y,X,w=NULL,groups=NULL,do.hc = TRUE){
   G = nrow(X)
   K = ncol(X)
   y = cbind(y)
@@ -42,7 +42,7 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
   # perform ols estimator of variance
   #resid_var = t(yw)%*%(diag(G)-Hat_mat)%*%yw/(G-K)
   res = y - X%*%beta_tilde_hat
-  resid_var = crossprod(y,res)/(G-K)
+  resid_var = crossprod( res)/(G-K)
   covb = kronecker(resid_var,A_inv)
 
 
@@ -89,166 +89,179 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL){
                    )
   }
 
+  if(do.hc){
 
+    # perform sandwich estimator of variance
 
-  # perform sandwich estimator of variance
+    Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
+    Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
+    Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
 
-  Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
-  Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
-  Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
+    for(i in 1:nb){
+      Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = A_inv
+      for(j in i:nb){
 
-  for(i in 1:nb){
-    Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = A_inv
-    for(j in i:nb){
+        Sigma_ij = crossprod(Xw*c(Xw%*%beta_tilde_hat[,i,drop=FALSE])-Xw*c(yw[,i]),
+                             Xw*c(Xw%*%beta_tilde_hat[,j,drop=FALSE])-Xw*c(yw[,j]))
 
-      Sigma_ij = crossprod(Xw*c(Xw%*%beta_tilde_hat[,i,drop=FALSE])-Xw*c(yw[,i]),
-                           Xw*c(Xw%*%beta_tilde_hat[,j,drop=FALSE])-Xw*c(yw[,j]))
-
-      Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
-      if(j==i){
-        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
+        Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
+        if(j==i){
+          Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
+        }
       }
     }
-  }
-  Sigma = Sigma+t(Sigma)-Sigma_ii
-  covb = Q_inv%*%Sigma%*%Q_inv
+    Sigma = Sigma+t(Sigma)-Sigma_ii
+    covb = Q_inv%*%Sigma%*%Q_inv
 
-  asyV = (J)%*%covb%*%t(J)
-
-
-  beta_se = sqrt(diag(asyV))
-  beta_se = matrix(beta_se,ncol=nb)
+    asyV = (J)%*%covb%*%t(J)
 
 
-  if(!is.null(groups)){
+    beta_se = sqrt(diag(asyV))
+    beta_se = matrix(beta_se,ncol=nb)
 
-    # N_indi = length(group1_idx) + length(group2_idx)
 
-    V_tilde = 0
+    if(!is.null(groups)){
 
-    idx = c(group1_idx,group2_idx)
-    for(i in idx){
-      for(j in idx){
-        V_tilde = V_tilde + a[i]*a[j]*asyV[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
+      # N_indi = length(group1_idx) + length(group2_idx)
+
+      V_tilde = 0
+
+      idx = c(group1_idx,group2_idx)
+      for(i in idx){
+        for(j in idx){
+          V_tilde = V_tilde + a[i]*a[j]*asyV[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
+        }
       }
+
+      z_score = diff_group/sqrt(diag(V_tilde))
+
+      p_value = (1-pnorm(abs(z_score)))*2
+
+      sand.out = list(cov_beta_tilde_hat = covb,
+                      beta_se = beta_se,
+                      cov_beta_hat = asyV,
+                      diff_se = sqrt(diag(V_tilde)),
+                      z_score=z_score,
+                      p_value=p_value)
+
+    }else{
+
+      sand.out = list(cov_beta_tilde_hat = covb,
+                      beta_se = beta_se,
+                      cov_beta_hat = asyV)
+
     }
 
-    z_score = diff_group/sqrt(diag(V_tilde))
 
-    p_value = (1-pnorm(abs(z_score)))*2
 
-    sand.out = list(cov_beta_tilde_hat = covb,
-                    beta_se = beta_se,
-                    cov_beta_hat = asyV,
-                   diff_se = sqrt(diag(V_tilde)),
-                   z_score=z_score,
-                   p_value=p_value)
+
+    # perform hc3
+
+    Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
+    #Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
+    Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
+
+    for(i in 1:nb){
+      #Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = A_inv
+
+      #Hi = t(t(X%*%A_inv%*%t(X))*w)
+      #hi = diag(Hi)
+
+
+      h = rowSums((X%*%A_inv)*X)*w
+      ri = res[,i]
+
+      for(j in i:nb){
+
+        if(j==i){
+
+          Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(h,1-1/G),0))*w*X)
+
+          Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
+        }else{
+          #Hj = t(t(X%*%A_inv%*%t(X))*w)
+          #hj = diag(Hj)
+          #rj = y[,j] - Hi%*%y[,j]
+
+          #hj = rowSums((X%*%A_inv)*X)*w
+          rj = res[,j]
+
+          Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(h,1-1/G),0))*w*X,
+                               c(rj)/(1-pmax(pmin(h,1-1/G),0))*w*X)
+        }
+
+
+        Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
+
+      }
+    }
+    Sigma = Sigma+t(Sigma)-Sigma_ii
+    covb = Q_inv%*%Sigma%*%Q_inv
+
+    asyV = (J)%*%covb%*%t(J)
+
+
+    beta_se = sqrt(diag(asyV))
+    beta_se = matrix(beta_se,ncol=nb)
+
+    if(!is.null(groups)){
+
+      # N_indi = length(group1_idx) + length(group2_idx)
+
+      V_tilde = 0
+
+      idx = c(group1_idx,group2_idx)
+      for(i in idx){
+        for(j in idx){
+          V_tilde = V_tilde + a[i]*a[j]*asyV[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
+        }
+      }
+
+      z_score = diff_group/sqrt(diag(V_tilde))
+
+      p_value = (1-pnorm(abs(z_score)))*2
+
+      sand.out.hc3 = list(cov_beta_tilde_hat = covb,
+                          beta_se = beta_se,
+                          cov_beta_hat = asyV,
+                          diff_se = sqrt(diag(V_tilde)),
+                          z_score=z_score,
+                          p_value=p_value)
+
+    }else{
+
+      sand.out.hc3 = list(cov_beta_tilde_hat = covb,
+                          beta_se = beta_se,
+                          cov_beta_hat = asyV)
+
+    }
+
+
+    rownames(beta_hat) = colnames(X)
+    rownames(beta_tilde_hat) = colnames(X)
+
+
+
+
+
+    return(list(beta_tilde_hat=beta_tilde_hat,
+                beta_hat=beta_hat,
+                diff_group=diff_group,
+                sand.out=sand.out,
+                ols.out=ols.out,
+                sand.out.hc3=sand.out.hc3))
 
   }else{
 
-    sand.out = list(cov_beta_tilde_hat = covb,
-                    beta_se = beta_se,
-                    cov_beta_hat = asyV)
+    return(list(beta_tilde_hat=beta_tilde_hat,
+                beta_hat=beta_hat,
+                diff_group=diff_group,
+                ols.out=ols.out))
 
   }
 
 
 
 
-  # perform hc3
-
-  Sigma = matrix(0,nrow=nb*K,ncol=nb*K)
-  #Q_inv = matrix(0,nrow=nb*K,ncol=nb*K)
-  Sigma_ii = matrix(0,nrow=nb*K,ncol=nb*K)
-
-  for(i in 1:nb){
-    #Q_inv[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = A_inv
-
-    #Hi = t(t(X%*%A_inv%*%t(X))*w)
-    #hi = diag(Hi)
-
-
-    h = rowSums((X%*%A_inv)*X)*w
-    ri = res[,i]
-
-    for(j in i:nb){
-
-      if(j==i){
-
-        Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(h,1-1/G),0))*w*X)
-
-        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
-      }else{
-        #Hj = t(t(X%*%A_inv%*%t(X))*w)
-        #hj = diag(Hj)
-        #rj = y[,j] - Hi%*%y[,j]
-
-        #hj = rowSums((X%*%A_inv)*X)*w
-        rj = res[,j]
-
-        Sigma_ij = crossprod(c(ri)/(1-pmax(pmin(h,1-1/G),0))*w*X,
-                             c(rj)/(1-pmax(pmin(h,1-1/G),0))*w*X)
-      }
-
-
-      Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
-
-    }
-  }
-  Sigma = Sigma+t(Sigma)-Sigma_ii
-  covb = Q_inv%*%Sigma%*%Q_inv
-
-  asyV = (J)%*%covb%*%t(J)
-
-
-  beta_se = sqrt(diag(asyV))
-  beta_se = matrix(beta_se,ncol=nb)
-
-  if(!is.null(groups)){
-
-    # N_indi = length(group1_idx) + length(group2_idx)
-
-    V_tilde = 0
-
-    idx = c(group1_idx,group2_idx)
-    for(i in idx){
-      for(j in idx){
-        V_tilde = V_tilde + a[i]*a[j]*asyV[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
-      }
-    }
-
-    z_score = diff_group/sqrt(diag(V_tilde))
-
-    p_value = (1-pnorm(abs(z_score)))*2
-
-    sand.out.hc3 = list(cov_beta_tilde_hat = covb,
-                        beta_se = beta_se,
-                        cov_beta_hat = asyV,
-                    diff_se = sqrt(diag(V_tilde)),
-                    z_score=z_score,
-                    p_value=p_value)
-
-  }else{
-
-    sand.out.hc3 = list(cov_beta_tilde_hat = covb,
-                        beta_se = beta_se,
-                        cov_beta_hat = asyV)
-
-  }
-
-
-  rownames(beta_hat) = colnames(X)
-  rownames(beta_tilde_hat) = colnames(X)
-
-
-
-
-
-  return(list(beta_tilde_hat=beta_tilde_hat,
-              beta_hat=beta_hat,
-              diff_group=diff_group,
-              sand.out=sand.out,
-              ols.out=ols.out,
-              sand.out.hc3=sand.out.hc3))
 }
 

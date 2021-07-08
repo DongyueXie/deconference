@@ -23,7 +23,8 @@ simu_corr_simple = function(ref,
                             only.scale.pos.res = FALSE,
                             n_bulk_for_cor = 100,
                             cor_method = 'testing',
-                            nfold = 10){
+                            nfold = 10,
+                            weighted = FALSE){
 
   is.identity = function(X){
     (sum(X)==nrow(X))
@@ -206,8 +207,16 @@ simu_corr_simple = function(ref,
     V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_indi
 
 
+    if(weighted){
+       # calc weights for each cell type, then average,
+      fit.vash = vashr::vash(sqrt(rowSums(V)),df=n_indi-1)
+      w = 1/(fit.vash$sd.post)^2
+    }else{
+      w = 1
+    }
+
     fit.adj.hc0 = estimation_func2(y=y,X=X,Vg=V,
-                                   w=1,hc.type='hc0',correction=FALSE,
+                                   w=w,hc.type='hc0',correction=FALSE,
                                    calc_cov=calc_cov,verbose=verbose,
                                    cor.idx=cor.idx,
                                    centeringXY=centeringXY,
@@ -215,7 +224,7 @@ simu_corr_simple = function(ref,
                                    only.scale.pos.res=only.scale.pos.res)
 
     fit.adj.hc2 = estimation_func2(y=y,X=X,Vg=V,
-                                   w=1,hc.type='hc2',correction=FALSE,
+                                   w=w,hc.type='hc2',correction=FALSE,
                                    calc_cov=calc_cov,verbose=verbose,
                                    cor.idx=cor.idx,
                                    centeringXY=centeringXY,
@@ -223,7 +232,7 @@ simu_corr_simple = function(ref,
                                    only.scale.pos.res=only.scale.pos.res)
 
     fit.adj.hc3 = estimation_func2(y=y,X=X,Vg=V,
-                                   w=1,hc.type='hc3',correction=FALSE,
+                                   w=w,hc.type='hc3',correction=FALSE,
                                    calc_cov=calc_cov,verbose=verbose,
                                    cor.idx=cor.idx,
                                    centeringXY=centeringXY,
@@ -231,7 +240,7 @@ simu_corr_simple = function(ref,
                                    only.scale.pos.res=only.scale.pos.res)
 
     fit.adj.jack = estimation_func2(y=y,X=X,Vg=V,
-                                   w=1,hc.type='jackknife',correction=FALSE,
+                                   w=w,hc.type='jackknife',correction=FALSE,
                                    calc_cov=calc_cov,verbose=verbose,
                                    cor.idx=cor.idx,
                                    centeringXY=centeringXY,
@@ -240,21 +249,21 @@ simu_corr_simple = function(ref,
                                    nfold = nfold)
 
     fit.unadj.hc0 = estimation_func2(y=y,X=X,Vg=V,
-                                     w=1,hc.type='hc0',correction=FALSE,
+                                     w=w,hc.type='hc0',correction=FALSE,
                                      calc_cov=calc_cov,verbose=verbose,
                                      cor.idx=NULL,
                                      centeringXY=centeringXY,
                                      true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
                                      only.scale.pos.res=only.scale.pos.res)
     fit.unadj.hc2 = estimation_func2(y=y,X=X,Vg=V,
-                                     w=1,hc.type='hc2',correction=FALSE,
+                                     w=w,hc.type='hc2',correction=FALSE,
                                      calc_cov=calc_cov,verbose=verbose,
                                      cor.idx=NULL,
                                      centeringXY=centeringXY,
                                      true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
                                      only.scale.pos.res=only.scale.pos.res)
     fit.unadj.hc3 = estimation_func2(y=y,X=X,Vg=V,
-                                     w=1,hc.type='hc3',correction=FALSE,
+                                     w=w,hc.type='hc3',correction=FALSE,
                                      calc_cov=calc_cov,verbose=verbose,
                                      cor.idx=NULL,
                                      centeringXY=centeringXY,

@@ -1,0 +1,148 @@
+---
+title: "neuron data simulation"
+author: "DongyueXie"
+date: "2021-07-03"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+mse = function(x,y){mean((x-y)^2)}
+out = readRDS('output/neuron/neuron_simu_ref11.rds')
+out.music = readRDS('output/neuron/neuron_simu_ref11_music.rds')
+
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z<=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+
+mse_ols
+mse_err
+mse_music
+
+
+plot(c(out.music[[2]]),type='p',col='gray50',ylab='p',main='music')
+lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
+
+plot(c(out[[2]]$fit.err.hc0$beta_hat),type='p',col='gray50',ylab='p',main='err')
+lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
+
+coverage
+median_std
+
+```
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref21.rds')
+out.music = readRDS('output/neuron/neuron_simu_ref21_music.rds')
+
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z<=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+
+mse_ols
+mse_err
+mse_music
+
+
+plot(c(out.music[[2]]),type='p',col='gray50',ylab='p',main='music')
+lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
+
+plot(c(out[[2]]$fit.err.hc0$beta_hat),type='p',col='gray50',ylab='p',main='err')
+lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
+
+coverage
+median_std
+```
+
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref31.rds')
+out.music = readRDS('output/neuron/neuron_simu_ref31_music.rds')
+
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z<=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+
+mse_ols
+mse_err
+mse_music
+
+
+plot(c(out.music[[2]]),type='p',col='gray50',ylab='p',main='music')
+lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
+
+plot(c(out[[2]]$fit.err.hc0$beta_hat),type='p',col='gray50',ylab='p',main='err')
+lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
+
+coverage
+median_std
+```

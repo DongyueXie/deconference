@@ -9,6 +9,31 @@ editor_options:
 
 ## Introduction
 
+Simulation settings:
+
+
+Data processing: 
+
+The neuron dataset has 37000+genes and 125k+ cells, 175 individuals. Two Uneron cell types are merged together and there are total 6 cell types.
+
+Cells in each individuals are merged together as pseudo-bulk data. Genes that express in less than 60 individuals are filtered out. This results in around 20000 genes. 
+
+Each individual's reference matrix is obtained by averaging gene expressions in cells of a certain certain type. For the simulation, we filter out individuals whose number of cells of a certain cell type is less than 10. After this step, 97 individuals are left.
+
+Further, we only keep genes that have expressed in all 97 individuals, this results in around 12406 genes. 
+
+The final data set for this simulation is an array of dimension [12406, 6, 97].
+
+In each simulation, we randomly select $10$(or $20$, $30$) individuals as reference matrices and the rest are used to create bulk data. The cell type proportions are b1 = c(0.1,0.1,0.15,0.15,0.2,0.3), b2 = c(0.1,0.15,0.25,0.3,0.1,0.1) and the bulk library size is 500*$\#genes$. 
+
+The correlations are obtained from the pseudo-bulk data together with multiple testing procedure with $\alpha=0.05$.
+
+We also include the results of MuSiC for comparisons.
+
+
+
+
+
 ```{r}
 mse = function(x,y){mean((x-y)^2)}
 out = readRDS('output/neuron/neuron_simu_ref11.rds')

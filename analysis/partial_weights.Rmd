@@ -107,3 +107,168 @@ lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
 coverage
 median_std
 ```
+
+
+
+## removing outliers
+
+```{r}
+mse = function(x,y){mean((x-y)^2)}
+out = readRDS('output/neuron/neuron_simu_ref11_rm_outlier_weight.rds')
+out.music = readRDS('output/neuron/neuron_simu_ref11_music.rds')
+
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z<=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+
+mse_ols
+mse_err
+mse_music
+
+
+coverage
+median_std
+```
+
+bias
+
+```{r}
+par(mfrow=c(3,4))
+for(j in 1:length(out)){
+  mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:43])
+  mean_bhat1_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,1:43])
+  plot(abs(mean_bhat1 - out[[j]]$input$b[,1]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat1_ols - out[[j]]$input$b[,1])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+par(mfrow=c(3,4))
+for(j in 1:length(out)){
+  mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,44:86])
+  mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,44:86])
+
+  plot(abs(mean_bhat2 - out[[j]]$input$b[,86]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat2_ols - out[[j]]$input$b[,86])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat2_ols - out[[j]]$input$b[,86]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+```
+
+
+look at weights 
+
+```{r}
+par(mfrow=c(1,1))
+quantile(out[[1]]$w)
+X = readRDS('output/neuron/ref_12400.rds')
+plot(rowMeans(X),1/out[[1]]$w,ylab='1/weight',xlab='mean gene expression')
+
+ii = which.min(out[[1]]$w)
+plot(rowMeans(X[-ii,]),1/out[[1]]$w[-ii],ylab='1/weight',xlab='mean gene expression')
+```
+
+### eb V
+
+
+```{r}
+mse = function(x,y){mean((x-y)^2)}
+out = readRDS('output/neuron/neuron_simu_ref11_rm_outlier_ebV.rds')
+
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z<=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+
+mse_ols
+mse_err
+mse_music
+
+
+coverage
+median_std
+
+out[[1]]$input$b[,1:5]
+round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)
+round(out[[1]]$fit.ols$beta_hat[,1:5],3)
+round(out.music[[1]][,1:5],3)
+
+```
+
+bias
+
+```{r}
+par(mfrow=c(3,4))
+for(j in 1:length(out)){
+  mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:43])
+  mean_bhat1_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,1:43])
+  plot(abs(mean_bhat1 - out[[j]]$input$b[,1]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat1_ols - out[[j]]$input$b[,1])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+par(mfrow=c(3,4))
+for(j in 1:length(out)){
+  mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,44:86])
+  mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,44:86])
+
+  plot(abs(mean_bhat2 - out[[j]]$input$b[,86]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat2_ols - out[[j]]$input$b[,86])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat2_ols - out[[j]]$input$b[,86]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+```

@@ -35,7 +35,7 @@ We also include the results of MuSiC for comparisons.
 
 
 ```{r}
-mse = function(x,y){mean((x-y)^2)}
+mse = function(x,y){sqrt(mean((x-y)^2))}
 out = readRDS('output/neuron/neuron_simu_ref11.rds')
 out.music = readRDS('output/neuron/neuron_simu_ref11_music.rds')
 
@@ -69,12 +69,6 @@ mse_ols
 mse_err
 mse_music
 
-
-plot(c(out.music[[2]]),type='p',col='gray50',ylab='p',main='music')
-lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
-
-plot(c(out[[2]]$fit.err.hc0$beta_hat),type='p',col='gray50',ylab='p',main='err')
-lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
 
 coverage
 median_std
@@ -116,11 +110,6 @@ mse_err
 mse_music
 
 
-plot(c(out.music[[2]]),type='p',col='gray50',ylab='p',main='music')
-lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
-
-plot(c(out[[2]]$fit.err.hc0$beta_hat),type='p',col='gray50',ylab='p',main='err')
-lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
 
 coverage
 median_std
@@ -161,12 +150,6 @@ mse_ols
 mse_err
 mse_music
 
-
-plot(c(out.music[[2]]),type='p',col='gray50',ylab='p',main='music')
-lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
-
-plot(c(out[[2]]$fit.err.hc0$beta_hat),type='p',col='gray50',ylab='p',main='err')
-lines(c(out[[i]]$input$b),type='p',col=2,pch=20)
 
 coverage
 median_std

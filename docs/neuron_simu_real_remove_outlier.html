@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="DongyueXie" />
+
+<meta name="date" content="2021-07-14" />
+
+<title>neuron data simulation based real data, try to remove outlier</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/sandstone.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">deconference</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+<li>
+  <a href="about.html">Data</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/DongyueXie/deconference">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">neuron data simulation based real data, try to remove outlier</h1>
+<h4 class="author">DongyueXie</h4>
+<h4 class="date">2021-07-14</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-07-14
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>deconference/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20200403code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20200403)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20200403code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20200403)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreec9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dcebtargetblankc9a04eba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/c9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dceb" target="_blank">c9a04eb</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreec9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dcebtargetblankc9a04eba" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/c9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dceb" target="_blank">c9a04eb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  analysis/neuron_simu_MLN.Rmd
+    Untracked:  analysis/simu_correlation_est_cor_bulkforcor_weights.Rmd
+    Untracked:  code/simulation/neuron/partial_weights.R
+    Untracked:  data/day30.h5
+    Untracked:  data/day30.h5.zip
+    Untracked:  data/neuron/
+    Untracked:  data/pancreas/
+    Untracked:  output/geneCor_DABulk_cpm.rds
+    Untracked:  output/geneCor_Epen1Bulk_cpm.rds
+    Untracked:  output/geneCor_FPPBulk_cpm.rds
+    Untracked:  output/geneCor_P_FPPBulk_cpm.rds
+    Untracked:  output/geneCor_SertBulk_cpm.rds
+    Untracked:  output/geneCor_U_NeurBulk_cpm.rds
+    Untracked:  output/geneCor_gtexpancreas_tpm.rds
+    Untracked:  output/geneCor_neuronBulk_cpm.rds
+    Untracked:  output/neuron/
+    Untracked:  output/simu_correlation_betahat_d500_neuron.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_est_cor_100bulkforcor_alpha05_addjack.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_hc3.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_hc3_only_pos_ecov.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_jack.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_trueb.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha01.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha05.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha05_addjack.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha05_addjack_weighted.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_thresh.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100indi.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100indi_alpha03.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_10indi.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_10indi_alpha03.rds
+    Untracked:  renv.lock
+    Untracked:  renv/
+
+Unstaged changes:
+    Modified:   .Rprofile
+    Modified:   analysis/simu_correlation_checkvariance_real.Rmd
+    Modified:   analysis/simu_correlation_est_cor.Rmd
+    Modified:   code/simulation/neuron/simu_neuron.R
+    Modified:   code/unadjusted_lm.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/neuron_simu_real_remove_outlier.Rmd</code>) and HTML (<code>docs/neuron_simu_real_remove_outlier.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/c9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dceb/analysis/neuron_simu_real_remove_outlier.Rmd" target="_blank">c9a04eb</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-07-14
+</td>
+<td>
+wflow_publish(“analysis/neuron_simu_real_remove_outlier.Rmd”)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>In previous analysis, we found the mse is <a href="neuron_simu.html">large</a>, but after adding weights, it’s much <a href="partial_weights.html">smaller</a></p>
+<pre class="r"><code>source(&#39;code/deconference_main.R&#39;)
+source(&#39;code/utils.R&#39;)
+source(&#39;code/wols.R&#39;)
+source(&#39;code/simulation/neuron/simu_neuron.R&#39;)
+#source(&#39;code/simulation/simu_correlation_ult.R&#39;)
+
+# remove genes
+
+gene_name = readRDS(&#39;data/neuron/gene_name_20293.rds&#39;)
+indis_ref = readRDS(&#39;data/neuron/indis_ref.rds&#39;)
+indis_ref = indis_ref[match(gene_name,dimnames(indis_ref)[[1]]),,]
+dim(indis_ref)
+
+# remove individuals that has no or too few certain cell types
+cell_ann = readRDS(&#39;data/neuron/cell_ann.rds&#39;)
+indi_by_cell = table(cell_ann$donor_id,cell_ann$celltype)
+indi_by_cell[,6] = indi_by_cell[,6] + indi_by_cell[,7]
+indi_by_cell = indi_by_cell[,1:6]
+colnames(indi_by_cell)[6] = &#39;U_Neur&#39;
+
+indi_to_use = names(which(rowSums(indi_by_cell&gt;10)==6))
+
+##
+
+indis_ref_filter = indis_ref[,,match(indi_to_use,dimnames(indis_ref)[[3]])]
+tt = apply(indis_ref_filter,3,rowSums)
+ii = rowSums(tt&gt;0)
+
+gene_to_use = which(ii&gt;=97)
+gene_name_12406 = names(gene_to_use)
+indis_ref_filter = indis_ref_filter[match(gene_name_12406,dimnames(indis_ref_filter)[[1]]),,]
+X = apply(indis_ref_filter,c(1,2),mean,na.rm=TRUE)
+V = t(apply(indis_ref_filter,c(1),function(z){(cov(t(z),use = &#39;complete.obs&#39;))}))/dim(indis_ref_filter)[3]
+h = rowSums((X%*%solve(crossprod(X)-matrix(colSums(V),ncol=6)))*X)
+plot(h)
+
+# remove genes whose h is larger than 0.2
+rm.idx = which(h&gt;0.2)
+
+indis_ref_filter = indis_ref_filter[-rm.idx,,]
+
+G = dim(indis_ref_filter)[1]
+corGene_idx = readRDS(&quot;data/neuron/corGene_idx_lower_cpm_alpha005.rds&quot;)
+library(Matrix)
+A.indicator = sparseMatrix(i = corGene_idx[,1],j = corGene_idx[,2],x=1,dims=c(20293,20293))
+idx = match(gene_name_12406[-rm.idx],gene_name)
+A.indicator = A.indicator[idx,idx]
+cor.idx = which(A.indicator!=0,arr.ind = TRUE)
+cor.idx = rbind(cor.idx,cbind(cor.idx[,2],cor.idx[,1]))
+
+b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
+b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)</code></pre>
+<pre class="r"><code>n = dim(indis_ref_filter)[3]
+n_ref = 11
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+
+
+set.seed(12345)
+out10 = list()
+for(i in 1:10){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out10[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = FALSE,
+                           only.scale.pos.res = TRUE)
+  saveRDS(out10,file=&#39;output/neuron/neuron_simu_ref11_rm_outlier_pos_res.rds&#39;)
+}
+
+
+set.seed(12345)
+out.music = list()
+for(i in 1:10){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out.music[[i]] = simu_neuron_music(indis_ref_filter,ref.idx,b)
+  saveRDS(out.music,file=&#39;output/neuron/neuron_simu_ref11_music_rm_outlier.rds&#39;)
+}</code></pre>
+<pre class="r"><code>out = readRDS(&#39;output/neuron/neuron_simu_ref11_rm_outlier_pos_res.rds&#39;)
+out.music = readRDS(&#39;output/neuron/neuron_simu_ref11_music_rm_outlier.rds&#39;)
+mse = function(x,y){sqrt(mean((x-y)^2))}
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z&lt;=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
+colnames(median_std)  = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
+
+mse_ols</code></pre>
+<pre><code> [1] 0.1153502 0.1149477 0.1188560 0.1090241 0.1088619 0.1188077 0.1122157
+ [8] 0.1037008 0.1078590 0.1173448</code></pre>
+<pre class="r"><code>mse_err</code></pre>
+<pre><code> [1] 0.1119139 0.1140998 0.1196854 0.1142351 0.1121908 0.1200523 0.1187053
+ [8] 0.1112566 0.1133158 0.1187675</code></pre>
+<pre class="r"><code>mse_music</code></pre>
+<pre><code> [1] 0.1176449 0.1161930 0.1187878 0.1105952 0.1104168 0.1187775 0.1105234
+ [8] 0.1038516 0.1045041 0.1161396</code></pre>
+<pre class="r"><code>coverage</code></pre>
+<pre><code>         ols.cv   ols.hc0   ols.hc3   err.hc0   err.hc3 err.cor.hc0 err.cor.hc3
+ [1,] 0.5406977 0.9089147 0.9244186 0.9186047 0.9341085   0.9186992   0.9378758
+ [2,] 0.5174419 0.9282946 0.9399225 0.9399225 0.9593023   0.9410569   0.9538153
+ [3,] 0.5697674 0.9147287 0.9360465 0.9186047 0.9496124   0.9209486   0.9375000
+ [4,] 0.5096899 0.9709302 0.9806202 0.9786822 0.9903101   0.9660000   0.9721670
+ [5,] 0.5096899 0.8914729 0.9050388 0.8953488 0.9186047   0.9014675   0.9002037
+ [6,] 0.5193798 0.8914729 0.9127907 0.9069767 0.9244186   0.9136546   0.9268775
+ [7,] 0.5872093 0.8779070 0.8914729 0.8875969 0.8992248   0.8744681   0.8881857
+ [8,] 0.5426357 0.9069767 0.9186047 0.9050388 0.9244186   0.8938053   0.9004329
+ [9,] 0.5426357 0.8895349 0.9069767 0.9011628 0.9302326   0.8987603   0.9230769
+[10,] 0.5562016 0.9011628 0.9127907 0.9108527 0.9302326   0.9060000   0.9246032</code></pre>
+<pre class="r"><code>median_std</code></pre>
+<pre><code>            ols.cv    ols.hc0    ols.hc3    err.hc0    err.hc3 err.cor.hc0
+ [1,] 6.955269e-05 0.06948385 0.07673684 0.07271986 0.08094642  0.07227246
+ [2,] 6.732918e-05 0.06405416 0.07144322 0.06813678 0.07778267  0.07385901
+ [3,] 7.005126e-05 0.06576635 0.07308400 0.06820219 0.07579108  0.06773379
+ [4,] 8.457629e-05 0.08657726 0.09904866 0.09551909 0.11010573  0.11596689
+ [5,] 5.986332e-05 0.05882546 0.06560997 0.06901899 0.07767302  0.06792990
+ [6,] 6.501828e-05 0.05764026 0.06533728 0.06193653 0.07026686  0.06462891
+ [7,] 5.996891e-05 0.05528400 0.06069366 0.06011394 0.06723576  0.05109770
+ [8,] 6.244896e-05 0.06097089 0.06866380 0.06686708 0.07431505  0.06028160
+ [9,] 6.458571e-05 0.06006045 0.06683413 0.06707878 0.07745215  0.06264659
+[10,] 6.482810e-05 0.06045939 0.06737050 0.06388596 0.07237782  0.06602796
+      err.cor.hc3
+ [1,]  0.07783175
+ [2,]  0.07951593
+ [3,]  0.07648800
+ [4,]  0.12693415
+ [5,]  0.07391187
+ [6,]  0.06953045
+ [7,]  0.05669861
+ [8,]  0.06559957
+ [9,]  0.07007406
+[10,]  0.07423767</code></pre>
+<pre class="r"><code>out[[1]]$input$b[,1:5]</code></pre>
+<pre><code>     [,1] [,2] [,3] [,4] [,5]
+[1,] 0.10 0.10 0.10 0.10 0.10
+[2,] 0.10 0.10 0.10 0.10 0.10
+[3,] 0.15 0.15 0.15 0.15 0.15
+[4,] 0.15 0.15 0.15 0.15 0.15
+[5,] 0.20 0.20 0.20 0.20 0.20
+[6,] 0.30 0.30 0.30 0.30 0.30</code></pre>
+<pre class="r"><code>round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)</code></pre>
+<pre><code>      [,1]  [,2]  [,3]  [,4]  [,5]
+[1,] 0.000 0.003 0.088 0.048 0.120
+[2,] 0.043 0.000 0.116 0.115 0.029
+[3,] 0.199 0.341 0.293 0.179 0.063
+[4,] 0.217 0.318 0.000 0.227 0.224
+[5,] 0.110 0.119 0.161 0.100 0.156
+[6,] 0.431 0.219 0.343 0.330 0.408</code></pre>
+<pre class="r"><code>round(out[[1]]$fit.ols$beta_hat[,1:5],3)</code></pre>
+<pre><code>        [,1]  [,2]  [,3]  [,4]  [,5]
+DA     0.028 0.061 0.152 0.110 0.183
+Epen1  0.055 0.000 0.126 0.124 0.039
+Sert   0.183 0.317 0.268 0.158 0.045
+FPP    0.232 0.327 0.000 0.230 0.225
+P_FPP  0.123 0.126 0.168 0.106 0.162
+U_Neur 0.378 0.169 0.287 0.271 0.346</code></pre>
+<pre class="r"><code>round(out.music[[1]][,1:5],3)</code></pre>
+<pre><code>      [,1]  [,2]  [,3]  [,4]  [,5]
+[1,] 0.028 0.064 0.164 0.110 0.183
+[2,] 0.055 0.000 0.120 0.124 0.039
+[3,] 0.183 0.322 0.266 0.158 0.045
+[4,] 0.232 0.318 0.000 0.230 0.225
+[5,] 0.123 0.127 0.159 0.106 0.162
+[6,] 0.378 0.170 0.292 0.271 0.346</code></pre>
+<p>bias</p>
+<pre class="r"><code>par(mfrow=c(3,4))
+for(j in 1:length(out)){
+  mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:43])
+  mean_bhat1_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,1:43])
+  plot(abs(mean_bhat1 - out[[j]]$input$b[,1]),type=&#39;b&#39;,
+       ylim=range(c(0,range(abs(mean_bhat1_ols - out[[j]]$input$b[,1])))),
+       ylab=&#39;abs(bias)&#39;)
+  lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type=&#39;b&#39;,pch=2)
+  legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
+}
+
+
+par(mfrow=c(3,4))</code></pre>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>for(j in 1:length(out)){
+  mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,44:86])
+  mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,44:86])
+
+  plot(abs(mean_bhat2 - out[[j]]$input$b[,86]),type=&#39;b&#39;,
+       ylim=range(c(0,range(abs(mean_bhat2_ols - out[[j]]$input$b[,86])))),
+       ylab=&#39;abs(bias)&#39;)
+  lines(abs(mean_bhat2_ols - out[[j]]$input$b[,86]),type=&#39;b&#39;,pch=2)
+  legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
+}</code></pre>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="reference" class="section level2">
+<h2>21 reference</h2>
+<pre class="r"><code>n = dim(indis_ref_filter)[3]
+n_ref = 21
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+
+
+set.seed(12345)
+out20 = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out20[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = FALSE,
+                           only.scale.pos.res = TRUE)
+  saveRDS(out20,file=&#39;output/neuron/neuron_simu_ref21_rm_outlier_pos_res.rds&#39;)
+}
+
+
+set.seed(12345)
+out.music = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out.music[[i]] = simu_neuron_music(indis_ref_filter,ref.idx,b)
+  saveRDS(out.music,file=&#39;output/neuron/neuron_simu_ref21_music_rm_outlier.rds&#39;)
+}</code></pre>
+<pre class="r"><code>out = readRDS(&#39;output/neuron/neuron_simu_ref21_rm_outlier_pos_res.rds&#39;)
+out.music = readRDS(&#39;output/neuron/neuron_simu_ref21_music_rm_outlier.rds&#39;)
+mse = function(x,y){sqrt(mean((x-y)^2))}
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z&lt;=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
+colnames(median_std)  = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
+
+mse_ols</code></pre>
+<pre><code>[1] 0.1106467 0.1136360 0.1128285 0.1194887 0.1099713</code></pre>
+<pre class="r"><code>mse_err</code></pre>
+<pre><code>[1] 0.1111755 0.1151277 0.1142324 0.1197846 0.1094054</code></pre>
+<pre class="r"><code>mse_music</code></pre>
+<pre><code>[1] 0.1136258 0.1131768 0.1136561 0.1188663 0.1113758</code></pre>
+<pre class="r"><code>coverage</code></pre>
+<pre><code>        ols.cv   ols.hc0   ols.hc3   err.hc0   err.hc3 err.cor.hc0 err.cor.hc3
+[1,] 0.5307018 0.9144737 0.9254386 0.9254386 0.9276316   0.9024943   0.9166667
+[2,] 0.5197368 0.9144737 0.9385965 0.9254386 0.9407895   0.8990826   0.9209932
+[3,] 0.5197368 0.8969298 0.9166667 0.9057018 0.9232456   0.8937644   0.9157175
+[4,] 0.5460526 0.8837719 0.9057018 0.8815789 0.9078947   0.8941176   0.9027778
+[5,] 0.5460526 0.8947368 0.9232456 0.9078947 0.9320175   0.9080460   0.9130435</code></pre>
+<pre class="r"><code>median_std</code></pre>
+<pre><code>           ols.cv    ols.hc0    ols.hc3    err.hc0    err.hc3 err.cor.hc0
+[1,] 6.563470e-05 0.06407147 0.06989415 0.06647647 0.07373936  0.06491356
+[2,] 6.197275e-05 0.05867994 0.06562542 0.06184820 0.06931205  0.06232908
+[3,] 5.937032e-05 0.05535137 0.06136073 0.05910620 0.06670828  0.06180540
+[4,] 5.528020e-05 0.05347360 0.05902527 0.05551907 0.06115737  0.05224197
+[5,] 6.505241e-05 0.06263087 0.06862487 0.06501294 0.07105045  0.06102871
+     err.cor.hc3
+[1,]  0.06969386
+[2,]  0.07206841
+[3,]  0.06977630
+[4,]  0.05970956
+[5,]  0.06816417</code></pre>
+<pre class="r"><code>out[[1]]$input$b[,1:5]</code></pre>
+<pre><code>     [,1] [,2] [,3] [,4] [,5]
+[1,] 0.10 0.10 0.10 0.10 0.10
+[2,] 0.10 0.10 0.10 0.10 0.10
+[3,] 0.15 0.15 0.15 0.15 0.15
+[4,] 0.15 0.15 0.15 0.15 0.15
+[5,] 0.20 0.20 0.20 0.20 0.20
+[6,] 0.30 0.30 0.30 0.30 0.30</code></pre>
+<pre class="r"><code>round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)</code></pre>
+<pre><code>      [,1]  [,2]  [,3]  [,4]  [,5]
+[1,] 0.000 0.086 0.003 0.093 0.388
+[2,] 0.000 0.119 0.113 0.038 0.162
+[3,] 0.311 0.287 0.174 0.063 0.221
+[4,] 0.331 0.000 0.240 0.227 0.000
+[5,] 0.113 0.166 0.103 0.159 0.145
+[6,] 0.245 0.342 0.367 0.420 0.084</code></pre>
+<pre class="r"><code>round(out[[1]]$fit.ols$beta_hat[,1:5],3)</code></pre>
+<pre><code>        [,1]  [,2]  [,3]  [,4]  [,5]
+DA     0.000 0.115 0.033 0.122 0.395
+Epen1  0.000 0.123 0.116 0.042 0.165
+Sert   0.307 0.276 0.164 0.056 0.214
+FPP    0.345 0.000 0.242 0.228 0.000
+P_FPP  0.119 0.169 0.107 0.162 0.147
+U_Neur 0.228 0.317 0.338 0.391 0.080</code></pre>
+<pre class="r"><code>round(out.music[[1]][,1:5],3)</code></pre>
+<pre><code>      [,1]  [,2]  [,3]  [,4]  [,5]
+[1,] 0.000 0.120 0.033 0.122 0.426
+[2,] 0.000 0.120 0.116 0.042 0.157
+[3,] 0.316 0.275 0.164 0.056 0.209
+[4,] 0.337 0.000 0.242 0.228 0.000
+[5,] 0.122 0.165 0.107 0.162 0.132
+[6,] 0.224 0.320 0.338 0.391 0.077</code></pre>
+<p>bias</p>
+<pre class="r"><code>par(mfrow=c(2,3))
+nb = 97-21
+for(j in 1:length(out)){
+  mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:nb/2])
+  mean_bhat1_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,1:nb/2])
+  plot(abs(mean_bhat1 - out[[j]]$input$b[,1]),type=&#39;b&#39;,
+       ylim=range(c(0,range(abs(mean_bhat1_ols - out[[j]]$input$b[,1])))),
+       ylab=&#39;abs(bias)&#39;)
+  lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type=&#39;b&#39;,pch=2)
+  legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
+}
+
+
+par(mfrow=c(2,3))</code></pre>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>for(j in 1:length(out)){
+  mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,(nb/2+1):nb])
+  mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,(nb/2+1):nb])
+
+  plot(abs(mean_bhat2 - out[[j]]$input$b[,nb]),type=&#39;b&#39;,
+       ylim=range(c(0,range(abs(mean_bhat2_ols - out[[j]]$input$b[,nb])))),
+       ylab=&#39;abs(bias)&#39;)
+  lines(abs(mean_bhat2_ols - out[[j]]$input$b[,nb]),type=&#39;b&#39;,pch=2)
+  legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
+}</code></pre>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="reference-1" class="section level2">
+<h2>31 reference</h2>
+<pre class="r"><code>n = dim(indis_ref_filter)[3]
+n_ref = 31
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+
+
+set.seed(12345)
+out30 = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out30[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = FALSE,
+                           only.scale.pos.res = TRUE)
+  saveRDS(out30,file=&#39;output/neuron/neuron_simu_ref31_rm_outlier_pos_res.rds&#39;)
+}
+
+
+set.seed(12345)
+out.music = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out.music[[i]] = simu_neuron_music(indis_ref_filter,ref.idx,b)
+  saveRDS(out.music,file=&#39;output/neuron/neuron_simu_ref31_music_rm_outlier.rds&#39;)
+}</code></pre>
+<pre class="r"><code>out = readRDS(&#39;output/neuron/neuron_simu_ref31_rm_outlier_pos_res.rds&#39;)
+out.music = readRDS(&#39;output/neuron/neuron_simu_ref31_music_rm_outlier.rds&#39;)
+mse = function(x,y){sqrt(mean((x-y)^2))}
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z&lt;=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
+colnames(median_std)  = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
+
+mse_ols</code></pre>
+<pre><code>[1] 0.1107300 0.1100684 0.1062065 0.1121827 0.1077958</code></pre>
+<pre class="r"><code>mse_err</code></pre>
+<pre><code>[1] 0.1108033 0.1111155 0.1075294 0.1128776 0.1094748</code></pre>
+<pre class="r"><code>mse_music</code></pre>
+<pre><code>[1] 0.1131933 0.1108851 0.1074548 0.1113003 0.1086060</code></pre>
+<pre class="r"><code>coverage</code></pre>
+<pre><code>        ols.cv   ols.hc0   ols.hc3   err.hc0   err.hc3 err.cor.hc0 err.cor.hc3
+[1,] 0.5303030 0.9116162 0.9292929 0.9141414 0.9343434   0.8973684   0.9112272
+[2,] 0.5934343 0.9015152 0.9065657 0.9065657 0.9116162   0.8948787   0.9086022
+[3,] 0.5025253 0.9217172 0.9292929 0.9267677 0.9318182   0.8888889   0.9047619
+[4,] 0.5252525 0.8964646 0.9090909 0.8939394 0.9090909   0.9178082   0.9193548
+[5,] 0.5303030 0.9090909 0.9267677 0.9090909 0.9292929   0.8984375   0.9114583</code></pre>
+<pre class="r"><code>median_std</code></pre>
+<pre><code>           ols.cv    ols.hc0    ols.hc3    err.hc0    err.hc3 err.cor.hc0
+[1,] 6.504351e-05 0.06166476 0.06832299 0.06380297 0.07049511  0.05832524
+[2,] 6.410438e-05 0.05936430 0.06613815 0.06309439 0.07067171  0.06115981
+[3,] 6.466607e-05 0.06113834 0.06812888 0.06306856 0.07017128  0.05862166
+[4,] 5.910947e-05 0.05420604 0.05982351 0.05635222 0.06211969  0.05435634
+[5,] 6.669815e-05 0.06486600 0.07150517 0.06715858 0.07478424  0.06010444
+     err.cor.hc3
+[1,]  0.06588624
+[2,]  0.06685519
+[3,]  0.06475403
+[4,]  0.05894608
+[5,]  0.06654999</code></pre>
+<pre class="r"><code>out[[1]]$input$b[,1:5]</code></pre>
+<pre><code>     [,1] [,2] [,3] [,4] [,5]
+[1,] 0.10 0.10 0.10 0.10 0.10
+[2,] 0.10 0.10 0.10 0.10 0.10
+[3,] 0.15 0.15 0.15 0.15 0.15
+[4,] 0.15 0.15 0.15 0.15 0.15
+[5,] 0.20 0.20 0.20 0.20 0.20
+[6,] 0.30 0.30 0.30 0.30 0.30</code></pre>
+<pre class="r"><code>round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)</code></pre>
+<pre><code>      [,1]  [,2]  [,3]  [,4]  [,5]
+[1,] 0.058 0.013 0.082 0.415 0.000
+[2,] 0.127 0.119 0.040 0.165 0.165
+[3,] 0.286 0.163 0.056 0.223 0.055
+[4,] 0.000 0.255 0.242 0.000 0.000
+[5,] 0.168 0.103 0.160 0.141 0.331
+[6,] 0.362 0.347 0.421 0.056 0.449</code></pre>
+<pre class="r"><code>round(out[[1]]$fit.ols$beta_hat[,1:5],3)</code></pre>
+<pre><code>        [,1]  [,2]  [,3]  [,4]  [,5]
+DA     0.077 0.030 0.100 0.418 0.000
+Epen1  0.129 0.121 0.042 0.167 0.170
+Sert   0.278 0.157 0.051 0.218 0.051
+FPP    0.000 0.257 0.242 0.000 0.000
+P_FPP  0.171 0.106 0.163 0.143 0.339
+U_Neur 0.345 0.329 0.402 0.055 0.439</code></pre>
+<pre class="r"><code>round(out.music[[1]][,1:5],3)</code></pre>
+<pre><code>      [,1]  [,2]  [,3]  [,4]  [,5]
+[1,] 0.080 0.030 0.100 0.442 0.008
+[2,] 0.127 0.121 0.042 0.160 0.112
+[3,] 0.278 0.157 0.051 0.215 0.000
+[4,] 0.000 0.257 0.242 0.000 0.000
+[5,] 0.168 0.106 0.163 0.133 0.312
+[6,] 0.348 0.329 0.402 0.051 0.568</code></pre>
+<p>bias</p>
+<pre class="r"><code>par(mfrow=c(2,3))
+nb = 97-31
+for(j in 1:length(out)){
+  mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:nb/2])
+  mean_bhat1_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,1:nb/2])
+  plot(abs(mean_bhat1 - out[[j]]$input$b[,1]),type=&#39;b&#39;,
+       ylim=range(c(0,range(abs(mean_bhat1_ols - out[[j]]$input$b[,1])))),
+       ylab=&#39;abs(bias)&#39;)
+  lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type=&#39;b&#39;,pch=2)
+  legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
+}
+
+
+par(mfrow=c(2,3))</code></pre>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>for(j in 1:length(out)){
+  mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,(nb/2+1):nb])
+  mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,(nb/2+1):nb])
+
+  plot(abs(mean_bhat2 - out[[j]]$input$b[,nb]),type=&#39;b&#39;,
+       ylim=range(c(0,range(abs(mean_bhat2_ols - out[[j]]$input$b[,nb])))),
+       ylab=&#39;abs(bias)&#39;)
+  lines(abs(mean_bhat2_ols - out[[j]]$input$b[,nb]),type=&#39;b&#39;,pch=2)
+  legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
+}</code></pre>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.0.3 (2020-10-10)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 10 x64 (build 19041)
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=English_United States.1252 
+[2] LC_CTYPE=English_United States.1252   
+[3] LC_MONETARY=English_United States.1252
+[4] LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] workflowr_1.6.2
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5        whisker_0.4       knitr_1.30        magrittr_2.0.1   
+ [5] R6_2.5.0          rlang_0.4.10      fansi_0.4.2       stringr_1.4.0    
+ [9] tools_4.0.3       xfun_0.22         utf8_1.2.1        git2r_0.27.1     
+[13] htmltools_0.5.1.1 ellipsis_0.3.1    rprojroot_2.0.2   yaml_2.2.1       
+[17] digest_0.6.27     tibble_3.1.0      lifecycle_1.0.0   crayon_1.4.1     
+[21] later_1.1.0.1     vctrs_0.3.7       promises_1.1.1    fs_1.5.0         
+[25] glue_1.4.2        evaluate_0.14     rmarkdown_2.5     stringi_1.5.3    
+[29] compiler_4.0.3    pillar_1.6.0      httpuv_1.5.4      pkgconfig_2.0.3  </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

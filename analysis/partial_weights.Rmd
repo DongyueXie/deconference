@@ -154,7 +154,7 @@ median_std
 
 bias
 
-```{r}
+```{r,fig.width=12,fig.height=9}
 par(mfrow=c(3,4))
 for(j in 1:length(out)){
   mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:43])
@@ -245,7 +245,7 @@ round(out.music[[1]][,1:5],3)
 
 bias
 
-```{r}
+```{r,fig.width=12,fig.height=9}
 par(mfrow=c(3,4))
 for(j in 1:length(out)){
   mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:43])

@@ -205,6 +205,11 @@ ploter.coverage(simu100)
 ploter.jack(simu100)
 ```
 
+```{r}
+simu100$mse_adj
+sqrt(simu100$mse_adj)
+simu100$p_hat[1:5,1:4]
+```
 
 ```{r}
 mean(simu100$coverage_adj_hc0)

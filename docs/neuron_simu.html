@@ -424,7 +424,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-07-08
+<strong>Last updated:</strong> 2021-07-15
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree4334c30d33ffd5d216b9e8f9d2e5116353420c21targetblank4334c30a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/4334c30d33ffd5d216b9e8f9d2e5116353420c21" target="_blank">4334c30</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1e4e94d78ff18b0d8c2ebb36cb0df18f64b0e1e1targetblank1e4e94da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/1e4e94d78ff18b0d8c2ebb36cb0df18f64b0e1e1" target="_blank">1e4e94d</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree4334c30d33ffd5d216b9e8f9d2e5116353420c21targetblank4334c30a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1e4e94d78ff18b0d8c2ebb36cb0df18f64b0e1e1targetblank1e4e94da" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/4334c30d33ffd5d216b9e8f9d2e5116353420c21" target="_blank">4334c30</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/1e4e94d78ff18b0d8c2ebb36cb0df18f64b0e1e1" target="_blank">1e4e94d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -587,7 +587,6 @@ Unstaged changes:
     Modified:   analysis/multiref_random_nondiag.Rmd
     Modified:   analysis/simu_correlation_checkvariance.Rmd
     Modified:   analysis/xin_16_indi.Rmd
-    Modified:   code/simulation/neuron/simu_neuron.R
 
 </code></pre>
 <p>
@@ -626,6 +625,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/1e4e94d78ff18b0d8c2ebb36cb0df18f64b0e1e1/analysis/neuron_simu.Rmd" target="_blank">1e4e94d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-07-15
+</td>
+<td>
+wflow_publish(“analysis/neuron_simu.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/99f13c357f54aacc0466cb22569dafede1d755bf/docs/neuron_simu.html" target="_blank">99f13c3</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-07-08
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -696,7 +729,7 @@ wflow_publish(“analysis/neuron_simu.Rmd”)
 <p>In each simulation, we randomly select <span class="math inline">\(10\)</span>(or <span class="math inline">\(20\)</span>, <span class="math inline">\(30\)</span>) individuals as reference matrices and the rest are used to create bulk data. The cell type proportions are b1 = c(0.1,0.1,0.15,0.15,0.2,0.3), b2 = c(0.1,0.15,0.25,0.3,0.1,0.1) and the bulk library size is 500*<span class="math inline">\(\#genes\)</span>.</p>
 <p>The correlations are obtained from the pseudo-bulk data together with multiple testing procedure with <span class="math inline">\(\alpha=0.05\)</span>.</p>
 <p>We also include the results of MuSiC for comparisons.</p>
-<pre class="r"><code>mse = function(x,y){mean((x-y)^2)}
+<pre class="r"><code>mse = function(x,y){sqrt(mean((x-y)^2))}
 out = readRDS(&#39;output/neuron/neuron_simu_ref11.rds&#39;)
 out.music = readRDS(&#39;output/neuron/neuron_simu_ref11_music.rds&#39;)
 
@@ -727,94 +760,14 @@ colnames(coverage) = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39
 colnames(median_std)  = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
 
 mse_ols</code></pre>
-<pre><code> [1] 0.02893245 0.02380714 0.02512115 0.02481026 0.02329452 0.02715525
- [7] 0.02455342 0.02508198 0.02122391 0.02421861</code></pre>
+<pre><code> [1] 0.1700954 0.1542956 0.1584965 0.1575127 0.1526254 0.1647885 0.1566953
+ [8] 0.1583729 0.1456843 0.1556233</code></pre>
 <pre class="r"><code>mse_err</code></pre>
-<pre><code> [1] 0.03348818 0.04714526 0.03265500 0.03072493 0.02584072 0.03607463
- [7] 0.03480069 0.02781132 0.02585672 0.03109050</code></pre>
+<pre><code> [1] 0.1829978 0.2171296 0.1807069 0.1752853 0.1607505 0.1899332 0.1865494
+ [8] 0.1667673 0.1608003 0.1763250</code></pre>
 <pre class="r"><code>mse_music</code></pre>
-<pre><code> [1] 0.02739864 0.01883983 0.02477552 0.02342291 0.02341840 0.02494983
- [7] 0.02395437 0.02277054 0.02092650 0.02280265</code></pre>
-<pre class="r"><code>plot(c(out.music[[2]]),type=&#39;p&#39;,col=&#39;gray50&#39;,ylab=&#39;p&#39;,main=&#39;music&#39;)
-lines(c(out[[i]]$input$b),type=&#39;p&#39;,col=2,pch=20)</code></pre>
-<p><img src="figure/neuron_simu.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-1">
-Past versions of unnamed-chunk-1-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-1-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/DongyueXie/deconference/blob/ea8121299b2de6879573147759e7d34ad9948231/docs/figure/neuron_simu.Rmd/unnamed-chunk-1-1.png" target="_blank">ea81212</a>
-</td>
-<td>
-DongyueXie
-</td>
-<td>
-2021-07-08
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<pre class="r"><code>plot(c(out[[2]]$fit.err.hc0$beta_hat),type=&#39;p&#39;,col=&#39;gray50&#39;,ylab=&#39;p&#39;,main=&#39;err&#39;)
-lines(c(out[[i]]$input$b),type=&#39;p&#39;,col=2,pch=20)</code></pre>
-<p><img src="figure/neuron_simu.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-1-2">
-Past versions of unnamed-chunk-1-2.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-1-2" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/DongyueXie/deconference/blob/ea8121299b2de6879573147759e7d34ad9948231/docs/figure/neuron_simu.Rmd/unnamed-chunk-1-2.png" target="_blank">ea81212</a>
-</td>
-<td>
-DongyueXie
-</td>
-<td>
-2021-07-08
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<pre><code> [1] 0.1655253 0.1372583 0.1574024 0.1530455 0.1530307 0.1579551 0.1547720
+ [8] 0.1508991 0.1446599 0.1510055</code></pre>
 <pre class="r"><code>coverage</code></pre>
 <pre><code>         ols.cv   ols.hc0   ols.hc3   err.hc0  err.hc3 err.cor.hc0 err.cor.hc3
  [1,] 0.5949612 0.9437984 0.9941860 0.9651163 0.998062   0.9330144   0.9980583
@@ -880,94 +833,14 @@ colnames(coverage) = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39
 colnames(median_std)  = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
 
 mse_ols</code></pre>
-<pre><code> [1] 0.02717771 0.02419335 0.02784483 0.03008572 0.02609409 0.02546842
- [7] 0.02631722 0.02431886 0.02685299 0.02252327</code></pre>
+<pre><code> [1] 0.1648566 0.1555421 0.1668677 0.1734524 0.1615367 0.1595883 0.1622258
+ [8] 0.1559451 0.1638688 0.1500775</code></pre>
 <pre class="r"><code>mse_err</code></pre>
-<pre><code> [1] 0.03214268 0.02636356 0.03048048 0.03208821 0.03087899 0.03014809
- [7] 0.03987293 0.02681972 0.02870430 0.02691294</code></pre>
+<pre><code> [1] 0.1792838 0.1623686 0.1745866 0.1791318 0.1757242 0.1736321 0.1996821
+ [8] 0.1637673 0.1694234 0.1640516</code></pre>
 <pre class="r"><code>mse_music</code></pre>
-<pre><code> [1] 0.02521783 0.02369210 0.02492131 0.02801785 0.02199648 0.02230295
- [7] 0.02250919 0.02130942 0.02399744 0.02079004</code></pre>
-<pre class="r"><code>plot(c(out.music[[2]]),type=&#39;p&#39;,col=&#39;gray50&#39;,ylab=&#39;p&#39;,main=&#39;music&#39;)
-lines(c(out[[i]]$input$b),type=&#39;p&#39;,col=2,pch=20)</code></pre>
-<p><img src="figure/neuron_simu.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
-Past versions of unnamed-chunk-2-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-2-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/DongyueXie/deconference/blob/ea8121299b2de6879573147759e7d34ad9948231/docs/figure/neuron_simu.Rmd/unnamed-chunk-2-1.png" target="_blank">ea81212</a>
-</td>
-<td>
-DongyueXie
-</td>
-<td>
-2021-07-08
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<pre class="r"><code>plot(c(out[[2]]$fit.err.hc0$beta_hat),type=&#39;p&#39;,col=&#39;gray50&#39;,ylab=&#39;p&#39;,main=&#39;err&#39;)
-lines(c(out[[i]]$input$b),type=&#39;p&#39;,col=2,pch=20)</code></pre>
-<p><img src="figure/neuron_simu.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-2">
-Past versions of unnamed-chunk-2-2.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-2-2" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/DongyueXie/deconference/blob/ea8121299b2de6879573147759e7d34ad9948231/docs/figure/neuron_simu.Rmd/unnamed-chunk-2-2.png" target="_blank">ea81212</a>
-</td>
-<td>
-DongyueXie
-</td>
-<td>
-2021-07-08
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<pre><code> [1] 0.1588012 0.1539224 0.1578649 0.1673853 0.1483121 0.1493417 0.1500306
+ [8] 0.1459775 0.1549111 0.1441875</code></pre>
 <pre class="r"><code>coverage</code></pre>
 <pre><code>         ols.cv   ols.hc0   ols.hc3   err.hc0   err.hc3 err.cor.hc0 err.cor.hc3
  [1,] 0.6052632 0.9342105 0.9978070 0.9605263 1.0000000   0.9270270   0.9956140
@@ -1033,94 +906,14 @@ colnames(coverage) = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39
 colnames(median_std)  = c(&#39;ols.cv&#39;,&#39;ols.hc0&#39;,&#39;ols.hc3&#39;,&#39;err.hc0&#39;,&#39;err.hc3&#39;,&#39;err.cor.hc0&#39;,&#39;err.cor.hc3&#39;)
 
 mse_ols</code></pre>
-<pre><code> [1] 0.02812327 0.02751098 0.02758644 0.02772930 0.02393961 0.02666216
- [7] 0.02559678 0.02338614 0.02446029 0.02484215</code></pre>
+<pre><code> [1] 0.1676999 0.1658643 0.1660917 0.1665212 0.1547243 0.1632855 0.1599899
+ [8] 0.1529253 0.1563979 0.1576139</code></pre>
 <pre class="r"><code>mse_err</code></pre>
-<pre><code> [1] 0.03048193 0.02937173 0.03012976 0.03045566 0.02685249 0.02757694
- [7] 0.02777951 0.02608122 0.02762995 0.02821813</code></pre>
+<pre><code> [1] 0.1745907 0.1713818 0.1735793 0.1745155 0.1638673 0.1660631 0.1666719
+ [8] 0.1614968 0.1662226 0.1679825</code></pre>
 <pre class="r"><code>mse_music</code></pre>
-<pre><code> [1] 0.02641348 0.02526617 0.02416090 0.02376589 0.02251022 0.02395524
- [7] 0.02329612 0.02094225 0.02237483 0.02264586</code></pre>
-<pre class="r"><code>plot(c(out.music[[2]]),type=&#39;p&#39;,col=&#39;gray50&#39;,ylab=&#39;p&#39;,main=&#39;music&#39;)
-lines(c(out[[i]]$input$b),type=&#39;p&#39;,col=2,pch=20)</code></pre>
-<p><img src="figure/neuron_simu.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
-Past versions of unnamed-chunk-3-1.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-3-1" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/DongyueXie/deconference/blob/ea8121299b2de6879573147759e7d34ad9948231/docs/figure/neuron_simu.Rmd/unnamed-chunk-3-1.png" target="_blank">ea81212</a>
-</td>
-<td>
-DongyueXie
-</td>
-<td>
-2021-07-08
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<pre class="r"><code>plot(c(out[[2]]$fit.err.hc0$beta_hat),type=&#39;p&#39;,col=&#39;gray50&#39;,ylab=&#39;p&#39;,main=&#39;err&#39;)
-lines(c(out[[i]]$input$b),type=&#39;p&#39;,col=2,pch=20)</code></pre>
-<p><img src="figure/neuron_simu.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>
-<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-2">
-Past versions of unnamed-chunk-3-2.png
-</button>
-</p>
-<div id="fig-unnamed-chunk-3-2" class="collapse">
-<div class="table-responsive">
-<table class="table table-condensed table-hover">
-<thead>
-<tr>
-<th>
-Version
-</th>
-<th>
-Author
-</th>
-<th>
-Date
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="https://github.com/DongyueXie/deconference/blob/ea8121299b2de6879573147759e7d34ad9948231/docs/figure/neuron_simu.Rmd/unnamed-chunk-3-2.png" target="_blank">ea81212</a>
-</td>
-<td>
-DongyueXie
-</td>
-<td>
-2021-07-08
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
+<pre><code> [1] 0.1625223 0.1589534 0.1554378 0.1541619 0.1500340 0.1547748 0.1526307
+ [8] 0.1447144 0.1495822 0.1504854</code></pre>
 <pre class="r"><code>coverage</code></pre>
 <pre><code>         ols.cv   ols.hc0   ols.hc3   err.hc0   err.hc3 err.cor.hc0 err.cor.hc3
  [1,] 0.6085859 0.9267677 1.0000000 0.9419192 1.0000000   0.9262821   0.9974684

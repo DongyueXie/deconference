@@ -1,0 +1,398 @@
+---
+title: "neuron data simulation based real data, try to remove outlier"
+author: "DongyueXie"
+date: "2021-07-14"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+In previous analysis, we found the mse is [large](neuron_simu.html), but after adding weights, it's much [smaller](partial_weights.html)
+```{r,eval=F}
+source('code/deconference_main.R')
+source('code/utils.R')
+source('code/wols.R')
+source('code/simulation/neuron/simu_neuron.R')
+#source('code/simulation/simu_correlation_ult.R')
+
+# remove genes
+
+gene_name = readRDS('data/neuron/gene_name_20293.rds')
+indis_ref = readRDS('data/neuron/indis_ref.rds')
+indis_ref = indis_ref[match(gene_name,dimnames(indis_ref)[[1]]),,]
+dim(indis_ref)
+
+# remove individuals that has no or too few certain cell types
+cell_ann = readRDS('data/neuron/cell_ann.rds')
+indi_by_cell = table(cell_ann$donor_id,cell_ann$celltype)
+indi_by_cell[,6] = indi_by_cell[,6] + indi_by_cell[,7]
+indi_by_cell = indi_by_cell[,1:6]
+colnames(indi_by_cell)[6] = 'U_Neur'
+
+indi_to_use = names(which(rowSums(indi_by_cell>10)==6))
+
+##
+
+indis_ref_filter = indis_ref[,,match(indi_to_use,dimnames(indis_ref)[[3]])]
+tt = apply(indis_ref_filter,3,rowSums)
+ii = rowSums(tt>0)
+
+gene_to_use = which(ii>=97)
+gene_name_12406 = names(gene_to_use)
+indis_ref_filter = indis_ref_filter[match(gene_name_12406,dimnames(indis_ref_filter)[[1]]),,]
+X = apply(indis_ref_filter,c(1,2),mean,na.rm=TRUE)
+V = t(apply(indis_ref_filter,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/dim(indis_ref_filter)[3]
+h = rowSums((X%*%solve(crossprod(X)-matrix(colSums(V),ncol=6)))*X)
+plot(h)
+
+# remove genes whose h is larger than 0.2
+rm.idx = which(h>0.2)
+
+indis_ref_filter = indis_ref_filter[-rm.idx,,]
+
+G = dim(indis_ref_filter)[1]
+corGene_idx = readRDS("data/neuron/corGene_idx_lower_cpm_alpha005.rds")
+library(Matrix)
+A.indicator = sparseMatrix(i = corGene_idx[,1],j = corGene_idx[,2],x=1,dims=c(20293,20293))
+idx = match(gene_name_12406[-rm.idx],gene_name)
+A.indicator = A.indicator[idx,idx]
+cor.idx = which(A.indicator!=0,arr.ind = TRUE)
+cor.idx = rbind(cor.idx,cbind(cor.idx[,2],cor.idx[,1]))
+
+b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
+b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)
+
+```
+
+
+```{r,eval=F}
+n = dim(indis_ref_filter)[3]
+n_ref = 11
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+
+
+set.seed(12345)
+out10 = list()
+for(i in 1:10){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out10[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = FALSE,
+                           only.scale.pos.res = TRUE)
+  saveRDS(out10,file='output/neuron/neuron_simu_ref11_rm_outlier_pos_res.rds')
+}
+
+
+set.seed(12345)
+out.music = list()
+for(i in 1:10){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out.music[[i]] = simu_neuron_music(indis_ref_filter,ref.idx,b)
+  saveRDS(out.music,file='output/neuron/neuron_simu_ref11_music_rm_outlier.rds')
+}
+```
+
+
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref11_rm_outlier_pos_res.rds')
+out.music = readRDS('output/neuron/neuron_simu_ref11_music_rm_outlier.rds')
+mse = function(x,y){sqrt(mean((x-y)^2))}
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z<=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+
+mse_ols
+mse_err
+mse_music
+
+coverage
+median_std
+
+out[[1]]$input$b[,1:5]
+round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)
+round(out[[1]]$fit.ols$beta_hat[,1:5],3)
+round(out.music[[1]][,1:5],3)
+```
+
+
+bias
+
+```{r}
+par(mfrow=c(3,4))
+for(j in 1:length(out)){
+  mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:43])
+  mean_bhat1_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,1:43])
+  plot(abs(mean_bhat1 - out[[j]]$input$b[,1]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat1_ols - out[[j]]$input$b[,1])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+par(mfrow=c(3,4))
+for(j in 1:length(out)){
+  mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,44:86])
+  mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,44:86])
+
+  plot(abs(mean_bhat2 - out[[j]]$input$b[,86]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat2_ols - out[[j]]$input$b[,86])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat2_ols - out[[j]]$input$b[,86]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+```
+
+
+
+
+
+## 21 reference
+
+
+
+
+```{r,eval=FALSE}
+n = dim(indis_ref_filter)[3]
+n_ref = 21
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+
+
+set.seed(12345)
+out20 = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out20[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = FALSE,
+                           only.scale.pos.res = TRUE)
+  saveRDS(out20,file='output/neuron/neuron_simu_ref21_rm_outlier_pos_res.rds')
+}
+
+
+set.seed(12345)
+out.music = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out.music[[i]] = simu_neuron_music(indis_ref_filter,ref.idx,b)
+  saveRDS(out.music,file='output/neuron/neuron_simu_ref21_music_rm_outlier.rds')
+}
+```
+
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref21_rm_outlier_pos_res.rds')
+out.music = readRDS('output/neuron/neuron_simu_ref21_music_rm_outlier.rds')
+mse = function(x,y){sqrt(mean((x-y)^2))}
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z<=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+
+mse_ols
+mse_err
+mse_music
+
+coverage
+median_std
+
+out[[1]]$input$b[,1:5]
+round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)
+round(out[[1]]$fit.ols$beta_hat[,1:5],3)
+round(out.music[[1]][,1:5],3)
+```
+
+
+bias
+
+```{r}
+par(mfrow=c(2,3))
+nb = 97-21
+for(j in 1:length(out)){
+  mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:nb/2])
+  mean_bhat1_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,1:nb/2])
+  plot(abs(mean_bhat1 - out[[j]]$input$b[,1]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat1_ols - out[[j]]$input$b[,1])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+par(mfrow=c(2,3))
+for(j in 1:length(out)){
+  mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,(nb/2+1):nb])
+  mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,(nb/2+1):nb])
+
+  plot(abs(mean_bhat2 - out[[j]]$input$b[,nb]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat2_ols - out[[j]]$input$b[,nb])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat2_ols - out[[j]]$input$b[,nb]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+```
+
+
+## 31 reference
+
+```{r,eval=F}
+n = dim(indis_ref_filter)[3]
+n_ref = 31
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+
+
+set.seed(12345)
+out30 = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out30[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = FALSE,
+                           only.scale.pos.res = TRUE)
+  saveRDS(out30,file='output/neuron/neuron_simu_ref31_rm_outlier_pos_res.rds')
+}
+
+
+set.seed(12345)
+out.music = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out.music[[i]] = simu_neuron_music(indis_ref_filter,ref.idx,b)
+  saveRDS(out.music,file='output/neuron/neuron_simu_ref31_music_rm_outlier.rds')
+}
+```
+
+
+
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref31_rm_outlier_pos_res.rds')
+out.music = readRDS('output/neuron/neuron_simu_ref31_music_rm_outlier.rds')
+mse = function(x,y){sqrt(mean((x-y)^2))}
+mse_ols = c()
+mse_err = c()
+mse_music = c()
+coverage = c()
+median_std = c()
+wald= list()
+
+for(i in 1:length(out)){
+  mse_ols[i]=mse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+  mse_err[i] = mse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
+  mse_music[i] = mse(out.music[[i]],out[[i]]$input$b)
+  waldi = list()
+  waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+  waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+  waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+  waldi = c(waldi,lapply(2:5,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+  wald[[i]] = waldi
+  coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(z<=1.96,na.rm = T)})))
+  median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                  median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                  unlist(lapply(2:5,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+}
+colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc0','err.hc3','err.cor.hc0','err.cor.hc3')
+
+mse_ols
+mse_err
+mse_music
+
+coverage
+median_std
+
+out[[1]]$input$b[,1:5]
+round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)
+round(out[[1]]$fit.ols$beta_hat[,1:5],3)
+round(out.music[[1]][,1:5],3)
+```
+
+
+bias
+
+```{r}
+par(mfrow=c(2,3))
+nb = 97-31
+for(j in 1:length(out)){
+  mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:nb/2])
+  mean_bhat1_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,1:nb/2])
+  plot(abs(mean_bhat1 - out[[j]]$input$b[,1]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat1_ols - out[[j]]$input$b[,1])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+par(mfrow=c(2,3))
+for(j in 1:length(out)){
+  mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,(nb/2+1):nb])
+  mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,(nb/2+1):nb])
+
+  plot(abs(mean_bhat2 - out[[j]]$input$b[,nb]),type='b',
+       ylim=range(c(0,range(abs(mean_bhat2_ols - out[[j]]$input$b[,nb])))),
+       ylab='abs(bias)')
+  lines(abs(mean_bhat2_ols - out[[j]]$input$b[,nb]),type='b',pch=2)
+  legend('topright',c('err.adj','ols'),pch=c(1,2))
+}
+
+
+```
+

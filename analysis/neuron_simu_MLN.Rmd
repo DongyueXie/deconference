@@ -1,0 +1,137 @@
+---
+title: "neuron_simu_MLN"
+author: "DongyueXie"
+date: "2021-07-14"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Repeat simulation on neuron data 
+
+```{r,eval=FALSE}
+source('code/deconference_main.R')
+source('code/utils.R')
+source('code/wols.R')
+source('code/simulation/simu_correlation_ult.R')
+
+# remove genes
+
+gene_name = readRDS('data/neuron/gene_name_20293.rds')
+indis_ref = readRDS('data/neuron/indis_ref.rds')
+indis_ref = indis_ref[match(gene_name,dimnames(indis_ref)[[1]]),,]
+dim(indis_ref)
+
+# remove individuals that has no or too few certain cell types
+cell_ann = readRDS('data/neuron/cell_ann.rds')
+indi_by_cell = table(cell_ann$donor_id,cell_ann$celltype)
+indi_by_cell[,6] = indi_by_cell[,6] + indi_by_cell[,7]
+indi_by_cell = indi_by_cell[,1:6]
+colnames(indi_by_cell)[6] = 'U_Neur'
+
+indi_to_use = names(which(rowSums(indi_by_cell>10)==6))
+
+##
+
+indis_ref_filter = indis_ref[,,match(indi_to_use,dimnames(indis_ref)[[3]])]
+tt = apply(indis_ref_filter,3,rowSums)
+ii = rowSums(tt>0)
+
+gene_to_use = which(ii>=97)
+gene_name_12406 = names(gene_to_use)
+indis_ref_filter = indis_ref_filter[match(gene_name_12406,dimnames(indis_ref_filter)[[1]]),,]
+
+# remove genes whose h is larger than 0.2
+X = apply(indis_ref_filter,c(1,2),mean,na.rm=TRUE)
+V = t(apply(indis_ref_filter,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/dim(indis_ref_filter)[3]
+h = rowSums((X%*%solve(crossprod(X)-matrix(colSums(V),ncol=6)))*X)
+plot(h)
+rm.idx = which(h>0.2)
+indis_ref_filter = indis_ref_filter[-rm.idx,,]
+
+ref = apply(indis_ref_filter,c(1,2),mean,na.rm=TRUE)
+sigma2 = t(apply(indis_ref_filter,c(1),function(z){diag(cov(t(z),use = 'complete.obs'))}))
+
+ref = ref+1/nrow(ref)
+sigma2 = sigma2 + 1/nrow(ref)
+
+b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
+b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)
+nb = 10
+b.m = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
+```
+
+
+## each gene correlated with 500 genes
+
+```{r,eval=FALSE}
+apply(sigma2,2,function(z){round(quantile(z),3)})
+```
+
+```{r}
+G = 12400
+K = 4
+d = 500
+A = matrix(0,nrow=G,ncol=G)
+
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+
+hist(A[upper.tri(A)],breaks = 100,main = 'histogram of correlations',xlab = 'correlations')
+```
+
+Known correlations
+
+```{r}
+# set.seed(12345)
+# simu = simu_corr_simple(ref,b.m,nreps=100,
+#                         sigma2=sigma2,
+#                         R=A,n_indi = 10,
+#                         verbose = F,
+#                         printevery = 1,
+#                         est_cor = FALSE,
+#                         calc_cov = F,
+#                         weighted = F)
+# saveRDS(simu,file='output/simu_correlation_betahat_d500_neuron.rds')
+simu = readRDS('output/simu_correlation_betahat_d500_neuron.rds')
+```
+
+```{r}
+ploter.coverage = function(simu){
+
+
+  plot(simu$coverage_adj_hc0,
+       ylim = range(c(simu$coverage_adj_hc0,
+                      simu$coverage_adj_hc2,
+                      simu$coverage_adj_hc3,
+                      simu$coverage_adj_jack,
+                      1),na.rm = T),
+       col=2,ylab='coverage',xlab='coefs',main='coverage of p',type='b')
+  lines(simu$coverage_adj_hc2,type='b',pch=2,col=3)
+  lines(simu$coverage_adj_hc3,type='b',pch=3,col=4)
+  lines(simu$coverage_adj_jack,type='b',pch=20,col=2)
+  abline(h=0.95,lty=2)
+  
+  legend('bottomright',c('cor_adj_hc0','cor_adj_hc2',"cor_adj_hc3","cor_adj_10fold"),
+         col=c(1,3,4,2),pch=c(1,2,3,20))
+ 
+}
+
+```
+
+
+```{r}
+ploter.coverage(simu)
+```
+
+```{r}
+simu$mse_adj
+```

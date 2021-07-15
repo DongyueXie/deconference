@@ -111,13 +111,14 @@ simu_neuron = function(indis_ref,
              fit.err.hc3=fit.err.hc3,
              fit.err.cor.hc0=fit.err.cor.hc0,
              fit.err.cor.hc3=fit.err.cor.hc3,
+             w=w,
              input = list(ref.idx=ref.idx,b=b))
   return(out)
 
 }
 
 
-
+devtools::load_all('D://githubs/MuSiC')
 simu_neuron_music = function(indis_ref,
                              ref.idx,
                              b,

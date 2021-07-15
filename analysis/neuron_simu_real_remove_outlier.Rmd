@@ -144,7 +144,7 @@ round(out.music[[1]][,1:5],3)
 
 bias
 
-```{r}
+```{r,fig.width=12,fig.height=9}
 par(mfrow=c(3,4))
 for(j in 1:length(out)){
   mean_bhat1 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,1:43])
@@ -155,7 +155,9 @@ for(j in 1:length(out)){
   lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type='b',pch=2)
   legend('topright',c('err.adj','ols'),pch=c(1,2))
 }
+```
 
+```{r,fig.width=12,fig.height=9}
 
 par(mfrow=c(3,4))
 for(j in 1:length(out)){

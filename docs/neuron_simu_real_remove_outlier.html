@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreec9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dcebtargetblankc9a04eba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/c9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dceb" target="_blank">c9a04eb</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1a3c6e6f16b134435083dd2c29c3017d83ecd2dbtargetblank1a3c6e6a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/1a3c6e6f16b134435083dd2c29c3017d83ecd2db" target="_blank">1a3c6e6</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreec9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dcebtargetblankc9a04eba" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree1a3c6e6f16b134435083dd2c29c3017d83ecd2dbtargetblank1a3c6e6a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/c9a04ebfdf1ea3b1b4c6f9321bbf696f0de4dceb" target="_blank">c9a04eb</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/1a3c6e6f16b134435083dd2c29c3017d83ecd2db" target="_blank">1a3c6e6</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -533,6 +533,7 @@ Note that you need to be careful to ensure that all relevant files for the analy
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
 
 Untracked files:
     Untracked:  analysis/neuron_simu_MLN.Rmd
@@ -613,6 +614,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/1a3c6e6f16b134435083dd2c29c3017d83ecd2db/analysis/neuron_simu_real_remove_outlier.Rmd" target="_blank">1a3c6e6</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-07-14
+</td>
+<td>
+wflow_publish(“analysis/neuron_simu_real_remove_outlier.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/eb93bea454f98b4d87a9b7bc95bd9150ca0a3f67/docs/neuron_simu_real_remove_outlier.html" target="_blank">eb93bea</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-07-14
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -833,12 +868,10 @@ for(j in 1:length(out)){
        ylab=&#39;abs(bias)&#39;)
   lines(abs(mean_bhat1_ols - out[[j]]$input$b[,1]),type=&#39;b&#39;,pch=2)
   legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
-}
-
-
-par(mfrow=c(3,4))</code></pre>
-<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>for(j in 1:length(out)){
+}</code></pre>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-4-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow=c(3,4))
+for(j in 1:length(out)){
   mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,44:86])
   mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,44:86])
 
@@ -848,7 +881,7 @@ par(mfrow=c(3,4))</code></pre>
   lines(abs(mean_bhat2_ols - out[[j]]$input$b[,86]),type=&#39;b&#39;,pch=2)
   legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
 }</code></pre>
-<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-5-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="reference" class="section level2">
 <h2>21 reference</h2>
@@ -980,7 +1013,7 @@ for(j in 1:length(out)){
 
 
 par(mfrow=c(2,3))</code></pre>
-<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>for(j in 1:length(out)){
   mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,(nb/2+1):nb])
   mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,(nb/2+1):nb])
@@ -991,7 +1024,7 @@ par(mfrow=c(2,3))</code></pre>
   lines(abs(mean_bhat2_ols - out[[j]]$input$b[,nb]),type=&#39;b&#39;,pch=2)
   legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
 }</code></pre>
-<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="reference-1" class="section level2">
 <h2>31 reference</h2>
@@ -1123,7 +1156,7 @@ for(j in 1:length(out)){
 
 
 par(mfrow=c(2,3))</code></pre>
-<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>for(j in 1:length(out)){
   mean_bhat2 = rowMeans(out[[j]]$fit.err.hc0$beta_hat[,(nb/2+1):nb])
   mean_bhat2_ols = rowMeans(out[[j]]$fit.ols$beta_hat[,(nb/2+1):nb])
@@ -1134,7 +1167,7 @@ par(mfrow=c(2,3))</code></pre>
   lines(abs(mean_bhat2_ols - out[[j]]$input$b[,nb]),type=&#39;b&#39;,pch=2)
   legend(&#39;topright&#39;,c(&#39;err.adj&#39;,&#39;ols&#39;),pch=c(1,2))
 }</code></pre>
-<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/neuron_simu_real_remove_outlier.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

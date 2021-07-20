@@ -55,6 +55,40 @@ n_ref = 11
 n_bulk = n-n_ref
 b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
 
+
+
+#############################################################
+#############################################################
+# use all individual for obtaining weights
+V.temp = t(apply(indis_ref_filter,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))
+fit.vash = vashr::vash(sqrt(rowSums(V.temp)),df=n-1)
+w = 1/(fit.vash$sd.post)^2
+w = w/sum(w)*G
+
+set.seed(12345)
+out10 = list()
+for(i in 1:10){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out10[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = TRUE,w=w)
+  saveRDS(out10,file='output/neuron/neuron_simu_ref11_rm_outlier_weight_allcalcweight_alpha005.rds')
+}
+
+# only add positive residuals
+set.seed(12345)
+out10 = list()
+for(i in 1:10){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out10[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = TRUE,only.add.pos.res = TRUE)
+  saveRDS(out10,file='output/neuron/neuron_simu_ref11_rm_outlier_weight_alpha005_onlypos.rds')
+}
+
+
+#############################################################
+#############################################################
 set.seed(12345)
 out10 = list()
 for(i in 1:10){
@@ -65,7 +99,8 @@ for(i in 1:10){
   saveRDS(out10,file='output/neuron/neuron_simu_ref11_rm_outlier_weight.rds')
 }
 
-
+#############################################################
+#############################################################
 
 set.seed(12345)
 out10 = list()

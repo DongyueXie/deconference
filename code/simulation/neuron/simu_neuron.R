@@ -10,6 +10,7 @@ simu_neuron = function(indis_ref,
                        groups = c(rep(1,ncol(b)/2),rep(2,ncol(b)/2)),
                        centeringXY=FALSE,
                        only.scale.pos.res = FALSE,
+                       only.add.pos.res = FALSE,
                        verbose = F,
                        weighted = FALSE,
                        w = NULL,
@@ -47,7 +48,7 @@ simu_neuron = function(indis_ref,
       if(eb.V){
         w = 1/(rowSums(V))
       }else{
-        V.temp = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_ref
+        V.temp = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))
         fit.vash = vashr::vash(sqrt(rowSums(V.temp)),df=n_ref-1)
         w = 1/(fit.vash$sd.post)^2
       }
@@ -78,7 +79,8 @@ simu_neuron = function(indis_ref,
                                  cor.idx=NULL,
                                  centeringXY=centeringXY,
                                  true.beta = NULL,
-                                 only.scale.pos.res=only.scale.pos.res)
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res)
 
   fit.err.hc3 = estimation_func2(y=y,X=X,Vg=V,
                                  w=w,hc.type='hc3',correction=FALSE,
@@ -86,7 +88,8 @@ simu_neuron = function(indis_ref,
                                  cor.idx=NULL,
                                  centeringXY=centeringXY,
                                  true.beta = NULL,
-                                 only.scale.pos.res=only.scale.pos.res)
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res)
 
   # adjust both measurement error and correlation
 
@@ -96,7 +99,8 @@ simu_neuron = function(indis_ref,
                                  cor.idx=cor.idx,
                                  centeringXY=centeringXY,
                                  true.beta = NULL,
-                                 only.scale.pos.res=only.scale.pos.res)
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res)
 
   fit.err.cor.hc3 = estimation_func2(y=y,X=X,Vg=V,
                                  w=w,hc.type='hc3',correction=FALSE,
@@ -104,7 +108,8 @@ simu_neuron = function(indis_ref,
                                  cor.idx=cor.idx,
                                  centeringXY=centeringXY,
                                  true.beta = NULL,
-                                 only.scale.pos.res=only.scale.pos.res)
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res)
 
   out = list(fit.ols=fit.ols,
              fit.err.hc0=fit.err.hc0,

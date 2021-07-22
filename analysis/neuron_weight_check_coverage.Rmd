@@ -1,0 +1,167 @@
+---
+title: "neuron_weight_check_coverage"
+author: "DongyueXie"
+date: "2021-07-20"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Use all 96 individuals to calculate weights.
+
+```{r}
+source('code/deconference_main.R')
+source('code/simulation/neuron/simu_neuron_result.R')
+out.music = readRDS('output/neuron/neuron_simu_ref11_music.rds')
+out = readRDS('output/neuron/neuron_simu_ref11_rm_outlier_weight_allcalcweight_alpha005.rds')
+
+summary_neuron(out,out.music)
+
+out[[1]]$input$b[,1:5]
+round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)
+round(out[[1]]$fit.ols$beta_hat[,1:5],3)
+round(out.music[[1]][,1:5],3)
+```
+
+## only add postive residuals for cor adjustment, alpha = 0.05
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref11_gene12400_weight_alpha005_add_pos_res.rds')
+
+summary_neuron(out,out.music)
+
+
+out[[1]]$input$b[,1:5]
+round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)
+round(out[[1]]$fit.ols$beta_hat[,1:5],3)
+round(out.music[[1]][,1:5],3)
+
+
+rowMeans(abs((out[[1]]$fit.err.cor.hc3$beta_hat - out[[1]]$input$b)/out[[1]]$fit.err.cor.hc3$beta_se)<1.96,na.rm=T)
+rowMeans(abs((out[[2]]$fit.err.cor.hc3$beta_hat - out[[2]]$input$b)/out[[2]]$fit.err.cor.hc3$beta_se)<1.96,na.rm=T)
+rowMeans(abs((out[[3]]$fit.err.cor.hc3$beta_hat - out[[3]]$input$b)/out[[3]]$fit.err.cor.hc3$beta_se)<1.96,na.rm=T)
+```
+
+```{r}
+plot(apply(out[[1]]$fit.err.hc0$beta_hat[,1:43],1,sd),ylim = c(0,0.15),ylab = 'sd',xlab='coefficients')
+lines(apply(out[[1]]$fit.err.hc0$beta_se[,1:43],1,median,na.rm=T),type='p',pch=2)
+lines(apply(out[[1]]$fit.err.cor.hc0$beta_se[,1:43],1,median,na.rm=T),type='p',pch=20)
+legend('topright',c('true','est.err','est.err.cor005.pos'),pch=c(1,2,20))
+```
+
+## only add postive residuals for cor adjustment, alpha = 0.5
+
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref11_gene12400_weight_alpha05_add_pos_res.rds')
+
+summary_neuron(out,out.music)
+
+
+out[[1]]$input$b[,1:5]
+round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)
+round(out[[1]]$fit.ols$beta_hat[,1:5],3)
+round(out.music[[1]][,1:5],3)
+
+plot(apply(out[[1]]$fit.err.hc0$beta_hat[,1:43],1,sd),ylim = c(0,0.15),ylab = 'sd',xlab='coefficients')
+lines(apply(out[[1]]$fit.err.hc0$beta_se[,1:43],1,median,na.rm=T),type='p',pch=2)
+lines(apply(out[[1]]$fit.err.cor.hc0$beta_se[,1:43],1,median,na.rm=T),type='p',pch=20)
+legend('topright',c('true','est.err','est.err.cor05.pos'),pch=c(1,2,20))
+```
+
+## use alpha = 0.5
+
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref11_gene12400_weight_alpha05.rds')
+
+summary_neuron(out,out.music)
+
+
+out[[1]]$input$b[,1:5]
+round(out[[1]]$fit.err.hc0$beta_hat[,1:5],3)
+round(out[[1]]$fit.ols$beta_hat[,1:5],3)
+round(out.music[[1]][,1:5],3)
+```
+
+## why use alpha=0.5 and only add postive residuals(multiply) for cor adjustment does not improve coverage
+
+```{r}
+indis_ref_filter = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+
+
+b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
+b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)
+
+n = dim(indis_ref_filter)[3]
+n_ref = 11
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+set.seed(12345)
+ref.idx = sample(1:97,n_ref)
+X_array_ref = indis_ref_filter[,,ref.idx]
+X_array_bulk = indis_ref_filter[,,-ref.idx]
+X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/length(ref.idx)
+G = nrow(X)
+K = ncol(X)
+V.temp = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))
+fit.vash = vashr::vash(sqrt(rowSums(V.temp)),df=length(ref.idx)-1)
+w = 1/(fit.vash$sd.post)^2
+w = w/sum(w)*G
+
+
+mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
+mb = do.call(cbind,mb)
+thetab = apply(mb,2,function(z){z/sum(z)})
+
+y = matrix(rpois(G*n_bulk,500*G*thetab),nrow=G)
+
+
+cor.idx005 = readRDS('data/neuron/gene12400_cor_idx_alpha005.rds')
+cor.idx05 = readRDS('data/neuron/gene12400_cor_idx_alpha05.rds')
+
+length(cor.idx005)
+length(cor.idx05)
+
+fit.err.hc3.cor005 = estimation_func2(y=y[,1:2],X=X,Vg=V,
+                               w=w,hc.type='hc3',correction=FALSE,
+                               calc_cov=F,verbose=T,
+                               cor.idx=cor.idx005,
+                               centeringXY=F,
+                               true.beta = NULL,
+                               only.scale.pos.res=F,
+                               only.add.pos.res=T)
+
+
+fit.err.hc3.cor05 = estimation_func2(y=y[,1:2],X=X,Vg=V,
+                               w=w,hc.type='hc3',correction=FALSE,
+                               calc_cov=F,verbose=T,
+                               cor.idx=cor.idx05,
+                               centeringXY=F,
+                               true.beta = NULL,
+                               only.scale.pos.res=F,
+                               only.add.pos.res=T)
+```
+
+
+
+```{r}
+fit.err.hc3.cor005$beta_se
+fit.err.hc3.cor05$beta_se
+```
+
+```{r}
+fit.err.hc3.cor005$Sigma/1e8
+fit.err.hc3.cor05$Sigma/1e8
+```
+
+
+```{r}
+fit.err.hc3.cor005$cov_beta_tilde_hat
+fit.err.hc3.cor05$cov_beta_tilde_hat
+```
+
+
+
+

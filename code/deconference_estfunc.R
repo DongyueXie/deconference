@@ -205,7 +205,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   #h = rowSums((X%*%Qinv)*X)*w
   h = rowSums((Xw%*%Qinv)*Xw)
 
-  #browser()
+
 
   Sigma = get_SIGMA2(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
                     V=Vw,h=h,nb=nb,
@@ -216,6 +216,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                     only.add.pos.res=only.add.pos.res,
                     nfold=nfold)
   covb = Q_inv%*%Sigma%*%Q_inv
+
+  #browser()
 
   # if(is.null(R)){
   #   browser()
@@ -315,7 +317,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
               Sigma = Sigma,
               #Sigma_ii = Sigma_ii/G^2,
               J=J,
-              Q_inv = Qinv,
+              Q_inv = Q_inv,
               Q=Q,
               V=V,
               A=A,
@@ -391,6 +393,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
 
     for(j in i:nb){
 
+      Sigma_ij = matrix(0,nrow=K,ncol=K)
       if(j==i){
 
         score.temp = (c(ri)*X+Vbi)
@@ -437,25 +440,27 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
 
 
           }else if(only.add.pos.res){
-            res.prod = ri[cor.idx[,1]] * ri[cor.idx[,2]]
-            s.idx = which(res.prod>0)
 
-            idx.temp = split(1:s.idx,1:100)
-            cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
-                                                              (score.temp)[cor.idx[idx,2],,drop=FALSE])})
-            cc.temp = Reduce('+',cc.temp)
-            Sigma_ij = Sigma_ij + cc.temp
+            #browser()
 
-            # Sigma_ij = Sigma_ij+
-            #   crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])
+            s.idx = which((ri[cor.idx[,1]] * ri[cor.idx[,2]])>0)
+            #
+            # idx.temp = split(s.idx,1:100)
+            # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
+            #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
+            # cc.temp = Reduce('+',cc.temp)
+            # Sigma_ij = Sigma_ij + cc.temp
+
+            Sigma_ij = Sigma_ij+
+              crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])
           }else{
-            idx.temp = split(1:dim(cor.idx)[1],1:100)
-            cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
-                                                              (score.temp)[cor.idx[idx,2],,drop=FALSE])})
-            cc.temp = Reduce('+',cc.temp)
-            Sigma_ij = Sigma_ij + cc.temp
-            # Sigma_ij = Sigma_ij + crossprod((score.temp)[cor.idx[,1],,drop=FALSE],
-            #                                 (score.temp)[cor.idx[,2],,drop=FALSE])
+            # idx.temp = split(1:dim(cor.idx)[1],1:100)
+            # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
+            #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
+            # cc.temp = Reduce('+',cc.temp)
+            # Sigma_ij = Sigma_ij + cc.temp
+            Sigma_ij = Sigma_ij + crossprod((score.temp)[cor.idx[,1],,drop=FALSE],
+                                            (score.temp)[cor.idx[,2],,drop=FALSE])
           }
 
 

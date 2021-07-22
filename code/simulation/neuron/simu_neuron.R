@@ -123,11 +123,13 @@ simu_neuron = function(indis_ref,
 }
 
 
-devtools::load_all('D://githubs/MuSiC')
+
 simu_neuron_music = function(indis_ref,
                              ref.idx,
                              b,
                              bulk_lib_size = 500){
+
+  devtools::load_all('D://githubs/MuSiC')
 
   G = dim(indis_ref)[1]
   K = dim(indis_ref)[2]

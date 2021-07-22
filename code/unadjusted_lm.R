@@ -40,10 +40,12 @@ unadjusted_lm = function(y,X,w=NULL,groups=NULL,do.hc = TRUE){
   }
 
   # perform ols estimator of variance
-  #resid_var = t(yw)%*%(diag(G)-Hat_mat)%*%yw/(G-K)
-  res = y - X%*%beta_tilde_hat
+  #
+  #res = y - X%*%beta_tilde_hat
+  res = yw - Xw%*%beta_tilde_hat
   resid_var = crossprod(res)/(G-K)
-  covb = kronecker(resid_var,A_inv%*%crossprod(X*w)%*%A_inv)
+  covb = kronecker(resid_var,A_inv)
+  #covb = kronecker(resid_var,A_inv%*%crossprod(X*w)%*%A_inv)
 
 
   asyV = (J)%*%covb%*%t(J)

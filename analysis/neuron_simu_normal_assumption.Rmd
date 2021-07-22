@@ -1,0 +1,20 @@
+---
+title: "neuron_simu_normal_assumption"
+author: "DongyueXie"
+date: "2021-07-22"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref11_gene12400_weight_alpha005_add_pos_res.rds')
+for(i in 1:10){
+  z1 = (out[[i]]$fit.err.cor.hc3$beta_hat - out[[i]]$input$b)/out[[i]]$fit.err.cor.hc3$beta_se
+  print(apply(z1,1,sd))
+}
+
+```
+

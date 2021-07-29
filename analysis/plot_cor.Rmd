@@ -66,7 +66,7 @@ n.ref = matrix(nrow=G,ncol=K)
       thetab = apply(mb,2,function(z){z/sum(z)})
       bulk_for_cor = matrix(rpois(G*100,500*G*thetab),nrow=G)
       
-R.est = Rfast::cova(t(bulk_for_cor))
+R.est = Rfast::cora(t(bulk_for_cor))
 
 hist(R.est[upper.tri(R.est)],breaks = 100)
 ```

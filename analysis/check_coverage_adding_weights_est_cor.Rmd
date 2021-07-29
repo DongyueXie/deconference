@@ -1,0 +1,449 @@
+---
+title: "check coverage after adding weights, with estimated correlation pairs"
+author: "DongyueXie"
+date: "2021-07-25"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r,warning=F,message=F}
+source('code/deconference_main.R')
+source('code/simulation/simu_correlation_ult.R')
+
+xin_raw <- readRDS("data/pancreas/xin_raw.rds")
+cell_types = c('alpha', 'beta', 'delta', 'gamma')
+K = length(cell_types)
+rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+rm.indi.idx = which(xin_raw$individual%in%rm.indi)
+
+datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types, 
+                           gene_thresh = 0.05,max_count_quantile_celltype = 0.95,
+                           max_count_quantile_indi = 0.95,
+                           w=1)
+design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,
+                                  datax.xin$indi_idx,estimator="separate",
+                                  est_sigma2 = TRUE,meta_mode = 'local',smooth.sigma = F)
+
+ref = design.mat.xin$X
+sigma2 = design.mat.xin$Sigma
+
+
+
+# set.seed(12345)
+# ref = matrix(rnorm(G*K),nrow=G)
+# ref = abs(ref)
+# ref = apply(ref, 2, function(z){z/sum(z)})*G
+# sigma2 = ref/2
+# rownames(ref) = 1:G
+
+
+
+```
+
+```{r}
+
+ref = ref+1/nrow(ref)
+sigma2 = sigma2 + 1/nrow(ref)
+
+b1 = c(0.1,0.1,0.3,0.5)
+b.m = t(b1%*%t(rep(1,100)))
+
+simu_study = function(ref,
+                            b,
+                            R=NULL,
+                            sigma2,
+                         
+                            nreps = 100,
+                            bulk_lib_size = 500,
+                            n_indi = 10,
+                            
+                            verbose=FALSE,
+                            alpha=0.05,
+                            alpha.cor = 0.1,
+                            
+                            centeringXY = FALSE,
+                            true.beta.for.Sigma=FALSE,
+                            calc_cov = F,
+                            est_cor = F,
+                            only.scale.pos.res = FALSE,
+                            n_bulk_for_cor = 100,
+                            cor_method = 'testing',
+                           
+                            weighted = FALSE,
+                            use.true.sigma.for.weight = FALSE,
+                            use.random.weight = FALSE){
+
+  is.identity = function(X){
+    if(!is.null(X)){
+      (sum(X)==nrow(X))
+    }else{
+      FALSE
+    }
+    
+  }
+
+  genp = function(K){
+    p = runif(K)
+    p/sum(p)
+  }
+
+  G = nrow(ref)
+  K = ncol(ref)
+  n_bulk = 1
+  
+  is.indep = (is.identity(R))|(is.null(R))
+
+ 
+  
+
+  ## 2. adjust for variance of U_hat, do not adjust for correlation, then hc0, hc2, hc3.
+  ## 3. adjust for varaince of U_hat, adjust for correlation, then hc0, hc2, hc3.
+
+  
+  gene_names = rownames(ref)
+  
+
+
+  ## pre calculate MLN and generate independent normal
+
+  n.ref = matrix(nrow=G,ncol=K)
+  n.Sigma.chol = list()
+  n.Sigma = matrix(nrow=G,ncol=K)
+  if(!is.indep){
+    chol.R = chol(R)
+  }
+  
+  for(k in 1:K){
+    n.ref[,k] = log(ref[,k]^2/sqrt(ref[,k]^2+sigma2[,k]))
+    n.s = sqrt(log(1+sigma2[,k]/ref[,k]^2))
+    if(!is.indep){
+      n.Sigma.chol[[k]] = t(n.s*t(chol.R))
+    }else{
+      n.Sigma[,k] = n.s^2
+    }
+  }
+
+
+  if(!est_cor){
+    if(!is.indep){
+      cor.idx = which(R!=0,arr.ind = T)
+      cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
+    }else{
+      cor.idx = NULL
+    }
+    n_bulk_for_cor = 0
+  }else{
+    X_array_bulk_for_cor = array(dim=c(G,K,n_bulk_for_cor))
+    for(k in 1:K){
+      if(is.indep){
+        X_array_bulk_for_cor[,k,] = exp(matrix(rnorm(G*n_bulk_for_cor,n.ref[,k],sqrt(n.Sigma[,k])),ncol=n_bulk_for_cor))
+      }else{
+        X_array_bulk_for_cor[,k,] = t(exp(mvnfast::rmvn(n_bulk_for_cor,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+      }
+    }
+      mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
+      thetab = apply(mb,2,function(z){z/sum(z)})
+      bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
+      rownames(bulk_for_cor) = gene_names
+
+      cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
+  }
+
+
+   p_hat = matrix(nrow=nreps,ncol=K)
+   p_hat_se= matrix(nrow=nreps,ncol=K)
+   true_betas = matrix(nrow=nreps,ncol=K)
+
+
+  for(reps in 1:nreps){
+    
+    if(reps%%10==0){print(sprintf("running %d (out of %d)",reps,nreps))}
+  
+    # generate individual reference matrices
+
+
+    n.temp = n_indi+n_bulk
+    X_array = array(dim=c(G,K,n.temp))
+
+    for(k in 1:K){
+      if(is.indep){
+        X_array[,k,] = exp(matrix(rnorm(G*n.temp,n.ref[,k],sqrt(n.Sigma[,k])),ncol=n.temp))
+      }else{
+        X_array[,k,] = t(exp(mvnfast::rmvn(n.temp,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+      }
+    }
+
+    #browser()
+
+    X_array_bulk = X_array[,,1:n_bulk]
+
+    X_array_ref = X_array[,,(n_bulk+1):(n_bulk+n_indi)]
+
+    #X_array_bulk_for_cor = X_array[,,-(1:(n_bulk+n_indi))]
+
+
+
+    mb = cbind(X_array_bulk%*%b)
+    
+    true.beta = t(t(b)*c(apply(mb,2,function(z){bulk_lib_size*G/sum(z)})))
+    true_betas[reps,] = c(true.beta)
+    thetab = apply(mb,2,function(z){z/sum(z)})
+
+
+    #browser()
+    y = matrix(rpois(G*n_bulk,bulk_lib_size*G*thetab),nrow=G)
+    rownames(y) = gene_names
+
+    #bulks = SingleCellExperiment(assays = list(counts = y),
+    #                             colData = DataFrame(individual = 1:n_bulk))
+
+
+
+    ## generate reference matrices X
+
+    # X_array = array(dim=c(G,K,n_indi))
+    #
+    # for(k in 1:K){
+    #   x_k = sim_MLN(n_indi,ref[,k],sqrt(sigma2[,k]),R)
+    #   X_array[,k,] = t(x_k)
+    # }
+
+
+    ## get correlated pairs
+
+    # if(est_cor){
+    # 
+    #   # generate bulk data for estimating correlation
+    # 
+    #   mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
+    #   thetab = apply(mb,2,function(z){z/sum(z)})
+    #   bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
+    #   rownames(bulk_for_cor) = gene_names
+    # 
+    #   cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
+    # 
+    #  
+    # 
+    # }
+
+    # fit model
+
+    #browser()
+
+    X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+    V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_indi
+
+
+    if(weighted){
+      if(use.true.sigma.for.weight){
+        w = 1/rowSums(sigma2)
+      }else if(use.random.weight){
+        w = runif(G)
+      }else{
+          fit.vash = vashr::vash(sqrt(rowSums(V)),df=n_indi-1)
+          w = 1/(fit.vash$sd.post)^2
+      }
+       # calc weights for each cell type, then average,
+
+    }else{
+      w = 1
+    }
+
+    # fit.hc0 = estimation_func2(y=y,X=X,Vg=V,
+    #                                w=w,hc.type='hc0',correction=FALSE,
+    #                                calc_cov=calc_cov,verbose=verbose,
+    #                                cor.idx=cor.idx,
+    #                                centeringXY=centeringXY,
+    #                                true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+    #                                only.scale.pos.res=only.scale.pos.res)
+
+    # fit.adj.hc2 = estimation_func2(y=y,X=X,Vg=V,
+    #                                w=w,hc.type='hc2',correction=FALSE,
+    #                                calc_cov=calc_cov,verbose=verbose,
+    #                                cor.idx=cor.idx,
+    #                                centeringXY=centeringXY,
+    #                                true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+    #                                only.scale.pos.res=only.scale.pos.res)
+
+    fit.hc3 = estimation_func2(y=y,X=X,Vg=V,
+                                   w=w,hc.type='hc3',correction=FALSE,
+                                   calc_cov=calc_cov,verbose=verbose,
+                                   cor.idx=cor.idx,
+                                   centeringXY=centeringXY,
+                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+                                   only.scale.pos.res=only.scale.pos.res)
+    
+    p_hat[reps,] = c(fit.hc3$beta_hat)
+    p_hat_se[reps,] = c(fit.hc3$beta_se)
+    
+    #fit.lm = unadjusted_lm(y,X,w)
+
+    # fit.adj.jack = estimation_func2(y=y,X=X,Vg=V,
+    #                                w=w,hc.type='jackknife',correction=FALSE,
+    #                                calc_cov=calc_cov,verbose=verbose,
+    #                                cor.idx=cor.idx,
+    #                                centeringXY=centeringXY,
+    #                                true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+    #                                only.scale.pos.res=only.scale.pos.res,
+    #                                nfold = nfold)
+
+    # fit.unadj.hc0 = estimation_func2(y=y,X=X,Vg=V,
+    #                                  w=w,hc.type='hc0',correction=FALSE,
+    #                                  calc_cov=calc_cov,verbose=verbose,
+    #                                  cor.idx=NULL,
+    #                                  centeringXY=centeringXY,
+    #                                  true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+    #                                  only.scale.pos.res=only.scale.pos.res)
+    # 
+    # fit.unadj.hc2 = estimation_func2(y=y,X=X,Vg=V,
+    #                                  w=w,hc.type='hc2',correction=FALSE,
+    #                                  calc_cov=calc_cov,verbose=verbose,
+    #                                  cor.idx=NULL,
+    #                                  centeringXY=centeringXY,
+    #                                  true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+    #                                  only.scale.pos.res=only.scale.pos.res)
+    # 
+    # fit.unadj.hc3 = estimation_func2(y=y,X=X,Vg=V,
+    #                                  w=w,hc.type='hc3',correction=FALSE,
+    #                                  calc_cov=calc_cov,verbose=verbose,
+    #                                  cor.idx=NULL,
+    #                                  centeringXY=centeringXY,
+    #                                  true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+    #                                  only.scale.pos.res=only.scale.pos.res)
+  
+
+
+  }
+
+  return(list(p_hat=p_hat,p_hat_se = p_hat_se,true_betas=true_betas))
+
+
+
+}
+rmse = function(x,y){sqrt(mean((x-y)^2))}
+
+
+summary_simu_study = function(out1){
+  rmses = c()
+  for(k in 1:K){
+    rmses = c(rmses,rmse(out1$p_hat[,k],b.m[,k]))
+  }
+
+  print('rmse')
+  print(round(rmses,3))
+
+  print(round(rmse(out1$p_hat,b.m),3))
+  
+  z.err.hc3 = (out1$p_hat-b.m)/out1$p_hat_se
+  print('coverage')
+  print(round(colMeans(abs(z.err.hc3)<1.96,na.rm=T),3))
+  
+  par(mfrow=c(2,2))
+  for(k in 1:K){
+    qqnorm(out1$p_hat[,k],main = 'qqplot - p_hat')
+    qqline(out1$p_hat[,k])
+  }
+  
+  
+  for(k in 1:K){
+    qqnorm(z.err.hc3[,k],main = 'qqplot - z score')
+    qqline(z.err.hc3[,k])
+  }
+  
+  for(k in 1:K){
+    h = hist(z.err.hc3[,k],breaks = 20,main='histogram of z score',xlab=paste('p_1',k))
+    xfit<-seq(-3,3,length=40)
+    yfit<-dnorm(xfit,mean=0,sd=1)
+    yfit <- yfit*diff(h$mids[1:2])*length(z.err.hc3[,k])
+    lines(xfit, yfit, col="blue", lwd=2)
+  }
+  par(mfrow=c(1,1))
+  
+  boxplot(out1$p_hat_se,col='grey80',ylab='se',ylim = range(apply(out1$p_hat_se,2,quantile,c(0,0.99),na.rm=T)))
+  lines(apply(out1$p_hat, 2, sd,na.rm=TRUE),type='p',col='yellow',pch=17)
+  
+}
+
+```
+
+
+
+
+## Correlated, no weights, estimated correlation 0.5
+
+```{r}
+G = nrow(ref)
+K = 4
+d = 500
+R = matrix(0,nrow=G,ncol=G)
+
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    R[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+R = R+t(R) - diag(G)
+library(Matrix)
+R = Matrix(R,sparse = TRUE)
+```
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = F,est_cor = T,alpha.cor = 0.5)
+# saveRDS(out1,file='output/check_coverage_weight_xin/cor_no_weight_est_cor05.rds')
+out1 = readRDS('output/check_coverage_weight_xin/cor_no_weight_est_cor05.rds')
+summary_simu_study(out1)
+```
+
+
+## Correlated, random weights, estimated correlation 0.5
+
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,est_cor = T,alpha.cor = 0.5,use.random.weight = TRUE)
+# saveRDS(out1,file='output/check_coverage_weight_xin/cor_random_weight_est_cor05.rds')
+out1 = readRDS('output/check_coverage_weight_xin/cor_random_weight_est_cor05.rds')
+summary_simu_study(out1)
+```
+
+
+
+## Correlated, true variance for weights, estimated correlation 0.5
+
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = TRUE)
+# saveRDS(out1,file='output/check_coverage_weight_xin/cor_truevar_weight_est_cor05.rds')
+out1 = readRDS('output/check_coverage_weight_xin/cor_truevar_weight_est_cor05.rds')
+summary_simu_study(out1)
+```
+
+
+
+## Correlated, estimated variance for weights, estimated correlation 0.5
+
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F)
+# saveRDS(out1,file='output/check_coverage_weight_xin/cor_estvar_weight_est_cor05.rds')
+out1 = readRDS('output/check_coverage_weight_xin/cor_estvar_weight_est_cor05.rds')
+summary_simu_study(out1)
+```
+
+## Correlated, estimated variance for weights, estimated correlation 0.9
+
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.9,use.random.weight = F,use.true.sigma.for.weight = F)
+# saveRDS(out1,file='output/check_coverage_weight_xin/cor_estvar_weight_est_cor09.rds')
+out1 = readRDS('output/check_coverage_weight_xin/cor_estvar_weight_est_cor09.rds')
+summary_simu_study(out1)
+```

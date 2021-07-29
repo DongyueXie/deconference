@@ -1,0 +1,73 @@
+---
+title: "plot empirical banded cor matrix"
+author: "DongyueXie"
+date: "2021-07-20"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## neuron
+
+```{r}
+G = 12400
+K = 4
+d = 500
+A = matrix(0,nrow=G,ncol=G)
+
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+R = Matrix(A,sparse = TRUE)
+
+
+
+  
+   genp = function(K){
+    p = runif(K)
+    p/sum(p)
+  }
+
+   indis_ref_filter = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+   
+   ref = apply(indis_ref_filter,c(1,2),mean,na.rm=TRUE)
+sigma2 = t(apply(indis_ref_filter,c(1),function(z){diag(cov(t(z),use = 'complete.obs'))}))
+
+ref = ref+1/nrow(ref)
+sigma2 = sigma2 + 1/nrow(ref)
+
+is.indep=F
+
+n.ref = matrix(nrow=G,ncol=K)
+  n.Sigma.chol = list()
+  n.Sigma = matrix(nrow=G,ncol=K)
+  chol.R = chol(R)
+  for(k in 1:K){
+    n.ref[,k] = log(ref[,k]^2/sqrt(ref[,k]^2+sigma2[,k]))
+    n.s = sqrt(log(1+sigma2[,k]/ref[,k]^2))
+    if(!is.indep){
+      n.Sigma.chol[[k]] = t(n.s*t(chol.R))
+    }else{
+      n.Sigma[,k] = n.s^2
+    }
+  }
+
+  X_array_bulk_for_cor = array(dim=c(G,K,100))
+  
+  for(k in 1:K){
+    X_array_bulk_for_cor[,k,] = t(exp(mvnfast::rmvn(100,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+  }
+   
+  mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
+      thetab = apply(mb,2,function(z){z/sum(z)})
+      bulk_for_cor = matrix(rpois(G*100,500*G*thetab),nrow=G)
+      
+R.est = Rfast::cova(t(bulk_for_cor))
+
+hist(R.est[upper.tri(R.est)],breaks = 100)
+```
+

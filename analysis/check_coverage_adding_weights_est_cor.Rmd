@@ -1,5 +1,5 @@
 ---
-title: "check coverage after adding weights, with estimated correlation pairs"
+title: "check coverage after adding weights, with estimated correlation pairs, Xin data"
 author: "DongyueXie"
 date: "2021-07-25"
 output: workflowr::wflow_html
@@ -324,7 +324,8 @@ simu_study = function(ref,
 rmse = function(x,y){sqrt(mean((x-y)^2))}
 
 
-summary_simu_study = function(out1){
+summary_simu_study = function(out1,b=c(0.1,0.1,0.3,0.5)){
+  b.m = t(b%*%t(rep(1,nrow(out1$p_hat))))
   rmses = c()
   for(k in 1:K){
     rmses = c(rmses,rmse(out1$p_hat[,k],b.m[,k]))
@@ -360,9 +361,9 @@ summary_simu_study = function(out1){
   }
   par(mfrow=c(1,1))
   
-  boxplot(out1$p_hat_se,col='grey80',ylab='se',ylim = range(apply(out1$p_hat_se,2,quantile,c(0,0.99),na.rm=T)))
-  lines(apply(out1$p_hat, 2, sd,na.rm=TRUE),type='p',col='yellow',pch=17)
-  
+  boxplot(out1$p_hat_se,col='grey80',ylab='se',ylim = range(apply(out1$p_hat_se,2,quantile,c(0,0.95),na.rm=TRUE)))
+  lines(apply(out1$p_hat, 2, sd),type='p',col='yellow',pch=17)
+  legend('bottomright',c('true sd'),pch=17,col='yellow')
 }
 
 ```
@@ -388,11 +389,24 @@ library(Matrix)
 R = Matrix(R,sparse = TRUE)
 ```
 
+
+### p_hat for variance estimation
+
 ```{r}
 # set.seed(12345)
 # out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = F,est_cor = T,alpha.cor = 0.5)
 # saveRDS(out1,file='output/check_coverage_weight_xin/cor_no_weight_est_cor05.rds')
 out1 = readRDS('output/check_coverage_weight_xin/cor_no_weight_est_cor05.rds')
+summary_simu_study(out1)
+```
+
+### true p for variance estimation
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = F,est_cor = T,alpha.cor = 0.5,true.beta.for.Sigma = T)
+# saveRDS(out1,file='output/check_coverage_weight_xin/cor_no_weight_est_cor05_truep.rds')
+out1 = readRDS('output/check_coverage_weight_xin/cor_no_weight_est_cor05_truep.rds')
 summary_simu_study(out1)
 ```
 
@@ -426,6 +440,7 @@ summary_simu_study(out1)
 
 ## Correlated, estimated variance for weights, estimated correlation 0.5
 
+### p_hat for variance estimation
 
 ```{r}
 # set.seed(12345)
@@ -433,6 +448,17 @@ summary_simu_study(out1)
 #                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F)
 # saveRDS(out1,file='output/check_coverage_weight_xin/cor_estvar_weight_est_cor05.rds')
 out1 = readRDS('output/check_coverage_weight_xin/cor_estvar_weight_est_cor05.rds')
+summary_simu_study(out1)
+```
+
+### true p for variance estimation
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F,true.beta.for.Sigma = T)
+# saveRDS(out1,file='output/check_coverage_weight_xin/cor_estvar_weight_est_cor05_truep.rds')
+out1 = readRDS('output/check_coverage_weight_xin/cor_estvar_weight_est_cor05_truep.rds')
 summary_simu_study(out1)
 ```
 

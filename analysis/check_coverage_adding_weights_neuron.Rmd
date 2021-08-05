@@ -59,7 +59,10 @@ simu_study = function(ref,
                             use.true.sigma.for.weight = FALSE,
                             use.random.weight = FALSE,
                             re_sample_ref = FALSE,
-                      use_all_pair_for_cov=FALSE
+                      use_all_pair_for_cov=FALSE,
+                      use_jackknife=FALSE,
+                      nfold = 10,
+                      use_kmeans_for_folds = TRUE
                             ){
 
   is.identity = function(X){
@@ -121,9 +124,9 @@ simu_study = function(ref,
       cor.idx = NULL
     }
     
-  }else{
-  
-      X_array = array(dim=c(G,K,n_bulk_for_cor))
+  }
+  if(est_cor|use_jackknife){
+    X_array = array(dim=c(G,K,n_bulk_for_cor))
       for(k in 1:K){
       if(is.indep){
         X_array[,k,] = exp(matrix(rnorm(G*n_bulk_for_cor,n.ref[,k],sqrt(n.Sigma[,k])),ncol=n_bulk_for_cor))
@@ -135,9 +138,19 @@ simu_study = function(ref,
       thetab = apply(mb,2,function(z){z/sum(z)})
       bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
       rownames(bulk_for_cor) = gene_names
+      
+    if(est_cor){
       cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
-      
-      
+    }
+    if(use_jackknife){
+      if(use_kmeans_for_folds){
+        folds = kmeans(bulk_for_cor,nfold,iter.max = 100,algorithm="MacQueen")$cluster
+      }else{
+        folds = NULL
+      }
+    }else{
+      folds = NULL
+    }
   }
 
   if(!re_sample_ref){
@@ -187,14 +200,17 @@ simu_study = function(ref,
     }
     
     fit.hc3 = estimation_func2(y=y,X=X,Vg=V,
-                                   w=w,hc.type='hc3',correction=FALSE,
+                                   w=w,hc.type=if(use_jackknife){'jackknife'}else{'hc3'},
+                               correction=FALSE,
                                    calc_cov=calc_cov,verbose=verbose,
                                    cor.idx=cor.idx,
                                    centeringXY=centeringXY,
                                    true.beta = if(true.beta.for.Sigma){true_betas}else{NULL},
                                    only.scale.pos.res=only.scale.pos.res,
                                   only.add.pos.res = only.add.pos.res,
-                               use_all_pair_for_cov=use_all_pair_for_cov)
+                               use_all_pair_for_cov=use_all_pair_for_cov,
+                               nfold=nfold,
+                               folds=folds)
     
     p_hat = t(fit.hc3$beta_hat)
     p_hat_se = t(fit.hc3$beta_se)
@@ -321,14 +337,16 @@ simu_study = function(ref,
     #                                only.scale.pos.res=only.scale.pos.res)
 
     fit.hc3 = estimation_func2(y=y,X=X,Vg=V,
-                                   w=w,hc.type='hc3',correction=FALSE,
+                                   w=w,hc.type=if(use_jackknife){'jackknife'}else{'hc3'},correction=FALSE,
                                    calc_cov=calc_cov,verbose=verbose,
                                    cor.idx=cor.idx,
                                    centeringXY=centeringXY,
                                    true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
                                    only.scale.pos.res=only.scale.pos.res,
                                only.add.pos.res = only.add.pos.res,
-                               use_all_pair_for_cov=use_all_pair_for_cov)
+                               use_all_pair_for_cov=use_all_pair_for_cov,
+                               nfold=nfold,
+                               folds=folds)
     
     p_hat[reps,] = c(fit.hc3$beta_hat)
     p_hat_se[reps,] = c(fit.hc3$beta_se)
@@ -725,5 +743,50 @@ summary_simu_study(out1)
 #                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F,true.beta.for.Sigma = T)
 # saveRDS(out1,file='output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_truep.rds')
 out1 = readRDS('output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_truep.rds')
+summary_simu_study(out1)
+```
+
+### p_hat for variance estimation, 10 fold jackknife, kmeans
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F,use_jackknife = TRUE)
+# saveRDS(out1,file='output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_jack10_kmeans.rds')
+out1 = readRDS('output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_jack10_kmeans.rds')
+summary_simu_study(out1)
+```
+
+### p_hat for variance estimation, 20 fold jackknife, kmeans
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F,use_jackknife = TRUE,nfold = 20)
+# saveRDS(out1,file='output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_jack20_kmeans.rds')
+out1 = readRDS('output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_jack20_kmeans.rds')
+summary_simu_study(out1)
+```
+
+### p_hat for variance estimation, 10 fold jackknife, gene index order
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F,use_jackknife = TRUE,use_kmeans_for_folds = FALSE)
+# saveRDS(out1,file='output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_jack10.rds')
+out1 = readRDS('output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_jack10.rds')
+summary_simu_study(out1)
+```
+
+
+### p_hat for variance estimation, 20 fold jackknife, gene index order
+
+```{r}
+# set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F,use_jackknife = TRUE,use_kmeans_for_folds = FALSE,nfold = 20)
+# saveRDS(out1,file='output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_jack20.rds')
+out1 = readRDS('output/check_coverage_weight_neuron/cor_estvar_weight_est_cor05_jack20.rds')
 summary_simu_study(out1)
 ```

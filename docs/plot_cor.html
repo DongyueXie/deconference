@@ -424,7 +424,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-07-29
+<strong>Last updated:</strong> 2021-08-04
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree33b9ba3f050ebc8e3ced446b170108febbe42c1dtargetblank33b9ba3a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/33b9ba3f050ebc8e3ced446b170108febbe42c1d" target="_blank">33b9ba3</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree20d23e0457eca2ff931772cead145a6e1d99b661targetblank20d23e0a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/20d23e0457eca2ff931772cead145a6e1d99b661" target="_blank">20d23e0</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree33b9ba3f050ebc8e3ced446b170108febbe42c1dtargetblank33b9ba3a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree20d23e0457eca2ff931772cead145a6e1d99b661targetblank20d23e0a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/33b9ba3f050ebc8e3ced446b170108febbe42c1d" target="_blank">33b9ba3</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/20d23e0457eca2ff931772cead145a6e1d99b661" target="_blank">20d23e0</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -533,8 +533,10 @@ Note that you need to be careful to ensure that all relevant files for the analy
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    output/check_coverage_weight_neuron/
 
 Untracked files:
+    Untracked:  analysis/check_coverage_adding_weights_neuron.Rmd
     Untracked:  data/day30.h5
     Untracked:  data/day30.h5.zip
     Untracked:  data/neuron/
@@ -571,6 +573,7 @@ Unstaged changes:
     Modified:   .Rprofile
     Modified:   analysis/simu_correlation_checkvariance_real.Rmd
     Modified:   analysis/simu_correlation_est_cor.Rmd
+    Modified:   code/deconference_estfunc.R
 
 </code></pre>
 <p>
@@ -609,6 +612,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/20d23e0457eca2ff931772cead145a6e1d99b661/analysis/plot_cor.Rmd" target="_blank">20d23e0</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-08-04
+</td>
+<td>
+wflow_publish(“analysis/plot_cor.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/40f7ad234b672971963c7a3e83a72595325dcfc4/docs/plot_cor.html" target="_blank">40f7ad2</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-07-29
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -683,17 +720,17 @@ A = A+t(A) - diag(G)
 library(Matrix)
 R = Matrix(A,sparse = TRUE)
 
+genp = function(K){
+  p = runif(K)
+  p/sum(p)
+}
 
-
-  
-   genp = function(K){
-    p = runif(K)
-    p/sum(p)
-  }
-
-   indis_ref_filter = readRDS(&#39;data/neuron/indis_ref_12400by6by97.rds&#39;)
+indis_ref_filter = readRDS(&#39;data/neuron/indis_ref_12400by6by97.rds&#39;)
+gene_names = readRDS(&#39;data/neuron/gene_name_12406.rds&#39;)
+gene_names2 = readRDS(&#39;data/neuron/gene_name_20293.rds&#39;)
+idx = gene_names2%in%gene_names
    
-   ref = apply(indis_ref_filter,c(1,2),mean,na.rm=TRUE)
+ref = apply(indis_ref_filter,c(1,2),mean,na.rm=TRUE)
 sigma2 = t(apply(indis_ref_filter,c(1),function(z){diag(cov(t(z),use = &#39;complete.obs&#39;))}))
 
 ref = ref+1/nrow(ref)
@@ -702,33 +739,43 @@ sigma2 = sigma2 + 1/nrow(ref)
 is.indep=F
 
 n.ref = matrix(nrow=G,ncol=K)
-  n.Sigma.chol = list()
-  n.Sigma = matrix(nrow=G,ncol=K)
-  chol.R = chol(R)
-  for(k in 1:K){
-    n.ref[,k] = log(ref[,k]^2/sqrt(ref[,k]^2+sigma2[,k]))
-    n.s = sqrt(log(1+sigma2[,k]/ref[,k]^2))
-    if(!is.indep){
-      n.Sigma.chol[[k]] = t(n.s*t(chol.R))
-    }else{
-      n.Sigma[,k] = n.s^2
-    }
+n.Sigma.chol = list()
+n.Sigma = matrix(nrow=G,ncol=K)
+chol.R = chol(R)
+for(k in 1:K){
+  n.ref[,k] = log(ref[,k]^2/sqrt(ref[,k]^2+sigma2[,k]))
+  n.s = sqrt(log(1+sigma2[,k]/ref[,k]^2))
+  if(!is.indep){
+    n.Sigma.chol[[k]] = t(n.s*t(chol.R))
+  }else{
+    n.Sigma[,k] = n.s^2
   }
+}
 
-  X_array_bulk_for_cor = array(dim=c(G,K,100))
+X_array_bulk_for_cor = array(dim=c(G,K,100))
   
-  for(k in 1:K){
-    X_array_bulk_for_cor[,k,] = t(exp(mvnfast::rmvn(100,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
-  }
+for(k in 1:K){  
+  X_array_bulk_for_cor[,k,] = t(exp(mvnfast::rmvn(100,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+}
    
-  mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
-      thetab = apply(mb,2,function(z){z/sum(z)})
-      bulk_for_cor = matrix(rpois(G*100,500*G*thetab),nrow=G)
+set.seed(12345)
+mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
+thetab = apply(mb,2,function(z){z/sum(z)})
+bulk_for_cor = matrix(rpois(G*100,500*G*thetab),nrow=G)
       
 R.est = Rfast::cora(t(bulk_for_cor))
 
-hist(R.est[upper.tri(R.est)],breaks = 100)</code></pre>
+neuron_cor = readRDS(&#39;output/geneCor_neuronBulk_cpm.rds&#39;)
+neuron_cor = cov2cor(neuron_cor$S[idx,idx])
+
+hist_banded = hist(R.est[upper.tri(R.est)],breaks=100)</code></pre>
 <p><img src="figure/plot_cor.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hist_neuron = hist(neuron_cor[upper.tri(neuron_cor)],breaks=100)</code></pre>
+<p><img src="figure/plot_cor.Rmd/unnamed-chunk-1-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot( hist_banded, col=rgb(0,0,1,1/4), xlim=c(-1,1),main=&#39;histogram of empirical correlations&#39;,xlab = &#39;cor&#39;)  # first histogram
+plot( hist_neuron, col=rgb(1,0,0,1/4), xlim=c(-1,1), add=T) 
+legend(&#39;topright&#39;,c(&#39;banded&#39;,&#39;neuron&#39;),col=c(rgb(0,0,1,1/4),rgb(1,0,0,1/4)),lwd=10)</code></pre>
+<p><img src="figure/plot_cor.Rmd/unnamed-chunk-1-3.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

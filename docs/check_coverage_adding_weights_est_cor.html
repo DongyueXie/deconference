@@ -424,7 +424,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-08-04
+<strong>Last updated:</strong> 2021-08-05
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree3444bce6c22f1a858fde5af00864bb263c8085a0targetblank3444bcea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/3444bce6c22f1a858fde5af00864bb263c8085a0" target="_blank">3444bce</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree5721d6dcf42053e81bee213b32c45c59ff464a29targetblank5721d6da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/5721d6dcf42053e81bee213b32c45c59ff464a29" target="_blank">5721d6d</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree3444bce6c22f1a858fde5af00864bb263c8085a0targetblank3444bcea" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree5721d6dcf42053e81bee213b32c45c59ff464a29targetblank5721d6da" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/3444bce6c22f1a858fde5af00864bb263c8085a0" target="_blank">3444bce</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/5721d6dcf42053e81bee213b32c45c59ff464a29" target="_blank">5721d6d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -533,14 +533,13 @@ Note that you need to be careful to ensure that all relevant files for the analy
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
-    Ignored:    output/check_coverage_weight_neuron/
 
 Untracked files:
-    Untracked:  analysis/check_coverage_adding_weights_neuron.Rmd
     Untracked:  data/day30.h5
     Untracked:  data/day30.h5.zip
     Untracked:  data/neuron/
     Untracked:  data/pancreas/
+    Untracked:  output/check_coverage_weight_neuron/
     Untracked:  output/check_coverage_weight_xin/
     Untracked:  output/geneCor_DABulk_cpm.rds
     Untracked:  output/geneCor_Epen1Bulk_cpm.rds
@@ -571,7 +570,6 @@ Untracked files:
 
 Unstaged changes:
     Modified:   .Rprofile
-    Modified:   analysis/plot_cor.Rmd
     Modified:   analysis/simu_correlation_checkvariance_real.Rmd
     Modified:   analysis/simu_correlation_est_cor.Rmd
     Modified:   code/deconference_estfunc.R
@@ -613,6 +611,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/5721d6dcf42053e81bee213b32c45c59ff464a29/analysis/check_coverage_adding_weights_est_cor.Rmd" target="_blank">5721d6d</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-08-05
+</td>
+<td>
+wflow_publish(“analysis/check_coverage_adding_weights_est_cor.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/18f1403140351ed3712636863a9b03b08af6590d/docs/check_coverage_adding_weights_est_cor.html" target="_blank">18f1403</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-08-04
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -723,12 +755,19 @@ simu_study = function(ref,
                             calc_cov = F,
                             est_cor = F,
                             only.scale.pos.res = FALSE,
+                            only.add.pos.res = FALSE,
                             n_bulk_for_cor = 100,
                             cor_method = &#39;testing&#39;,
                            
                             weighted = FALSE,
                             use.true.sigma.for.weight = FALSE,
-                            use.random.weight = FALSE){
+                            use.random.weight = FALSE,
+                            re_sample_ref = FALSE,
+                      use_all_pair_for_cov=FALSE,
+                      use_jackknife=FALSE,
+                      nfold = 10,
+                      use_kmeans_for_folds = TRUE
+                            ){
 
   is.identity = function(X){
     if(!is.null(X)){
@@ -746,7 +785,7 @@ simu_study = function(ref,
 
   G = nrow(ref)
   K = ncol(ref)
-  n_bulk = 1
+
   
   is.indep = (is.identity(R))|(is.null(R))
 
@@ -788,33 +827,109 @@ simu_study = function(ref,
     }else{
       cor.idx = NULL
     }
-    n_bulk_for_cor = 0
-  }else{
-    X_array_bulk_for_cor = array(dim=c(G,K,n_bulk_for_cor))
-    for(k in 1:K){
+    
+  }
+  if(est_cor|use_jackknife){
+    X_array = array(dim=c(G,K,n_bulk_for_cor))
+      for(k in 1:K){
       if(is.indep){
-        X_array_bulk_for_cor[,k,] = exp(matrix(rnorm(G*n_bulk_for_cor,n.ref[,k],sqrt(n.Sigma[,k])),ncol=n_bulk_for_cor))
+        X_array[,k,] = exp(matrix(rnorm(G*n_bulk_for_cor,n.ref[,k],sqrt(n.Sigma[,k])),ncol=n_bulk_for_cor))
       }else{
-        X_array_bulk_for_cor[,k,] = t(exp(mvnfast::rmvn(n_bulk_for_cor,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+        X_array[,k,] = t(exp(mvnfast::rmvn(n_bulk_for_cor,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
       }
-    }
-      mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
+      }
+      mb = apply(X_array,3,function(z){z%*%genp(K)})
       thetab = apply(mb,2,function(z){z/sum(z)})
       bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
       rownames(bulk_for_cor) = gene_names
-
+      
+    if(est_cor){
       cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
+    }
+    if(use_jackknife){
+      if(use_kmeans_for_folds){
+        folds = kmeans(bulk_for_cor,nfold,iter.max = 100,algorithm=&quot;MacQueen&quot;)$cluster
+      }else{
+        folds = NULL
+      }
+    }else{
+      folds = NULL
+    }
   }
 
+  if(!re_sample_ref){
+    n.temp = n_indi+nreps
+    X_array = array(dim=c(G,K,n.temp))
 
-   p_hat = matrix(nrow=nreps,ncol=K)
+    for(k in 1:K){
+      if(is.indep){
+        X_array[,k,] = exp(matrix(rnorm(G*n.temp,n.ref[,k],sqrt(n.Sigma[,k])),ncol=n.temp))
+      }else{
+        X_array[,k,] = t(exp(mvnfast::rmvn(n.temp,mu = n.ref[,k],sigma = n.Sigma.chol[[k]],isChol = TRUE)))
+      }
+    }
+
+    #browser()
+
+    X_array_bulk = X_array[,,1:nreps]
+    b = b%*%t(rep(1,nreps))
+    mb = lapply(1:nreps,function(i){X_array_bulk[,,i]%*%b[,i]})
+    mb = do.call(cbind,mb)
+    true_betas = t(t(b)*c(apply(mb,2,function(z){bulk_lib_size*G/sum(z)})))
+    thetab = apply(mb,2,function(z){z/sum(z)})
+
+    #browser()
+    y = matrix(rpois(G*nreps,bulk_lib_size*G*thetab),nrow=G)
+    rownames(y) = gene_names
+
+    X_array_ref = X_array[,,(nreps+1):(nreps+n_indi)]
+
+    X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+    V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = &#39;complete.obs&#39;))}))/n_indi
+    
+    if(weighted){
+      if(use.true.sigma.for.weight){
+        w = 1/rowSums(sigma2)
+      }else if(use.random.weight){
+        w = runif(G)
+      }else{
+          fit.vash = vashr::vash(sqrt(rowSums(V)),df=n_indi-1)
+          w = 1/(fit.vash$sd.post)^2
+      }
+       # calc weights for each cell type, then average,
+
+    }else{
+      w = 1
+    }
+    
+    fit.hc3 = estimation_func2(y=y,X=X,Vg=V,
+                                   w=w,hc.type=if(use_jackknife){&#39;jackknife&#39;}else{&#39;hc3&#39;},
+                               correction=FALSE,
+                                   calc_cov=calc_cov,verbose=verbose,
+                                   cor.idx=cor.idx,
+                                   centeringXY=centeringXY,
+                                   true.beta = if(true.beta.for.Sigma){true_betas}else{NULL},
+                                   only.scale.pos.res=only.scale.pos.res,
+                                  only.add.pos.res = only.add.pos.res,
+                               use_all_pair_for_cov=use_all_pair_for_cov,
+                               nfold=nfold,
+                               folds=folds)
+    
+    p_hat = t(fit.hc3$beta_hat)
+    p_hat_se = t(fit.hc3$beta_se)
+    true_betas = t(true_betas)
+    
+  }else{
+    
+    n_bulk = 1
+  p_hat = matrix(nrow=nreps,ncol=K)
    p_hat_se= matrix(nrow=nreps,ncol=K)
    true_betas = matrix(nrow=nreps,ncol=K)
 
 
   for(reps in 1:nreps){
     
-    if(reps%%10==0){print(sprintf(&quot;running %d (out of %d)&quot;,reps,nreps))}
+    #if(reps%%10==0){print(sprintf(&quot;running %d (out of %d)&quot;,reps,nreps))}
   
     # generate individual reference matrices
 
@@ -835,7 +950,7 @@ simu_study = function(ref,
 
     X_array_ref = X_array[,,(n_bulk+1):(n_bulk+n_indi)]
 
-    #X_array_bulk_for_cor = X_array[,,-(1:(n_bulk+n_indi))]
+    
 
     mb = cbind(X_array_bulk%*%b)
     
@@ -864,15 +979,17 @@ simu_study = function(ref,
     # if(est_cor){
     # 
     #   # generate bulk data for estimating correlation
+    #   if(re_sample_for_cor){
+    #     
+    #     mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
+    #     thetab = apply(mb,2,function(z){z/sum(z)})
+    #     bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
+    #     rownames(bulk_for_cor) = gene_names
     # 
-    #   mb = apply(X_array_bulk_for_cor,3,function(z){z%*%genp(K)})
-    #   thetab = apply(mb,2,function(z){z/sum(z)})
-    #   bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
-    #   rownames(bulk_for_cor) = gene_names
+    #     cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
+    #   
+    #   }
     # 
-    #   cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
-    # 
-    #  
     # 
     # }
 
@@ -915,12 +1032,16 @@ simu_study = function(ref,
     #                                only.scale.pos.res=only.scale.pos.res)
 
     fit.hc3 = estimation_func2(y=y,X=X,Vg=V,
-                                   w=w,hc.type=&#39;hc3&#39;,correction=FALSE,
+                                   w=w,hc.type=if(use_jackknife){&#39;jackknife&#39;}else{&#39;hc3&#39;},correction=FALSE,
                                    calc_cov=calc_cov,verbose=verbose,
                                    cor.idx=cor.idx,
                                    centeringXY=centeringXY,
                                    true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
-                                   only.scale.pos.res=only.scale.pos.res)
+                                   only.scale.pos.res=only.scale.pos.res,
+                               only.add.pos.res = only.add.pos.res,
+                               use_all_pair_for_cov=use_all_pair_for_cov,
+                               nfold=nfold,
+                               folds=folds)
     
     p_hat[reps,] = c(fit.hc3$beta_hat)
     p_hat_se[reps,] = c(fit.hc3$beta_se)
@@ -963,6 +1084,9 @@ simu_study = function(ref,
 
 
   }
+  }
+
+   
 
   return(list(p_hat=p_hat,p_hat_se = p_hat_se,true_betas=true_betas))
 
@@ -1118,6 +1242,36 @@ summary_simu_study(out1)</code></pre>
 [1] 1.000 1.000 0.980 0.979</code></pre>
 <p><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
+<div id="p_hat-for-variance-estimation-10-fold-jackknife-kmeans" class="section level3">
+<h3>p_hat for variance estimation, 10 fold jackknife, kmeans</h3>
+<pre class="r"><code># set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F,use_jackknife = TRUE,use_kmeans_for_folds = TRUE)
+# saveRDS(out1,file=&#39;output/check_coverage_weight_xin/cor_estvar_weight_est_cor05_jack10_kmeans.rds&#39;)
+out1 = readRDS(&#39;output/check_coverage_weight_xin/cor_estvar_weight_est_cor05_jack10_kmeans.rds&#39;)
+summary_simu_study(out1)</code></pre>
+<pre><code>[1] &quot;rmse&quot;
+[1] 0.083 0.064 0.038 0.053
+[1] 0.062
+[1] &quot;coverage&quot;
+[1] 0.900 0.960 0.838 0.910</code></pre>
+<p><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-10-4.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="p_hat-for-variance-estimation-10-fold-jackknife-gene-index-order" class="section level3">
+<h3>p_hat for variance estimation, 10 fold jackknife, gene index order</h3>
+<pre class="r"><code># set.seed(12345)
+# out1 = simu_study(ref,b1,R = R,sigma2=sigma2,n_indi=10,weighted = T,
+#                   est_cor = T,alpha.cor = 0.5,use.random.weight = F,use.true.sigma.for.weight = F,use_jackknife = TRUE,use_kmeans_for_folds = FALSE)
+# saveRDS(out1,file=&#39;output/check_coverage_weight_xin/cor_estvar_weight_est_cor05_jack10.rds&#39;)
+out1 = readRDS(&#39;output/check_coverage_weight_xin/cor_estvar_weight_est_cor05_jack10.rds&#39;)
+summary_simu_study(out1)</code></pre>
+<pre><code>[1] &quot;rmse&quot;
+[1] 0.068 0.073 0.040 0.061
+[1] 0.062
+[1] &quot;coverage&quot;
+[1] 0.950 0.919 0.888 0.918</code></pre>
+<p><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-11-4.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
 </div>
 <div id="correlated-estimated-variance-for-weights-estimated-correlation-0.9" class="section level2">
 <h2>Correlated, estimated variance for weights, estimated correlation 0.9</h2>
@@ -1132,7 +1286,7 @@ summary_simu_study(out1)</code></pre>
 [1] 0.056
 [1] &quot;coverage&quot;
 [1] 0.574 0.558 0.539 0.714</code></pre>
-<p><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-10-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-10-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/check_coverage_adding_weights_est_cor.Rmd/unnamed-chunk-12-4.png" width="672" style="display: block; margin: auto;" /></p>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

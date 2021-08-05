@@ -33,6 +33,8 @@ J_sum2one = function(b,K){
 #'@param true.beta true beta before normalizing to 1
 #'@param asyV.pos check if asymptotic Variance is positive definite
 #'@param Q.pos check if Q is positive definite
+#'@param nfold if using jacknife, the number of fold to be used.
+#'@param folds if using jackknife, the folds to be used. folds looks like 111222333.
 
 
 estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
@@ -53,7 +55,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            Q.pos = TRUE,
                            only.scale.pos.res=FALSE,
                            only.add.pos.res = FALSE,
-                           nfold=10
+                           nfold=10,
+                           folds = NULL,
+                           use_all_pair_for_cov = FALSE
                            ){
 
   #browser()
@@ -214,7 +218,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                     cor.idx=cor.idx,
                     only.scale.pos.res=only.scale.pos.res,
                     only.add.pos.res=only.add.pos.res,
-                    nfold=nfold)
+                    nfold=nfold,
+                    folds=folds,
+                    use_all_pair_for_cov=use_all_pair_for_cov)
   covb = Q_inv%*%Sigma%*%Q_inv
 
   #browser()
@@ -334,7 +340,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 #'@description allow correlations among samples, and use yw and Xw, not X and y
 #'#'@param only.scale.pos.res only apply hc adjustment to positive empirical covariance, when accounting for correlation?
-get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx,only.scale.pos.res,only.add.pos.res,nfold){
+get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx,only.scale.pos.res,only.add.pos.res,nfold,folds,use_all_pair_for_cov){
 
 
 
@@ -354,7 +360,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
   }else if(hc.type == 'hc3'){
     res.hc = res/(1-h)
   }else if(hc.type=='jackknife'){
-    res.hc = get_jack_res(y,X,V,nfold=nfold)
+    res.hc = get_jack_res(y,X,V,nfold=nfold,folds=folds)
   }
 
 
@@ -398,7 +404,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
 
         score.temp = (c(ri)*X+Vbi)
 
-        Sigma_ij = crossprod(score.temp)
+
 
         # if(hc.type == 'hc0'){
         #   Sigma_ij = crossprod(c(ri)*X+Vbi)
@@ -408,60 +414,71 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
         #   Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi)
         # }
 
-        if(!is.null(cor.idx)){
+        if(use_all_pair_for_cov){
 
-          # l1.temp = (c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE]
-          # l2.temp = (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE]
-          # Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
+          Sigma_ij = tcrossprod(colSums(score.temp))
 
-          if(only.scale.pos.res){
-            # find pos res prod
+        }else{
 
-            score.temp.no.hc = (c(res[,i])*X+Vbi)
-            # ecov = 0
-            # for(cc in 1:dim(cor.idx)[1]){
-            #   res.prod = ri[cor.idx[cc,][1]] * ri[cor.idx[cc,][2]]
-            #   if(res.prod>0){
-            #     ecov = ecov + tcrossprod(score.temp[cor.idx[cc,][1],],score.temp[cor.idx[cc,][2],])
-            #   }else{
-            #     ecov = ecov + tcrossprod(score.temp.no.hc[cor.idx[cc,][1],],
-            #                              score.temp.no.hc[cor.idx[cc,][2],])
-            #   }
-            # }
+          Sigma_ij = crossprod(score.temp)
 
-            res.prod = ri[cor.idx[,1]] * ri[cor.idx[,2]]
-            s.idx = which(res.prod>0)
+          if(!is.null(cor.idx)){
 
-            Sigma_ij = Sigma_ij+
-              crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])+
-              crossprod((score.temp.no.hc)[cor.idx[-s.idx,1],,drop=FALSE],(score.temp.no.hc)[cor.idx[-s.idx,2],,drop=FALSE])
+            # l1.temp = (c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE]
+            # l2.temp = (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE]
+            # Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
+
+            if(only.scale.pos.res){
+              # find pos res prod
+
+              score.temp.no.hc = (c(res[,i])*X+Vbi)
+              # ecov = 0
+              # for(cc in 1:dim(cor.idx)[1]){
+              #   res.prod = ri[cor.idx[cc,][1]] * ri[cor.idx[cc,][2]]
+              #   if(res.prod>0){
+              #     ecov = ecov + tcrossprod(score.temp[cor.idx[cc,][1],],score.temp[cor.idx[cc,][2],])
+              #   }else{
+              #     ecov = ecov + tcrossprod(score.temp.no.hc[cor.idx[cc,][1],],
+              #                              score.temp.no.hc[cor.idx[cc,][2],])
+              #   }
+              # }
+
+              res.prod = ri[cor.idx[,1]] * ri[cor.idx[,2]]
+              s.idx = which(res.prod>0)
+
+              Sigma_ij = Sigma_ij+
+                crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])+
+                crossprod((score.temp.no.hc)[cor.idx[-s.idx,1],,drop=FALSE],(score.temp.no.hc)[cor.idx[-s.idx,2],,drop=FALSE])
 
 
 
 
-          }else if(only.add.pos.res){
+            }else if(only.add.pos.res){
 
-            #browser()
+              #browser()
 
-            s.idx = which((ri[cor.idx[,1]] * ri[cor.idx[,2]])>0)
-            #
-            # idx.temp = split(s.idx,1:100)
-            # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
-            #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
-            # cc.temp = Reduce('+',cc.temp)
-            # Sigma_ij = Sigma_ij + cc.temp
+              s.idx = which((ri[cor.idx[,1]] * ri[cor.idx[,2]])>0)
+              #
+              # idx.temp = split(s.idx,1:100)
+              # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
+              #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
+              # cc.temp = Reduce('+',cc.temp)
+              # Sigma_ij = Sigma_ij + cc.temp
 
-            Sigma_ij = Sigma_ij+
-              crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])
-          }else{
-            # idx.temp = split(1:dim(cor.idx)[1],1:100)
-            # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
-            #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
-            # cc.temp = Reduce('+',cc.temp)
-            # Sigma_ij = Sigma_ij + cc.temp
-            Sigma_ij = Sigma_ij + crossprod((score.temp)[cor.idx[,1],,drop=FALSE],
-                                            (score.temp)[cor.idx[,2],,drop=FALSE])
-          }
+              Sigma_ij = Sigma_ij+
+                crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])
+            }else{
+              # idx.temp = split(1:dim(cor.idx)[1],1:100)
+              # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
+              #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
+              # cc.temp = Reduce('+',cc.temp)
+              # Sigma_ij = Sigma_ij + cc.temp
+              Sigma_ij = Sigma_ij + crossprod((score.temp)[cor.idx[,1],,drop=FALSE],
+                                              (score.temp)[cor.idx[,2],,drop=FALSE])
+            }
+
+        }
+
 
 
         }
@@ -479,6 +496,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
 
       }else{
 
+        # need to revise and add different options to calc variance
         if(calc_cov){
 
           if(ncol(V)==K^2){
@@ -522,7 +540,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
 }
 
 
-get_jack_res = function(y,X,V,nfold = 10){
+get_jack_res = function(y,X,V,nfold = 10,folds=NULL){
   n = nrow(y)
   n_bulk = ncol(y)
   K = ncol(X)
@@ -532,7 +550,10 @@ get_jack_res = function(y,X,V,nfold = 10){
 
 
   res = matrix(nrow=n,ncol=n_bulk)
-  folds = cut(1:n,breaks = nfold,labels = F)
+  if(is.null(folds)){
+    folds = cut(1:n,breaks = nfold,labels = F)
+  }
+
 
   for(f in 1:nfold){
     idx = which(folds==f)

@@ -66,6 +66,9 @@ get_cor_pairs2 = function(X,alpha=0.05,method='thresholding'){
   }
 
 
+  if(length(cor.idx)==0){
+    cor.idx = NULL
+  }
 
   cor.idx
 

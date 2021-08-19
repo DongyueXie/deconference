@@ -399,7 +399,6 @@ calc_ci = function(b,V,alpha=0.05,eps=1e-7,trans=TRUE){
     return(cbind(ci.l,ci.r))
   }
 
-
 }
 
 #'@param bhat nbulk*K matrix

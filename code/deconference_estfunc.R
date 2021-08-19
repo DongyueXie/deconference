@@ -314,25 +314,27 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   #browser()
   # rownames(beta_hat) = colnames(X)
 
-  return(list(beta_hat=beta_hat,
-              beta_se=beta_se,
-              cov_beta_hat = asyV,
-              beta_tilde_hat=beta_tilde_hat,
-              beta_tilde_se = matrix(sqrt(diag(covb)),ncol=nb),
-              cov_beta_tilde_hat = covb,
-              Sigma = Sigma,
+  return(list(p_hat=beta_hat,
+              p_hat_se=beta_se,
+              p_hat_cov = asyV,
+              beta_hat=beta_tilde_hat,
+              beta_hat_se = matrix(sqrt(diag(covb)),ncol=nb),
+              beta_hat_cov = covb,
+              Sigma = Sigma
               #Sigma_ii = Sigma_ii/G^2,
-              J=J,
-              Q_inv = Q_inv,
-              Q=Q,
-              V=V,
-              A=A,
-              h=h,
+              #J=J,
+              #Q_inv = Q_inv,
+              #Q=Q,
+              #V=V,
+              #A=A,
+              #h=h,
               #H=H,
-              lambda=lambda0,
-              input = input))
+              #lambda=lambda0,
+              #input = input
+              ))
 
 }
+
 
 
 

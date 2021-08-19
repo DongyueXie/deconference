@@ -1,0 +1,144 @@
+
+xin_raw <- readRDS("data/pancreas/xin_raw.rds")
+cell_types = c('alpha', 'beta', 'delta', 'gamma')
+K = length(cell_types)
+rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+rm.indi.idx = which(xin_raw$individual%in%rm.indi)
+
+datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types,
+                           gene_thresh = 0.05,max_count_quantile_celltype = 0.95,
+                           max_count_quantile_indi = 0.95,
+                           w=1)
+design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,
+                                  datax.xin$indi_idx,estimator="separate",
+                                  est_sigma2 = TRUE,meta_mode = 'local',smooth.sigma = F)
+
+ref = design.mat.xin$X
+sigma2 = design.mat.xin$Sigma
+
+ref = ref+1/nrow(ref)
+sigma2 = sigma2 + 1/nrow(ref)
+
+b1 = c(0.1,0.1,0.3,0.5)
+b2 = c(0.1,0.2,0.5,0.2)
+nb = 10
+b = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
+
+G = nrow(ref)
+K = 4
+d = 500
+A = matrix(0,nrow=G,ncol=G)
+
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1)
+saveRDS(simu_out,file = 'output/manuscript/simulation_10bulk_500genecor_fdr05.rds')
+
+
+d = 300
+A = matrix(0,nrow=G,ncol=G)
+
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1)
+saveRDS(simu_out,file = 'output/manuscript/simulation_10bulk_300genecor_fdr05.rds')
+
+set.seed(12345)
+simu_out = simu_study(ref,b,R=NULL,sigma2,printevery = 1)
+saveRDS(simu_out,file = 'output/manuscript/simulation_10bulk_0genecor_fdr05.rds')
+
+
+# for(t in 1:7){
+#   temp = simu_out[[t]]
+#   temp_out = array(dim=c(4,10,100))
+#   for(r in 1:100){
+#     temp_out[,,r] = matrix(c(temp[,,r]),nrow=4)
+#   }
+#   simu_out[[t]] = temp_out
+# }
+# saveRDS(simu_out,file = 'output/manuscript/simulation1.rds')
+
+#
+
+# diff_hat_se = matrix(nrow=100,ncol=4)
+# diff_hat_se_cor = matrix(nrow=100,ncol=4)
+# diff_hat_weight_se_cor = matrix(nrow=100,ncol=4)
+# for(i in 1:100){
+#   diff_hat_se[i,] = two_group_test(simu_out$all_fit[[i]]$fit.err,c(1,1,1,1,1,2,2,2,2,2))$diff_se
+#   diff_hat_se_cor[i,] = two_group_test(simu_out$all_fit[[i]]$fit.err.cor,c(1,1,1,1,1,2,2,2,2,2))$diff_se
+#   diff_hat_weight_se_cor[i,] = two_group_test(simu_out$all_fit[[i]]$fit.err.cor.weight,c(1,1,1,1,1,2,2,2,2,2))$diff_se
+# }
+# simu_out$diff_hat_se = diff_hat_se
+# simu_out$diff_hat_se_cor = diff_hat_se_cor
+# simu_out$diff_hat_weight_se_cor = diff_hat_weight_se_cor
+
+## Look at rmse
+rmse = function(x,y){sqrt(mean((x-y)^2))}
+
+get_rmse = function(p_hat,b){
+  K = dim(p_hat)[1]
+  nb = dim(p_hat)[2]
+  nreps = dim(p_hat)[3]
+  rmses = c()
+  for(i in 1:nb){
+    err = c()
+    for(j in 1:nreps){
+      err[j] = sum((p_hat[,i,j]-b[,i])^2)
+    }
+    rmses[i] = sqrt(mean(err))
+  }
+  names(rmses) = paste('bulk',1:nb)
+  rmses
+
+}
+
+get_rmse(simu_out$p_hat_ols,b)
+get_rmse(simu_out$p_hat,b)
+get_rmse(simu_out$p_hat_weight,b)
+
+
+# Look at coverage
+
+get_coverage_p = function(p_hat,p_hat_se,b){
+
+  K = dim(z)[1]
+  nb = dim(z)[2]
+  z = array(dim = dim(p_hat))
+  for(i in 1:dim(z)[3]){
+    z[,,i] = (p_hat[,,i]-b)/p_hat_se[,,i]
+  }
+  crg = apply(z,c(1,2),function(z){round(mean(abs(z)<1.96,na.rm=T),3)})
+  rownames(crg) = paste('cell',1:K)
+  colnames(crg) = paste('bulk',1:nb)
+  crg
+}
+
+get_coverage_p(simu_out$p_hat_ols,simu_out$p_hat_ols_se,b)
+get_coverage_p(simu_out$p_hat,simu_out$p_hat_se,b)
+get_coverage_p(simu_out$p_hat,simu_out$p_hat_se_cor,b)
+get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor,b)
+
+get_power_diff = function(diff_hat,diff_hat_se){
+  colMeans(abs(diff_hat/diff_hat_se)>1.96,na.rm=TRUE)
+}
+
+get_power_diff(simu_out$diff_hat_ols,simu_out$diff_hat_ols_se)
+get_power_diff(simu_out$diff_hat,simu_out$diff_hat_se)
+get_power_diff(simu_out$diff_hat,simu_out$diff_hat_se_cor)
+get_power_diff(simu_out$diff_hat_weight,simu_out$diff_hat_weight_se_cor)
+

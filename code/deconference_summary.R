@@ -15,9 +15,9 @@ two_group_test = function(out, groups){
   group2_idx = which(groups==group_name[2])
   a[group2_idx] = -1/length(group2_idx)
 
-  K = ncol(out$input$X)
+  K = nrow(out$p_hat)
 
-  diff_group = rowMeans(out$beta_hat[,group1_idx,drop=F]) - rowMeans(out$beta_hat[,group2_idx,drop=F])
+  diff_group = rowMeans(out$p_hat[,group1_idx,drop=F]) - rowMeans(out$p_hat[,group2_idx,drop=F])
 
   # N_indi = length(group1_idx) + length(group2_idx)
 
@@ -26,7 +26,7 @@ two_group_test = function(out, groups){
   idx = c(group1_idx,group2_idx)
   for(i in idx){
     for(j in idx){
-      V_tilde = V_tilde + a[i]*a[j]*out$cov_beta_hat[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
+      V_tilde = V_tilde + a[i]*a[j]*out$p_hat_cov[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
     }
   }
 

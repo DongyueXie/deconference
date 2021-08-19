@@ -1,7 +1,7 @@
 rmse = function(x,y){sqrt(mean((x-y)^2))}
 
 
-summary_neuron = function(out,out.music){
+summary_neuron = function(out,out.music=NULL){
   rmse_ols = c()
   rmse_err = c()
   rmse_music = c()
@@ -12,7 +12,10 @@ summary_neuron = function(out,out.music){
   for(i in 1:length(out)){
     rmse_ols[i]=rmse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
     rmse_err[i] = rmse(out[[i]]$fit.err.hc0$beta_hat,out[[i]]$input$b)
-    rmse_music[i] = rmse(out.music[[i]],out[[i]]$input$b)
+    if(!is.null(out.music)){
+      rmse_music[i] = rmse(out.music[[i]],out[[i]]$input$b)
+    }
+
     waldi = list()
     waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
     waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se

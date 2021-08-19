@@ -1,0 +1,483 @@
+---
+title: "check coverage after adding weights, neuron real data"
+author: "DongyueXie"
+date: "2021-08-15"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+In the neuron real data based [simulation](neuron_weight_check_coverage.html), the coverage is very low even after adjusting for correlations. The main reason seems to be the underestimate of the variance of $\hat\beta$.
+
+Here we try to use true $\beta$ when calculating variance and also try to add all pairs.
+
+```{r}
+indis_ref_filter = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+```
+
+```{r,warning=F,message=F}
+source('code/deconference_main.R')
+source('code/simulation/simu_correlation_ult.R')
+```
+
+```{r}
+simu_neuron = function(indis_ref,
+                       ref.idx,
+                       b,
+                       cor.idx,
+                       calc_cov = T,
+                       bulk_lib_size = 500,
+                       groups = c(rep(1,ncol(b)/2),rep(2,ncol(b)/2)),
+                       centeringXY=FALSE,
+                       
+                       only.scale.pos.res = FALSE,
+                       only.add.pos.res = FALSE,
+                       verbose = F,
+                       weighted = FALSE,
+                       w = NULL,
+                       eb.V = FALSE){
+
+  G = dim(indis_ref)[1]
+  K = dim(indis_ref)[2]
+  n_sub = dim(indis_ref)[3]
+  n_ref = length(ref.idx)
+  n_bulk = n_sub-n_ref
+  gene_names = dimnames(indis_ref)[[1]]
+
+  X_array_ref = indis_ref[,,ref.idx]
+  X_array_bulk = indis_ref[,,-ref.idx]
+
+  X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+  #browser()
+  if(eb.V){
+    #browser()
+    V.diag = t(apply(X_array_ref,c(1),function(z){diag(cov(t(z),use = 'complete.obs'))}))
+    V.diag.sd = apply(V.diag,2,function(z){vashr::vash(sqrt(z),df=n_ref-1)$sd.post})
+    V = matrix(nrow=G,ncol=K^2)
+    for (g in 1:G){
+      V[g,] = c(t(cor(t(X_array_ref[g,,]),use = 'complete.obs')*V.diag.sd[g,])*V.diag.sd[g,]/n_ref)
+    }
+    V[is.na(V)] = 0
+  }else{
+    V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_ref
+  }
+
+
+  if(weighted){
+    if(is.null(w)){
+      # calc weights for each cell type, then average,
+      if(eb.V){
+        w = 1/(rowSums(V))
+      }else{
+        V.temp = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))
+        fit.vash = vashr::vash(sqrt(rowSums(V.temp)),df=n_ref-1)
+        w = 1/(fit.vash$sd.post)^2
+      }
+      w = w/sum(w)*G
+    }
+  }else{
+    w = 1
+  }
+
+  # create bulk data
+
+  mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
+  mb = do.call(cbind,mb)
+  thetab = apply(mb,2,function(z){z/sum(z)})
+  
+  true.beta = t(t(b)*c(apply(mb,2,function(z){bulk_lib_size*G/sum(z)})))
+
+  y = matrix(rpois(G*n_bulk,bulk_lib_size*G*thetab),nrow=G)
+  rownames(y) = gene_names
+
+  ## ols
+
+  fit.ols = unadjusted_lm(y,X,w=w,groups = groups)
+
+  ## adjust for measurement error, not for correlation
+
+  # fit.err.hc0 = estimation_func2(y=y,X=X,Vg=V,
+  #                                w=w,hc.type='hc0',correction=FALSE,
+  #                                calc_cov=calc_cov,verbose=verbose,
+  #                                cor.idx=NULL,
+  #                                centeringXY=centeringXY,
+  #                                true.beta = NULL,
+  #                                only.scale.pos.res=only.scale.pos.res,
+  #                                only.add.pos.res=only.add.pos.res)
+
+  fit.err.hc3 = estimation_func2(y=y,X=X,Vg=V,
+                                 w=w,hc.type='hc3',correction=FALSE,
+                                 calc_cov=calc_cov,verbose=verbose,
+                                 cor.idx=NULL,
+                                 centeringXY=centeringXY,
+                                 true.beta = NULL,
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res)
+
+  ## adjust both measurement error and correlation
+
+  # fit.err.cor.hc0 = estimation_func2(y=y,X=X,Vg=V,
+  #                                w=w,hc.type='hc0',correction=FALSE,
+  #                                calc_cov=calc_cov,verbose=verbose,
+  #                                cor.idx=cor.idx,
+  #                                centeringXY=centeringXY,
+  #                                true.beta = NULL,
+  #                                only.scale.pos.res=only.scale.pos.res,
+  #                                only.add.pos.res=only.add.pos.res)
+
+  fit.err.cor.hc3 = estimation_func2(y=y,X=X,Vg=V,
+                                 w=w,hc.type='hc3',correction=FALSE,
+                                 calc_cov=calc_cov,verbose=verbose,
+                                 cor.idx=cor.idx,
+                                 centeringXY=centeringXY,
+                                 true.beta = NULL,
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res)
+  
+  ## adjust both measurement error and correlation, using true beta
+  
+  fit.err.cor.hc3.true.beta = estimation_func2(y=y,X=X,Vg=V,
+                                 w=w,hc.type='hc3',correction=FALSE,
+                                 calc_cov=calc_cov,verbose=verbose,
+                                 cor.idx=cor.idx,
+                                 centeringXY=centeringXY,
+                                 true.beta = true.beta,
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res)
+  
+  ## adjust both measurement error and correlation, using true beta, use all pairs
+  
+  fit.err.cor.hc3.true.beta.all.pairs = estimation_func2(y=y,X=X,Vg=V,
+                                 w=w,hc.type='hc3',correction=FALSE,
+                                 calc_cov=calc_cov,verbose=verbose,
+                                 cor.idx=cor.idx,
+                                 centeringXY=centeringXY,
+                                 true.beta = true.beta,
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res,
+                                 use_all_pair_for_cov = TRUE)
+  
+  ## adjust both measurement error and correlation, jackknife 10 folds
+  folds = kmeans(y,10,iter.max = 100,algorithm="MacQueen")$cluster
+  fit.err.cor.jack = estimation_func2(y=y,X=X,Vg=V,
+                                 w=w,hc.type='jackknife',correction=FALSE,
+                                 calc_cov=calc_cov,verbose=verbose,
+                                 cor.idx=cor.idx,
+                                 centeringXY=centeringXY,
+                                 true.beta = NULL,
+                                 only.scale.pos.res=only.scale.pos.res,
+                                 only.add.pos.res=only.add.pos.res,
+                                 folds=folds)
+
+  out = list(fit.ols=fit.ols,
+             fit.err.hc3=fit.err.hc3,
+             fit.err.cor.hc3=fit.err.cor.hc3,
+             fit.err.cor.hc3.true.beta=fit.err.cor.hc3.true.beta,
+             fit.err.cor.hc3.true.beta.all.pairs=fit.err.cor.hc3.true.beta.all.pairs,
+             fit.err.cor.jack=fit.err.cor.jack,
+             w=w,
+             input = list(ref.idx=ref.idx,b=b))
+  return(out)
+
+}
+```
+
+
+```{r,eval=FALSE}
+indis_ref_filter = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
+b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)
+
+n = dim(indis_ref_filter)[3]
+n_ref = 11
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+
+## alpha = 0.05
+cor.idx = readRDS('data/neuron/gene12400_cor_idx_alpha005.rds')
+set.seed(12345)
+out10 = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out10[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = TRUE,only.add.pos.res = F)
+  saveRDS(out10,file='output/neuron/neuron_simu_ref11_gene12400_weight_alpha005_check_coverage.rds')
+}
+
+
+set.seed(12345)
+out10 = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out10[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = TRUE,only.add.pos.res = T)
+  saveRDS(out10,file='output/neuron/neuron_simu_ref11_gene12400_weight_alpha005_check_coverage_add_pos_res.rds')
+}
+
+## alpha = 0.5
+cor.idx = readRDS('data/neuron/gene12400_cor_idx_alpha05.rds')
+set.seed(12345)
+out10 = list()
+for(i in 1:5){
+  print(i)
+  ref.idx = sort(sample(1:n,n_ref))
+  out10[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+                           calc_cov = FALSE,verbose=F,weighted = TRUE,only.add.pos.res = F)
+  saveRDS(out10,file='output/neuron/neuron_simu_ref11_gene12400_weight_alpha05_check_coverage.rds')
+}
+
+# set.seed(12345)
+# out10 = list()
+# for(i in 1:5){
+#   print(i)
+#   ref.idx = sort(sample(1:n,n_ref))
+#   out10[[i]] = simu_neuron(indis_ref_filter,ref.idx,b,cor.idx,
+#                            calc_cov = FALSE,verbose=F,weighted = TRUE,only.add.pos.res = T)
+#   saveRDS(out10,file='output/neuron/neuron_simu_ref11_gene12400_weight_alpha05_check_coverage_add_pos_res.rds')
+# } 
+```
+
+
+
+```{r}
+rmse = function(x,y){sqrt(mean((x-y)^2))}
+summary_temp = function(out,out.music=NULL){
+  rmse_ols = c()
+  rmse_err = c()
+  rmse_music = c()
+  coverage = c()
+  median_std = c()
+  wald= list()
+
+  for(i in 1:length(out)){
+    rmse_ols[i]=rmse(out[[i]]$fit.ols$beta_hat,out[[i]]$input$b)
+    rmse_err[i] = rmse(out[[i]]$fit.err.hc3$beta_hat,out[[i]]$input$b)
+    if(!is.null(out.music)){
+      rmse_music[i] = rmse(out.music[[i]],out[[i]]$input$b)
+    }
+
+    waldi = list()
+    waldi[[1]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$ols.out$beta_se
+    waldi[[2]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out$beta_se
+    waldi[[3]] = (out[[i]]$fit.ols$beta_hat-out[[i]]$input$b)/out[[i]]$fit.ols$sand.out.hc3$beta_se
+    waldi = c(waldi,lapply(2:6,function(j){(out[[i]][[j]]$beta_hat-out[[i]]$input$b)/out[[i]][[j]]$beta_se}))
+    wald[[i]] = waldi
+    coverage = rbind(coverage,unlist(lapply(waldi,function(z){mean(abs(z)<=1.96,na.rm = T)})))
+    median_std = rbind(median_std,c(median(c(out[[i]]$fit.ols$ols.out$beta_se)),
+                                    median(c(out[[i]]$fit.ols$sand.out$beta_se)),
+                                    median(c(out[[i]]$fit.ols$sand.out.hc3$beta_se)),
+                                    unlist(lapply(2:6,function(j){median(c(out[[i]][[j]]$beta_se),na.rm = T)}))))
+  }
+  colnames(coverage) = c('ols.cv','ols.hc0','ols.hc3','err.hc3','err.cor.hc3','err.cor.hc3.true.beta','err.cor.hc3.true.beta.all.pairs','err.cor.jack')
+  colnames(median_std)  = c('ols.cv','ols.hc0','ols.hc3','err.hc3','err.cor.hc3','err.cor.hc3.true.beta','err.cor.hc3.true.beta.all.pairs','err.cor.jack')
+
+  return(list(rmse_ols=round(rmse_ols,4),
+  rmse_err=round(rmse_err,4),
+  rmse_music=(rmse_music),
+
+  coverage=round(coverage,4),
+  median_std=round(median_std,4)))
+
+}
+
+
+```
+
+
+## cor alpha 0.05
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref11_gene12400_weight_alpha005_check_coverage.rds')
+summary_temp(out)
+```
+
+Look at estimated sd v.s. true sd
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3$beta_hat[,1:43],1,sd))),
+        main = 'cor,hc3')
+lines(apply(out[[1]]$fit.err.cor.hc3$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,1:43],1,sd))),
+        main = 'cor,hc3,true beta')
+lines(apply(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_hat[,1:43],1,sd))),
+        main = 'cor,hc3,true beta, all pairs')
+lines(apply(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.jack$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.jack$beta_se[,1:43],apply(out[[1]]$fit.err.cor.jack$beta_hat[,1:43],1,sd,na.rm=T)),na.rm = T),
+        main = 'cor,cross validation')
+lines(apply(out[[1]]$fit.err.cor.jack$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+Take a look at the confidence interval when using true beta
+
+```{r}
+idx = 1:43
+round(pmax(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,idx] - 2*out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,idx],0),3)
+round(pmin(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,idx] + 2*out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,idx],1),3)
+```
+
+Look at J
+
+```{r}
+out[[1]]$fit.err.cor.hc3$J[1:6,1:6]*1e4
+out[[1]]$fit.err.cor.hc3.true.beta$J[1:6,1:6]*1e4
+```
+
+Look at Sigma(variance of $X^Ty$)
+
+```{r}
+out[[1]]$fit.err.cor.hc3$Sigma[1:6,1:6]/1e4
+out[[1]]$fit.err.cor.hc3.true.beta$Sigma[1:6,1:6]/1e4
+round(out[[1]]$fit.err.cor.hc3.true.beta$Sigma[1:6,1:6] / out[[1]]$fit.err.cor.hc3$Sigma[1:6,1:6],3)
+```
+
+Look at variance of $\hat\beta$.
+
+```{r}
+out[[1]]$fit.err.cor.hc3$cov_beta_tilde_hat[1:6,1:6]
+out[[1]]$fit.err.cor.hc3.true.beta$cov_beta_tilde_hat[1:6,1:6]
+```
+
+Look at $\hat\beta$ and true $\beta$.
+
+```{r}
+indis_ref_filter = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
+b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)
+G = dim(indis_ref_filter)[1]
+n = dim(indis_ref_filter)[3]
+n_ref = 11
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+set.seed(12345)
+ref.idx = sort(sample(1:n,n_ref))
+
+X_array_bulk = indis_ref_filter[,,-ref.idx]
+  
+mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
+mb = do.call(cbind,mb)
+true.beta = t(t(b)*c(apply(mb,2,function(z){500*G/sum(z)})))
+
+out[[1]]$fit.err.cor.hc3.true.beta$beta_tilde_hat[,1:5]
+true.beta[,1:5]
+```
+
+## cor alpha 0.05, add pos res 
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref11_gene12400_weight_alpha005_check_coverage_add_pos_res.rds')
+summary_temp(out)
+```
+
+Look at estimated sd v.s. true sd
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3$beta_hat[,1:43],1,sd))),
+        main = 'cor,hc3')
+lines(apply(out[[1]]$fit.err.cor.hc3$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,1:43],1,sd))),
+        main = 'cor,hc3,true beta')
+lines(apply(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_hat[,1:43],1,sd))),
+        main = 'cor,hc3,true beta, all pairs')
+lines(apply(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.jack$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.jack$beta_se[,1:43],apply(out[[1]]$fit.err.cor.jack$beta_hat[,1:43],1,sd,na.rm=T)),na.rm = T),
+        main = 'cor,cross validation')
+lines(apply(out[[1]]$fit.err.cor.jack$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+Take a look at the confidence interval when using true beta
+
+```{r}
+idx = 1:43
+round(pmax(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,idx] - 2*out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,idx],0),3)
+round(pmin(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,idx] + 2*out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,idx],1),3)
+```
+
+## cor alpha 0.5
+
+```{r}
+out = readRDS('output/neuron/neuron_simu_ref11_gene12400_weight_alpha05_check_coverage.rds')
+summary_temp(out)
+```
+
+Look at estimated sd v.s. true sd
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3$beta_hat[,1:43],1,sd,na.rm=T)),na.rm = T),
+        main = 'cor,hc3')
+lines(apply(out[[1]]$fit.err.cor.hc3$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,1:43],1,sd))),
+        main = 'cor,hc3,true beta')
+lines(apply(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_se[,1:43],apply(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_hat[,1:43],1,sd))),
+        main = 'cor,hc3,true beta, all pairs')
+lines(apply(out[[1]]$fit.err.cor.hc3.true.beta.all.pairs$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+
+```{r}
+boxplot(t(out[[1]]$fit.err.cor.jack$beta_se[,1:43]),ylim = range(c(out[[1]]$fit.err.cor.jack$beta_se[,1:43],apply(out[[1]]$fit.err.cor.jack$beta_hat[,1:43],1,sd,na.rm=T)),na.rm = T),
+        main = 'cor,cross validation')
+lines(apply(out[[1]]$fit.err.cor.jack$beta_hat[,1:43],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+```
+
+Take a look at the confidence interval when using true beta
+
+```{r}
+idx = 1:43
+round(pmax(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,idx] - 2*out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,idx],0),3)
+round(pmin(out[[1]]$fit.err.cor.hc3.true.beta$beta_hat[,idx] + 2*out[[1]]$fit.err.cor.hc3.true.beta$beta_se[,idx],1),3)
+```
+

@@ -1,0 +1,192 @@
+---
+title: "check coverage after adding weights, neuron real data, permute to remove correlations"
+author: "DongyueXie"
+date: "2021-08-21"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+
+Completely remove correlations.
+
+```{r}
+indis_ref = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+rmse = function(x,y){sqrt(mean((x-y)^2))}
+```
+
+```{r,warning=F,message=F}
+source('code/deconference_main.R')
+source('code/simulation/simu_correlation_ult.R')
+```
+
+
+Permute the indis_ref dataset, permute the rows of gene expression matrices among individuals
+
+```{r}
+set.seed(12345)
+n = dim(indis_ref)[3]
+G = dim(indis_ref)[1]
+K = dim(indis_ref)[2]
+indis_ref_perm = array(dim = dim(indis_ref))
+for(g in 1:G){
+  indis_ref_perm[g,,] = (indis_ref[g,,])[,sample(1:n,n)]
+}
+```
+
+Now genes are no longer correlated.
+
+```{r}
+b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
+b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)
+
+n_ref = 11
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+set.seed(12345)
+ref.idx = sort(sample(1:n,n_ref))
+gene_names = dimnames(indis_ref)[[1]]
+
+X_array_ref = indis_ref_perm[,,ref.idx]
+X_array_bulk = indis_ref_perm[,,-ref.idx]
+
+X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_ref
+V.temp = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))
+fit.vash = vashr::vash(sqrt(rowSums(V.temp)),df=9)
+w = 1/(fit.vash$sd.post)^2
+summary(w)
+
+bulk_lib_size = 500
+mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
+mb = do.call(cbind,mb)
+thetab = apply(mb,2,function(z){z/sum(z)})
+true.beta = t(t(b)*c(apply(mb,2,function(z){bulk_lib_size*G/sum(z)})))
+y = matrix(rpois(G*n_bulk,bulk_lib_size*G*thetab),nrow=G)
+rownames(y) = gene_names
+
+```
+
+First start with no weights.
+
+```{r}
+fit = estimation_func2(y=y,X=X,Vg=V,
+                       w=1,hc.type='hc3',correction=FALSE,
+                                             calc_cov=F,verbose=F,
+                                             cor.idx=NULL,
+                                             centeringXY=F,
+                                             true.beta = NULL,
+                                             only.scale.pos.res=F,
+                                             only.add.pos.res=F,
+                                             folds=NULL,
+                                             use_all_pair_for_cov=F)
+
+
+boxplot(t(fit$p_hat_se[,1:n_bulk/2]),ylim = range(c(fit$p_hat_se[,1:n_bulk/2],apply(fit$p_hat[,1:n_bulk/2],1,sd,na.rm=T)),na.rm = T),
+        main = 'cor,cross validation,first group')
+lines(apply(fit$p_hat[,1:n_bulk/2],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+
+
+boxplot(t(fit$p_hat_se[,(n_bulk/2+1):n_bulk]),ylim = range(c(fit$p_hat_se[,(n_bulk/2+1):n_bulk],apply(fit$p_hat[,(n_bulk/2+1):n_bulk],1,sd,na.rm=T)),na.rm = T),
+        main = 'cor,cross validation,second group')
+lines(apply(fit$p_hat[,(n_bulk/2+1):n_bulk],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+
+waldi = (fit$p_hat-b)/fit$p_hat_se
+
+rowMeans(abs(waldi)<=1.96,na.rm = T)
+
+for(k in 1:6){
+  print(rmse(fit$p_hat[k,1:(n_bulk/2)],b[k,1:(n_bulk/2)]))
+}
+
+for(k in 1:6){
+  print(rmse(fit$p_hat[k,(n_bulk/2+1):n_bulk],b[k,(n_bulk/2+1):n_bulk]))
+}
+```
+
+Now add weights
+
+```{r}
+fit = estimation_func2(y=y,X=X,Vg=V,
+                       w=w,hc.type='hc3',correction=FALSE,
+                                             calc_cov=F,verbose=F,
+                                             cor.idx=NULL,
+                                             centeringXY=F,
+                                             true.beta = NULL,
+                                             only.scale.pos.res=F,
+                                             only.add.pos.res=F,
+                                             folds=NULL,
+                                             use_all_pair_for_cov=F)
+
+
+boxplot(t(fit$p_hat_se[,1:n_bulk/2]),ylim = range(c(fit$p_hat_se[,1:n_bulk/2],apply(fit$p_hat[,1:n_bulk/2],1,sd,na.rm=T)),na.rm = T),
+        main = 'cor,cross validation,first group')
+lines(apply(fit$p_hat[,1:n_bulk/2],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+
+
+boxplot(t(fit$p_hat_se[,(n_bulk/2+1):n_bulk]),ylim = range(c(fit$p_hat_se[,(n_bulk/2+1):n_bulk],apply(fit$p_hat[,(n_bulk/2+1):n_bulk],1,sd,na.rm=T)),na.rm = T),
+        main = 'cor,cross validation,second group')
+lines(apply(fit$p_hat[,(n_bulk/2+1):n_bulk],1,sd),type='p',col='yellow',pch=17)
+legend('bottomright',c('true sd'),pch=17,col='yellow')
+
+waldi = (fit$p_hat-b)/fit$p_hat_se
+
+rowMeans(abs(waldi)<=1.96,na.rm = T)
+
+for(k in 1:6){
+  print(rmse(fit$p_hat[k,1:(n_bulk/2)],b[k,1:(n_bulk/2)]))
+}
+
+for(k in 1:6){ 
+  print(rmse(fit$p_hat[k,(n_bulk/2+1):n_bulk],b[k,(n_bulk/2+1):n_bulk]))
+}
+```
+
+Adding weights reduces the rmse. Why? Let's take a closer look.
+
+The gene with lowest weights has large expression and variances.
+
+```{r}
+low_weight_idx = order(w,decreasing = F)[1:10]
+w[low_weight_idx]
+X[low_weight_idx,]
+V[low_weight_idx,seq(1,36,by=7)]
+```
+
+The gene with highest weight has small gene expression and small variances.
+
+```{r}
+high_weight_idx = order(w,decreasing = T)[1:10]
+w[high_weight_idx]
+X[high_weight_idx,]
+V[high_weight_idx,seq(1,36,by=7)]
+```
+
+And the corresponding bulk data:
+
+```{r}
+y[low_weight_idx,1:20]
+y[high_weight_idx,1:20]
+```
+
+```{r}
+cor(w,rowSums(X))
+cor(w,rowMax(X))
+```
+
+Adding the weights 1. greatly reduce the rmse of the second and fifth coefficients; 2. The coverage of the first and 6th coefficients are much lower. Why?  
+
+
+Maybe the variances of gene expression in the second and fifth cell types are larger?
+
+```{r}
+for(k in seq(1,36,by=7)){
+  print(summary(V[,k]))
+}
+```
+
+
+Not sure the reason.

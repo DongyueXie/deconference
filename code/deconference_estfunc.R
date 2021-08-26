@@ -387,7 +387,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
   for(i in 1:nb){
 
     if(verbose){
-      message(paste("...covaraince",i,'to',nb))
+      message(paste("...covariance",i,'to',nb))
     }
 
     if(ncol(V)==K^2){

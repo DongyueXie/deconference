@@ -6,6 +6,7 @@ library(Rfast)
 
 
 # X: gene by individual matrix
+
 get_cor_pairs2 = function(X,alpha=0.05,method='thresholding'){
 
   p = nrow(X)

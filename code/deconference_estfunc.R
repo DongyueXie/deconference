@@ -57,7 +57,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            only.add.pos.res = FALSE,
                            nfold=10,
                            folds = NULL,
-                           use_all_pair_for_cov = FALSE
+                           use_all_pair_for_cov = FALSE,
+                           b=NULL,
+                           b_sd=NULL
                            ){
 
   #browser()
@@ -220,7 +222,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                     only.add.pos.res=only.add.pos.res,
                     nfold=nfold,
                     folds=folds,
-                    use_all_pair_for_cov=use_all_pair_for_cov)
+                    use_all_pair_for_cov=use_all_pair_for_cov,
+                    b=b,
+                    b_sd=b_sd)
   covb = Q_inv%*%Sigma%*%Q_inv
 
   #browser()
@@ -303,6 +307,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   #   print(paste('not adjusted for corr:',sum(diag(asyV))))
   # }
 
+  #browser()
+
   beta_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
   beta_se = sqrt(diag(asyV))
   beta_se = matrix(beta_se,ncol=nb)
@@ -342,7 +348,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 #'@description allow correlations among samples, and use yw and Xw, not X and y
 #'#'@param only.scale.pos.res only apply hc adjustment to positive empirical covariance, when accounting for correlation?
-get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx,only.scale.pos.res,only.add.pos.res,nfold,folds,use_all_pair_for_cov){
+get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx,
+                      only.scale.pos.res,only.add.pos.res,nfold,folds,use_all_pair_for_cov,
+                      b,b_sd){
 
 
 
@@ -475,6 +483,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
               #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
               # cc.temp = Reduce('+',cc.temp)
               # Sigma_ij = Sigma_ij + cc.temp
+              # browser()
               Sigma_ij = Sigma_ij + crossprod((score.temp)[cor.idx[,1],,drop=FALSE],
                                               (score.temp)[cor.idx[,2],,drop=FALSE])
             }
@@ -549,11 +558,14 @@ get_jack_res = function(y,X,V,nfold = 10,folds=NULL){
 
   d_Vg = ncol(V)
 
+  #browser()
 
 
   res = matrix(nrow=n,ncol=n_bulk)
   if(is.null(folds)){
     folds = cut(1:n,breaks = nfold,labels = F)
+  }else{
+    nfold = length(table(folds))
   }
 
 
@@ -579,6 +591,46 @@ get_jack_res = function(y,X,V,nfold = 10,folds=NULL){
 
 
 
+get_jack_res_b = function(y,X,V,nfold = 10,folds=NULL,b,b_sd){
+  n = nrow(y)
+  n_bulk = ncol(y)
+  K = ncol(X)
+
+  d_Vg = ncol(V)
+
+
+
+  res = matrix(nrow=n,ncol=n_bulk)
+  if(is.null(folds)){
+    folds = cut(1:n,breaks = nfold,labels = F)
+  }
+
+
+  for(f in 1:nfold){
+    idx = which(folds==f)
+    X.temp = X[-idx,]
+    y.temp = y[-idx,]
+    if(d_Vg==K^2){
+      V.temp = matrix(c(colSums(V[-idx,])),ncol = K)
+    }else if(d_Vg==K){
+      V.temp = diag(c(colSums(V[-idx,])))
+    }else{
+      stop('check dimension of V')
+    }
+
+    if(!is.null(b)){
+      bhat = (b+rnorm(length(b),0,b_sd))%*%t(rep(1,n_bulk))
+    }else{
+      bhat = pmax(solve(crossprod(X.temp)-V.temp)%*%t(X.temp)%*%y.temp,0)
+    }
+
+
+    res[idx,] = y[idx,] - X[idx,]%*%bhat
+  }
+
+  res
+
+}
 
 
 

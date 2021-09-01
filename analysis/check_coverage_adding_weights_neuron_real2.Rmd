@@ -31,7 +31,7 @@ source('code/simulation/simu_correlation_ult.R')
 
 b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
 b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)
-
+b2=b1
 
 n = dim(indis_ref)[3]
 n_ref = 11
@@ -50,7 +50,7 @@ X_array_bulk = indis_ref[,,-ref.idx]
 X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
 V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_ref
 V.temp = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))
-fit.vash = vashr::vash(sqrt(rowSums(V.temp)),df=9)
+fit.vash = vashr::vash(sqrt(rowSums(V.temp)),df=n_ref-1)
 w = 1/(fit.vash$sd.post)^2
 summary(w)
 
@@ -67,11 +67,53 @@ cor.idx = readRDS('data/neuron/gene12400_cor_idx_alpha005.rds')
 dim(cor.idx)
 ```
 
+```{r}
+summary_temp = function(fit,b,true.beta){
+  boxplot(t(fit$p_hat_se),ylim = range(c(fit$p_hat_se,apply(fit$p_hat,1,sd,na.rm=T)),na.rm = T),
+        main = 'estimated sd and true sd')
+  lines(apply(fit$p_hat,1,sd),type='p',col='yellow',pch=17)
+  legend('bottomright',c('true sd'),pch=17,col='yellow')
+  
+  waldi = (fit$p_hat-b)/fit$p_hat_se
+  cat('coverage p:')
+  print(round(rowMeans(abs(waldi)<=1.96,na.rm = T),3))
+  
+  folds = fit$folds
+  print(table(folds))
+  
+  wald_beta = (fit$beta_hat-true.beta)/fit$beta_hat_se
+  cat('coverage beta:')
+  print(round(rowMeans(abs(wald_beta)<=1.96,na.rm = T),3))
+  
+}
+```
+
+
+perform standard hc3 method.
+
+```{r}
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='hc3',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=NULL,
+#                                              use_all_pair_for_cov=F)
+# fit$folds = NULL
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_hc3_alpha005.rds')
+fit = readRDS('output/check_coverage_weight_neuron/11ref_hc3_alpha005.rds')
+summary_temp(fit,b,true.beta)
+```
+
 
 perform kmeans on row-centered bulk matrix.
 
 ```{r}
-# folds = kmeans(t(scale(t(y),scale = F)),10,iter.max = 100,algorithm="MacQueen")$cluster
+# set.seed(12345)
+# folds = kmeans(t(scale(t(y),scale = F)),10,iter.max = 100,algorithm="MacQueen",nstart = 20)$cluster
 # fit = estimation_func2(y=y,X=X,Vg=V,
 #                        w=w,hc.type='jackknife',correction=FALSE,
 #                                              calc_cov=F,verbose=T,
@@ -79,31 +121,30 @@ perform kmeans on row-centered bulk matrix.
 #                                              centeringXY=F,
 #                                              true.beta = NULL,
 #                                              only.scale.pos.res=F,
-#                                              only.add.pos.res=T,
+#                                              only.add.pos.res=F,
 #                                              folds=folds,
 #                                              use_all_pair_for_cov=F)
-# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmeans_centered_alpha005_add_pos_res.rds')
+# fit$folds = folds
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmeans_centered_alpha005.rds')
 
-fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmeans_centered_alpha005_add_pos_res.rds')
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmeans_centered_alpha005.rds')
 
 
-boxplot(t(fit$p_hat_se[,1:n_bulk/2]),ylim = range(c(fit$p_hat_se[,1:n_bulk/2],apply(fit$p_hat[,1:n_bulk/2],1,sd,na.rm=T)),na.rm = T),
-        main = 'cor,cross validation')
-lines(apply(fit$p_hat[,1:n_bulk/2],1,sd),type='p',col='yellow',pch=17)
-legend('bottomright',c('true sd'),pch=17,col='yellow')
-
-waldi = (fit$p_hat-b)/fit$p_hat_se
-
-rowMeans(abs(waldi)<=1.96,na.rm = T)
-
-rmse(fit$p_hat[,1:(n_bulk/2)],b[,1:(n_bulk/2)])
+summary_temp(fit,b=b,true.beta = true.beta)
 ```
 
+```{r,eval=FALSE}
+table(folds)
+round(quantile(abs(R[names(folds[folds==1]),names(folds[folds==1])]),probs = seq(0,1,by=0.1)),3)
+round(quantile(abs(R[names(folds[folds==2]),names(folds[folds==2])]),probs = seq(0,1,by=0.1)),3)
+round(quantile(abs(R[names(folds[folds==1]),names(folds[folds==2])]),probs = seq(0,1,by=0.1)),3)
+```
 
 perform kmeans on row-centered and scaled bulk matrix.
 
 ```{r}
-# folds = kmeans(t(scale(t(y))),10,iter.max = 100,algorithm="MacQueen")$cluster
+# set.seed(12345)
+# folds = kmeans(t(scale(t(y))),10,iter.max = 100,algorithm="MacQueen",nstart = 20)$cluster
 # fit = estimation_func2(y=y,X=X,Vg=V,
 #                        w=w,hc.type='jackknife',correction=FALSE,
 #                                              calc_cov=F,verbose=T,
@@ -111,38 +152,29 @@ perform kmeans on row-centered and scaled bulk matrix.
 #                                              centeringXY=F,
 #                                              true.beta = NULL,
 #                                              only.scale.pos.res=F,
-#                                              only.add.pos.res=T,
+#                                              only.add.pos.res=F,
 #                                              folds=folds,
 #                                              use_all_pair_for_cov=F)
+# 
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmeans_centered_scaled_alpha005.rds')
+# fit$folds = folds
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmeans_centered_scaled_alpha005.rds')
 
-# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmeans_centered_scaled_alpha005_add_pos_res.rds')
-
-fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmeans_centered_scaled_alpha005_add_pos_res.rds')
-
-boxplot(t(fit$p_hat_se[,1:n_bulk/2]),ylim = range(c(fit$p_hat_se[,1:n_bulk/2],apply(fit$p_hat[,1:n_bulk/2],1,sd,na.rm=T)),na.rm = T),
-        main = 'cor,cross validation')
-lines(apply(fit$p_hat[,1:n_bulk/2],1,sd),type='p',col='yellow',pch=17)
-legend('bottomright',c('true sd'),pch=17,col='yellow')
-
-waldi = (fit$p_hat-b)/fit$p_hat_se
-
-rowMeans(abs(waldi)<=1.96,na.rm = T)
-
-rmse(fit$p_hat[,1:(n_bulk/2)],b[,1:(n_bulk/2)])
+summary_temp(fit,b,true.beta)
 ```
 
 alternatively, try to use hierarchical clustering based on correlations.
 
 Firstly, we create a distance matrix based on the correlation index from multiple testing.
 
-```{r}
+```{r,eval=FALSE}
 # construct distance matrix, 
 # if correlated, distance = 0, otherwise, correlation = 1
 
 R01 = sparseMatrix(i = cor.idx[,1],j = cor.idx[,2],dims = c(G,G))
 diag(R01) = 1
-R01 = as.dist(1-R01)
-hc = hclust(R01,method = 'centroid')
+R01.dist = as.dist(1-R01)
+hc = hclust(R01.dist,method = 'centroid')
 folds = cutree(hc,k=10)
 table(folds)
 ```
@@ -151,27 +183,31 @@ This does not work because almost all genes are in 1 cluster.
 
 Or, we directly use the correlation matrix.
 
-```{r}
+```{r,eval=FALSE}
 day30bulk = readRDS("data/neuron/day30bulk.rds")
 gene_name_12400 = readRDS('data/neuron/gene_name_12400.rds')
 bulk = day30bulk[match(gene_name_12400,rownames(day30bulk)),]
 
+bulk_cpm = apply(bulk,2,function(z){z/sum(z)*1e6})
+
 library(Rfast)
-R = cora(t(bulk))
-R = as.dist(1-abs(R))
-hc = hclust(R,method = 'centroid')
+R = cora(t(bulk_cpm))
+R.dist = as.dist(1-abs(R))
+hc = hclust(R.dist,method = 'centroid')
 folds = cutree(hc,k=10)
 table(folds)
 ```
 
 Still does not work.
 
+
+
 Alternatively, we can run k medoids methods on the distance matrix from correlations. 
 
 
-```{r}
+```{r,eval=FALSE}
 library(cluster)
-clusters = pam(R,10)
+clusters = pam(R.dist,10,pamonce=5)
 folds = clusters$clustering
 table(folds)
 ```
@@ -185,43 +221,267 @@ table(folds)
 #                                              centeringXY=F,
 #                                              true.beta = NULL,
 #                                              only.scale.pos.res=F,
-#                                              only.add.pos.res=T,
+#                                              only.add.pos.res=F,
 #                                              folds=folds,
 #                                              use_all_pair_for_cov=F)
+# fit$folds = folds
 # 
-# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_alpha005_add_pos_res.rds')
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_10kmedoids_alpha005.rds')
 
-fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_alpha005_add_pos_res.rds')
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_10kmedoids_alpha005.rds')
 
-boxplot(t(fit$p_hat_se[,1:n_bulk/2]),ylim = range(c(fit$p_hat_se[,1:n_bulk/2],apply(fit$p_hat[,1:n_bulk/2],1,sd,na.rm=T)),na.rm = T),
-        main = 'cor,cross validation')
-lines(apply(fit$p_hat[,1:n_bulk/2],1,sd),type='p',col='yellow',pch=17)
-legend('bottomright',c('true sd'),pch=17,col='yellow')
-
-waldi = (fit$p_hat-b)/fit$p_hat_se
-
-rowMeans(abs(waldi)<=1.96,na.rm = T)
-
-rmse(fit$p_hat[,1:(n_bulk/2)],b[,1:(n_bulk/2)])
+summary_temp(fit,b,true.beta)
 ```
 
+
+
+Try more folds:
+
+```{r,eval=FALSE}
+clusters = pam(R.dist,20,pamonce=5)
+folds = clusters$clustering
+table(folds)
+```
+
+
 ```{r}
-clusters01 = pam(R01,10)
+
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=folds,
+#                                              use_all_pair_for_cov=F)
+# fit$folds = folds
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_20folds_alpha005.rds')
+
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_20folds_alpha005.rds')
+
+summary_temp(fit,b,true.beta)
+```
+
+
+
+Try to use 0-1 matrix:
+
+```{r,eval=FALSE}
+clusters01 = pam(R01.dist,10,pamonce=5)
 folds01 = clusters01$clustering
 table(folds01)
 ```
 
 
+```{r}
 
-## Reduce cor fdr to 0.01
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=folds01,
+#                                              use_all_pair_for_cov=F)
+# 
+# fit$folds = folds01
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_alpha005.rds')
+
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_alpha005.rds')
+
+summary_temp(fit,b,true.beta)
+```
+
+try only add pos res
 
 ```{r}
-cor.idx = readRDS('data/neuron/gene12400_cor_idx_alpha001.rds')
-dim(cor.idx)
+# folds01 = fit$folds
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=T,
+#                                              folds=folds01,
+#                                              use_all_pair_for_cov=F)
+# 
+# fit$folds = folds01
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_alpha005_add_pos_res.rds')
+
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_alpha005_add_pos_res.rds')
+
+summary_temp(fit,b,true.beta)
+```
+
+
+use 0-1 matrix and 20 folds.
+
+```{r,eval=FALSE}
+clusters01 = pam(R01.dist,20,pamonce=5)
+folds01 = clusters01$clustering
+table(folds01)
+```
+
+```{r}
+
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=folds01,
+#                                              use_all_pair_for_cov=F)
+# fit$folds = folds01
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_alpha005.rds')
+
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_20folds_alpha005.rds')
+
+summary_temp(fit,b,true.beta)
+```
+
+
+Now try spectral clustering:
+
+We will use the correlation matrix as the similarity matrix W. The entries of similarity matrix are non-negative, so we will use the absolute value of correlation matrix. Ww may also try to set negative correlations to 0 later.
+
+They are other ways to construct similarity matrix: knn graphs, and fully connect graph with Gaussian similarity kernel.
+
+```{r,eval=FALSE}
+S = abs(R)
+D = Matrix(diag(c(rowSums(S))),sparse = T)
+L = D-S
+library(RSpectra)
+eigL = eigs(L,10,which='SM')
+plot(eigL$values)
+folds_spectral = kmeans(eigL$vectors,10,nstart = 20)
+table(folds_spectral$cluster)
 ```
 
 
 ```{r}
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=folds_spectral$cluster,
+#                                              use_all_pair_for_cov=F)
+# fit$folds = folds_spectral$cluster
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_spectral_10folds_alpha005.rds')
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_spectral_10folds_alpha005.rds')
+
+summary_temp(fit,b,true.beta)
+```
+
+
+
+Directly apply eigen-decompistion to L constructed using R01 matrix leads to "only 0 eigenvalue(s) converged, less than k = 10". 
+```{r,eval=FALSE}
+D = Matrix(diag(c(rowSums(R01))),sparse = T)
+L = D - R01
+eigL = eigs_sym(L,5,which='SM')
+```
+
+
+So here I try to use normalized L.
+
+```{r,eval=FALSE}
+D.inv = Matrix(diag(1/c(rowSums(R01))),sparse = T)
+L = diag(G)-D.inv%*%R01
+eigL = eigs_sym(L,10,which='SM')
+plot(eigL$values)
+folds_spectral = kmeans(eigL$vectors,10,nstart = 20,algorithm = "MacQueen",iter.max = 100)
+table(folds_spectral$cluster)
+```
+
+```{r,eval=FALSE}
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=folds_spectral$cluster,
+#                                              use_all_pair_for_cov=F)
+# fit$folds = folds_spectral$cluster
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_spectral01_10folds_alpha005.rds')
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_spectral01_10folds_alpha005.rds')
+
+summary_temp(fit,b,true.beta)
+```
+
+Finally, try to construct a knn graph from the absolute correlation matrix
+
+```{r,eval=FALSE}
+make.affinity <- function(S, n.neighboors=2) {
+  N <- length(S[,1])
+  
+  if (n.neighboors >= N) {  # fully connected
+    A <- S
+  } else {
+    A <- matrix(rep(0,N^2), ncol=N)
+    for(i in 1:N) { # for each line
+      # only connect to those points with larger similarity 
+      best.similarities <- sort(S[i,], decreasing=TRUE)[1:n.neighboors]
+      for (s in best.similarities) {
+        j <- which(S[i,] == s)
+        A[i,j] <- S[i,j]
+        A[j,i] <- S[i,j] # to make an undirected graph, ie, the matrix becomes symmetric
+      }
+    }
+  }
+  A  
+}
+
+W = make.affinity(abs(R),3)
+L =  diag(c(rowSums(W))) - W
+
+eigL = eigs_sym(L,10,which='SM')
+plot(eigL$values)
+folds_spectral = kmeans(eigL$vectors,10,nstart = 20,algorithm = "MacQueen",iter.max = 100)
+table(folds_spectral$cluster)
+```
+
+```{r}
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=folds_spectral$cluster,
+#                                              use_all_pair_for_cov=F)
+# fit$folds = folds_spectral$cluster
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_spectral_3knn_10folds_alpha005.rds')
+
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_spectral_3knn_10folds_alpha005.rds')
+
+summary_temp(fit,b,true.beta)
+```
+
+
+
+```{r,eval=FALSE}
+## Reduce cor fdr to 0.01
+cor.idx = readRDS('data/neuron/gene12400_cor_idx_alpha001.rds')
+dim(cor.idx)
+
 
 # fit = estimation_func2(y=y,X=X,Vg=V,
 #                        w=w,hc.type='hc3',correction=FALSE,
@@ -248,10 +508,7 @@ waldi = (fit$p_hat-b)/fit$p_hat_se
 rowMeans(abs(waldi)<=1.96,na.rm = T)
 
 rmse(fit$p_hat[,1:(n_bulk/2)],b[,1:(n_bulk/2)])
-```
 
-
-```{r}
 
 # fit = estimation_func2(y=y,X=X,Vg=V,
 #                        w=w,hc.type='jackknife',correction=FALSE,

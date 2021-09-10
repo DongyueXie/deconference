@@ -296,6 +296,7 @@ fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10
 summary_temp(fit,b,true.beta)
 ```
 
+
 try only add pos res
 
 ```{r}
@@ -318,6 +319,50 @@ fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10
 
 summary_temp(fit,b,true.beta)
 ```
+
+
+Try the new method to form folds:
+
+```{r}
+# R01 = sparseMatrix(i = cor.idx[,1],j = cor.idx[,2],dims = c(G,G))
+# folds01 = fit$folds
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife3',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=folds01,
+#                                              use_all_pair_for_cov=F,R01=R01)
+# 
+# fit$folds = folds01
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_littlecor_alpha005.rds')
+fit = readRDS(file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_littlecor_alpha005.rds')
+summary_temp(fit,b,true.beta)
+```
+
+new method to form folds + add pos res
+
+```{r}
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife3',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=T,
+#                                              folds=folds01,
+#                                              use_all_pair_for_cov=F,R01=R01)
+# 
+# fit$folds = folds01
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_littlecor_alpha005_only_pos_res.rds')
+fit = readRDS(file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_littlecor_alpha005_only_pos_res.rds')
+summary_temp(fit,b,true.beta)
+```
+
 
 
 use 0-1 matrix and 20 folds.
@@ -348,6 +393,46 @@ fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_20fo
 summary_temp(fit,b,true.beta)
 ```
 
+try new method to get $\hat\beta$.
+
+```{r}
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife3',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=F,
+#                                              folds=folds01,
+#                                              use_all_pair_for_cov=F,R01=R01)
+# 
+# fit$folds = folds01
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_littlecor_alpha005.rds')
+
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_littlecor_alpha005.rds')
+summary_temp(fit,b,true.beta)
+```
+
+new method + only add pos res
+
+```{r}
+# fit = estimation_func2(y=y,X=X,Vg=V,
+#                        w=w,hc.type='jackknife3',correction=FALSE,
+#                                              calc_cov=F,verbose=T,
+#                                              cor.idx=cor.idx,
+#                                              centeringXY=F,
+#                                              true.beta = NULL,
+#                                              only.scale.pos.res=F,
+#                                              only.add.pos.res=T,
+#                                              folds=folds01,
+#                                              use_all_pair_for_cov=F,R01=R01)
+# 
+# fit$folds = folds01
+# saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_littlecor_alpha005_add_pos_res.rds')
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_littlecor_alpha005_add_pos_res.rds')
+summary_temp(fit,b,true.beta)
+```
 
 Now try spectral clustering:
 

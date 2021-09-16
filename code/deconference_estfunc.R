@@ -59,7 +59,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            folds = NULL,
                            use_all_pair_for_cov = FALSE,
                            b=NULL,
-                           b_sd=NULL
+                           b_sd=NULL,
+                           R01=NULL
                            ){
 
   #browser()
@@ -224,7 +225,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                     folds=folds,
                     use_all_pair_for_cov=use_all_pair_for_cov,
                     b=b,
-                    b_sd=b_sd)
+                    b_sd=b_sd,
+                    R01=R01)
   covb = Q_inv%*%Sigma%*%Q_inv
 
   #browser()
@@ -350,7 +352,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 #'#'@param only.scale.pos.res only apply hc adjustment to positive empirical covariance, when accounting for correlation?
 get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.idx,
                       only.scale.pos.res,only.add.pos.res,nfold,folds,use_all_pair_for_cov,
-                      b,b_sd){
+                      b,b_sd,R01){
 
 
 
@@ -371,19 +373,16 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
     res.hc = res/(1-h)
   }else if(hc.type=='jackknife'){
     res.hc = get_jack_res(y,X,V,nfold=nfold,folds=folds)
+  }else if(hc.type=='jackknife2'){
+    res.hc = get_jack_res2(y,X,V,nfold=nfold,folds=folds,R01=R01)
+  }else if(hc.type=='jackknife3'){
+    res.hc = get_jack_res3(y,X,V,nfold=nfold,folds=folds,R01=R01)
+  }else if(hc.type=='jackknife4'){
+    res.hc = get_jack_res4(y,X,V,nfold=nfold,folds=folds,R01=R01)
   }
 
 
 
-
-  #browser()
-
-  # if(!is.null(R)){
-  #   cor.idx = which(R!=0,arr.ind = T)
-  #   cor.idx = t(apply(cor.idx,1,sort))
-  #   cor.idx = cor.idx[!duplicated(cor.idx),]
-  #   cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
-  # }
 
 
   if(verbose){
@@ -405,94 +404,91 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
       Vbi = (V)%*%diag(c(beta[,i]))*lambda
     }
     ri = res.hc[,i]
-
+    score.temp = (c(ri)*X+Vbi)
 
     for(j in i:nb){
-
       Sigma_ij = matrix(0,nrow=K,ncol=K)
       if(j==i){
-
-        score.temp = (c(ri)*X+Vbi)
-
-
-
-        # if(hc.type == 'hc0'){
-        #   Sigma_ij = crossprod(c(ri)*X+Vbi)
-        # }else if(hc.type == 'hc2'){
-        #   Sigma_ij = crossprod(c(ri)/sqrt(1-h)*X+Vbi)
-        # }else if(hc.type == 'hc3'){
-        #   Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi)
-        # }
-
         if(use_all_pair_for_cov){
-
           Sigma_ij = tcrossprod(colSums(score.temp))
-
         }else{
-
-          Sigma_ij = crossprod(score.temp)
-
-          if(!is.null(cor.idx)){
-
-            # l1.temp = (c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE]
-            # l2.temp = (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE]
-            # Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
-
-            if(only.scale.pos.res){
-              # find pos res prod
-
-              score.temp.no.hc = (c(res[,i])*X+Vbi)
-              # ecov = 0
-              # for(cc in 1:dim(cor.idx)[1]){
-              #   res.prod = ri[cor.idx[cc,][1]] * ri[cor.idx[cc,][2]]
-              #   if(res.prod>0){
-              #     ecov = ecov + tcrossprod(score.temp[cor.idx[cc,][1],],score.temp[cor.idx[cc,][2],])
-              #   }else{
-              #     ecov = ecov + tcrossprod(score.temp.no.hc[cor.idx[cc,][1],],
-              #                              score.temp.no.hc[cor.idx[cc,][2],])
-              #   }
-              # }
-
-              res.prod = ri[cor.idx[,1]] * ri[cor.idx[,2]]
-              s.idx = which(res.prod>0)
-
-              Sigma_ij = Sigma_ij+
-                crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])+
-                crossprod((score.temp.no.hc)[cor.idx[-s.idx,1],,drop=FALSE],(score.temp.no.hc)[cor.idx[-s.idx,2],,drop=FALSE])
-
-
-
-
-            }else if(only.add.pos.res){
-
+          if(!is.null(R01)){
+            if(only.add.pos.res){
               #browser()
-
-              s.idx = which((ri[cor.idx[,1]] * ri[cor.idx[,2]])>0)
-              #
-              # idx.temp = split(s.idx,1:100)
-              # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
-              #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
-              # cc.temp = Reduce('+',cc.temp)
-              # Sigma_ij = Sigma_ij + cc.temp
-
-              Sigma_ij = Sigma_ij+
-                crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])
+              Sigma_ij = t(score.temp)%*%((ri>0)*t(R01*(ri>0)))%*%score.temp + t(score.temp)%*%((ri<0)*t(R01*(ri<0)))%*%score.temp
             }else{
-              # idx.temp = split(1:dim(cor.idx)[1],1:100)
-              # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
-              #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
-              # cc.temp = Reduce('+',cc.temp)
-              # Sigma_ij = Sigma_ij + cc.temp
-              # browser()
-              Sigma_ij = Sigma_ij + crossprod((score.temp)[cor.idx[,1],,drop=FALSE],
-                                              (score.temp)[cor.idx[,2],,drop=FALSE])
+              Sigma_ij = t(score.temp)%*%R01%*%score.temp
             }
-
+          }else{
+            Sigma_ij = crossprod(score.temp)
+          }
         }
+        #browser()
+        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = as.matrix(Sigma_ij)
 
 
 
-        }
+          # if(!is.null(cor.idx)){
+          #
+          #   # l1.temp = (c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE]
+          #   # l2.temp = (c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE]
+          #   # Sigma_ij = Sigma_ij + crossprod(l1.temp,l2.temp) + crossprod(l2.temp,l1.temp)
+          #
+          #   if(only.scale.pos.res){
+          #     # find pos res prod
+          #
+          #     score.temp.no.hc = (c(res[,i])*X+Vbi)
+          #     # ecov = 0
+          #     # for(cc in 1:dim(cor.idx)[1]){
+          #     #   res.prod = ri[cor.idx[cc,][1]] * ri[cor.idx[cc,][2]]
+          #     #   if(res.prod>0){
+          #     #     ecov = ecov + tcrossprod(score.temp[cor.idx[cc,][1],],score.temp[cor.idx[cc,][2],])
+          #     #   }else{
+          #     #     ecov = ecov + tcrossprod(score.temp.no.hc[cor.idx[cc,][1],],
+          #     #                              score.temp.no.hc[cor.idx[cc,][2],])
+          #     #   }
+          #     # }
+          #
+          #     res.prod = ri[cor.idx[,1]] * ri[cor.idx[,2]]
+          #     s.idx = which(res.prod>0)
+          #
+          #     Sigma_ij = Sigma_ij+
+          #       crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])+
+          #       crossprod((score.temp.no.hc)[cor.idx[-s.idx,1],,drop=FALSE],(score.temp.no.hc)[cor.idx[-s.idx,2],,drop=FALSE])
+          #
+          #
+          #
+          #
+          #   }else if(only.add.pos.res){
+          #
+          #     #browser()
+          #
+          #     s.idx = which((ri[cor.idx[,1]] * ri[cor.idx[,2]])>0)
+          #     #
+          #     # idx.temp = split(s.idx,1:100)
+          #     # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
+          #     #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
+          #     # cc.temp = Reduce('+',cc.temp)
+          #     # Sigma_ij = Sigma_ij + cc.temp
+          #
+          #     Sigma_ij = Sigma_ij+
+          #       crossprod((score.temp)[cor.idx[s.idx,1],,drop=FALSE],(score.temp)[cor.idx[s.idx,2],,drop=FALSE])
+          #   }else{
+          #     # idx.temp = split(1:dim(cor.idx)[1],1:100)
+          #     # cc.temp = lapply(idx.temp,function(idx){crossprod((score.temp)[cor.idx[idx,1],,drop=FALSE],
+          #     #                                                   (score.temp)[cor.idx[idx,2],,drop=FALSE])})
+          #     # cc.temp = Reduce('+',cc.temp)
+          #     # Sigma_ij = Sigma_ij + cc.temp
+          #     # browser()
+          #     Sigma_ij = Sigma_ij + crossprod((score.temp)[cor.idx[,1],,drop=FALSE],
+          #                                     (score.temp)[cor.idx[,2],,drop=FALSE])
+          #   }
+
+        # }
+        #
+        #
+        #
+        # }
 
         ###########
         # if(!is.null(R)){
@@ -503,7 +499,7 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
 
         ############
 
-        Sigma_ii[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = Sigma_ij
+
 
       }else{
 
@@ -518,33 +514,37 @@ get_SIGMA2 = function(y,X,beta,V,h,nb,G,K,lambda,verbose,calc_cov,hc.type,cor.id
           }
 
           rj = res.hc[,j]
-          Sigma_ij = crossprod(c(ri)*X+Vbi,c(rj)*X+Vbj)
-          # if(hc.type == 'hc0'){
-          #   Sigma_ij = crossprod(c(ri)*X+Vbi,c(rj)*X+Vbj)
-          # }else if(hc.type == 'hc2'){
-          #   Sigma_ij = crossprod(c(ri)/sqrt(1-h)*X+Vbi,c(rj)/sqrt(1-h)*X+Vbj)
-          # }else if(hc.type == 'hc3'){
-          #   Sigma_ij = crossprod(c(ri)/(1-h)*X+Vbi,c(rj)/(1-h)*X+Vbj)
-          # }
+          score.temp.j = (c(rj)*X+Vbj)
 
-          if(!is.null(cor.idx)){
-            # Sigma_ij = Sigma_ij
-            # + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,2],,drop=FALSE])
-            # + crossprod((c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,1],,drop=FALSE])
+          if(!is.null(R01)){
+            if(only.add.pos.res){
+              Sigma_ij = t(score.temp)%*%(t(R01*(ri>0))*(rj>0))%*%(score.temp.j)
+              + t(score.temp)%*%(t(R01*(ri<0))*(rj<0))%*%(score.temp.j)
+            }else{
+              Sigma_ij = t(score.temp)%*%R01%*%(score.temp.j)
+            }
 
-            Sigma_ij = Sigma_ij
-            + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,2],,drop=FALSE])
+          }else{
+            Sigma_ij = crossprod(score.temp,score.temp.j)
           }
 
+          # if(!is.null(cor.idx)){
+          #   # Sigma_ij = Sigma_ij
+          #   # + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,2],,drop=FALSE])
+          #   # + crossprod((c(ri)*X+Vbi)[cor.idx[,2],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,1],,drop=FALSE])
+          #
+          #   Sigma_ij = Sigma_ij
+          #   + crossprod((c(ri)*X+Vbi)[cor.idx[,1],,drop=FALSE],(c(rj)*X+Vbj)[cor.idx[,2],,drop=FALSE])
+          # }
+          Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = as.matrix(Sigma_ij)
         }
 
-      }
-
-      Sigma[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)] = Sigma_ij
-
+      # }
+    }
     }
   }
-  Sigma = (Sigma+t(Sigma)-Sigma_ii)
+
+  Sigma = (Sigma+t(Sigma)+Sigma_ii)
 
   Sigma
 
@@ -590,47 +590,187 @@ get_jack_res = function(y,X,V,nfold = 10,folds=NULL){
 }
 
 
-
-get_jack_res_b = function(y,X,V,nfold = 10,folds=NULL,b,b_sd){
+get_jack_res2 = function(y,X,V,nfold = 10,folds=NULL,R01){
   n = nrow(y)
   n_bulk = ncol(y)
   K = ncol(X)
 
   d_Vg = ncol(V)
 
+  #browser()
 
 
   res = matrix(nrow=n,ncol=n_bulk)
   if(is.null(folds)){
     folds = cut(1:n,breaks = nfold,labels = F)
+  }else{
+    nfold = length(table(folds))
   }
 
 
   for(f in 1:nfold){
     idx = which(folds==f)
-    X.temp = X[-idx,]
-    y.temp = y[-idx,]
+
+    temp = rowSums(R01[idx, ])
+    index = idx[which(temp == 0)]
+    if(length(index)<(length(idx)/2)){
+      index = idx[(order(temp,decreasing = F))[1:(length(idx)/2)]]
+    }
+
+    X.temp = X[index,]
+    y.temp = y[index,]
     if(d_Vg==K^2){
-      V.temp = matrix(c(colSums(V[-idx,])),ncol = K)
+      V.temp = matrix(c(colSums(V[index,])),ncol = K)
     }else if(d_Vg==K){
-      V.temp = diag(c(colSums(V[-idx,])))
+      V.temp = diag(c(colSums(V[index,])))
     }else{
       stop('check dimension of V')
     }
 
-    if(!is.null(b)){
-      bhat = (b+rnorm(length(b),0,b_sd))%*%t(rep(1,n_bulk))
-    }else{
-      bhat = pmax(solve(crossprod(X.temp)-V.temp)%*%t(X.temp)%*%y.temp,0)
-    }
-
-
+    bhat = pmax(solve(crossprod(X.temp)-V.temp)%*%t(X.temp)%*%y.temp,0)
     res[idx,] = y[idx,] - X[idx,]%*%bhat
   }
 
   res
 
 }
+
+
+get_jack_res3 = function(y,X,V,nfold = 10,folds=NULL,R01){
+  n = nrow(y)
+  n_bulk = ncol(y)
+  K = ncol(X)
+
+  d_Vg = ncol(V)
+
+  #browser()
+
+
+  res = matrix(nrow=n,ncol=n_bulk)
+  if(is.null(folds)){
+    folds = cut(1:n,breaks = nfold,labels = F)
+  }else{
+    nfold = length(table(folds))
+  }
+
+
+  for(f in 1:nfold){
+    idx = which(folds==f)
+
+    temp = rowSums(R01[-idx, ])
+    index = ((1:n)[-idx])[which(temp == 0)]
+    if(length(index)<(length(temp)/2)){
+      index = ((1:n)[-idx])[(order(temp,decreasing = F))[1:(length(temp)/2)]]
+    }
+
+    X.temp = X[index,]
+    y.temp = y[index,]
+    if(d_Vg==K^2){
+      V.temp = matrix(c(colSums(V[index,])),ncol = K)
+    }else if(d_Vg==K){
+      V.temp = diag(c(colSums(V[index,])))
+    }else{
+      stop('check dimension of V')
+    }
+
+    bhat = pmax(solve(crossprod(X.temp)-V.temp)%*%t(X.temp)%*%y.temp,0)
+    res[idx,] = y[idx,] - X[idx,]%*%bhat
+  }
+
+  res
+
+}
+
+
+get_jack_res4 = function(y,X,V,nfold = 10,folds=NULL,R01){
+  n = nrow(y)
+  n_bulk = ncol(y)
+  K = ncol(X)
+
+  d_Vg = ncol(V)
+
+  #browser()
+
+
+  res = matrix(nrow=n,ncol=n_bulk)
+  if(is.null(folds)){
+    folds = cut(1:n,breaks = nfold,labels = F)
+  }else{
+    nfold = length(table(folds))
+  }
+
+
+  for(f in 1:nfold){
+    idx = which(folds==f)
+
+    temp = colSums(R01[idx, ])
+    #index = ((1:n)[-idx])[which(temp == 0)]
+    index = which(temp==0)
+    #print(length(index))
+    if(length(index)<(n/2)){
+      index = ((1:n)[-idx])[(order(temp[-idx],decreasing = F))[1:((n-length(idx))/2)]]
+    }
+
+    X.temp = X[index,]
+    y.temp = y[index,]
+    if(d_Vg==K^2){
+      V.temp = matrix(c(colSums(V[index,])),ncol = K)
+    }else if(d_Vg==K){
+      V.temp = diag(c(colSums(V[index,])))
+    }else{
+      stop('check dimension of V')
+    }
+
+    bhat = pmax(solve(crossprod(X.temp)-V.temp)%*%t(X.temp)%*%y.temp,0)
+    res[idx,] = y[idx,] - X[idx,]%*%bhat
+  }
+
+  res
+
+}
+
+
+
+# get_jack_res_b = function(y,X,V,nfold = 10,folds=NULL,b,b_sd){
+#   n = nrow(y)
+#   n_bulk = ncol(y)
+#   K = ncol(X)
+#
+#   d_Vg = ncol(V)
+#
+#
+#
+#   res = matrix(nrow=n,ncol=n_bulk)
+#   if(is.null(folds)){
+#     folds = cut(1:n,breaks = nfold,labels = F)
+#   }
+#
+#
+#   for(f in 1:nfold){
+#     idx = which(folds==f)
+#     X.temp = X[-idx,]
+#     y.temp = y[-idx,]
+#     if(d_Vg==K^2){
+#       V.temp = matrix(c(colSums(V[-idx,])),ncol = K)
+#     }else if(d_Vg==K){
+#       V.temp = diag(c(colSums(V[-idx,])))
+#     }else{
+#       stop('check dimension of V')
+#     }
+#
+#     if(!is.null(b)){
+#       bhat = (b+rnorm(length(b),0,b_sd))%*%t(rep(1,n_bulk))
+#     }else{
+#       bhat = pmax(solve(crossprod(X.temp)-V.temp)%*%t(X.temp)%*%y.temp,0)
+#     }
+#
+#
+#     res[idx,] = y[idx,] - X[idx,]%*%bhat
+#   }
+#
+#   res
+#
+# }
 
 
 

@@ -1,0 +1,160 @@
+---
+title: "faster calculation, averaging over individuals"
+author: "Dongyue Xie"
+date: "2021-09-19"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+We make the calculation faster by stacking the score matrix of each individual denoted as $B$ and calculate $B^TAB$ where $A$ is the $0-1$ correlation matrix.
+
+When only adding empirically positively correlated pairs, we take average of the individual matrix $A$.
+
+```{r}
+indis_ref = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+rmse = function(x,y){sqrt(mean((x-y)^2))}
+```
+
+```{r,warning=F,message=F}
+source('code/deconference_main.R')
+source('code/simulation/simu_correlation_ult.R')
+```
+
+```{r}
+
+b1 = c(0.1,0.1,0.15,0.15,0.2,0.3)
+b2 = c(0.1,0.15,0.25,0.3,0.1,0.1)
+b2=b1
+
+n = dim(indis_ref)[3]
+n_ref = 11
+n_bulk = n-n_ref
+b = cbind(b1%*%t(rep(1,n_bulk/2)),b2%*%t(rep(1,n_bulk/2)))
+
+set.seed(12345)
+ref.idx = sort(sample(1:n,n_ref))
+G = dim(indis_ref)[1]
+K = dim(indis_ref)[2]
+gene_names = dimnames(indis_ref)[[1]]
+
+X_array_ref = indis_ref[,,ref.idx]
+X_array_bulk = indis_ref[,,-ref.idx]
+
+X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_ref
+V.temp = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))
+fit.vash = vashr::vash(sqrt(rowSums(V.temp)),df=n_ref-1)
+w = 1/(fit.vash$sd.post)^2
+summary(w)
+
+bulk_lib_size = 500
+mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
+mb = do.call(cbind,mb)
+thetab = apply(mb,2,function(z){z/sum(z)})
+true.beta = t(t(b)*c(apply(mb,2,function(z){bulk_lib_size*G/sum(z)})))
+y = matrix(rpois(G*n_bulk,bulk_lib_size*G*thetab),nrow=G)
+rownames(y) = gene_names
+
+
+cor.idx = readRDS('data/neuron/gene12400_cor_idx_alpha005.rds')
+dim(cor.idx)
+R01 = sparseMatrix(i = cor.idx[,1],j = cor.idx[,2],dims = c(G,G))
+diag(R01) = 1
+```
+
+```{r}
+summary_temp = function(fit,b,true.beta){
+  boxplot(t(fit$p_hat_se),ylim = range(c(fit$p_hat_se,apply(fit$p_hat,1,sd,na.rm=T)),na.rm = T),
+        main = 'estimated sd and true sd')
+  lines(apply(fit$p_hat,1,sd),type='p',col='yellow',pch=17)
+  legend('bottomright',c('true sd'),pch=17,col='yellow')
+  
+  waldi = (fit$p_hat-b)/fit$p_hat_se
+  cat('coverage p:')
+  print(round(rowMeans(abs(waldi)<=1.96,na.rm = T),3))
+  
+  folds = fit$folds
+  print(table(folds))
+  
+  wald_beta = (fit$beta_hat-true.beta)/fit$beta_hat_se
+  cat('coverage beta:')
+  print(round(rowMeans(abs(wald_beta)<=1.96,na.rm = T),3))
+  
+}
+```
+
+```{r}
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_rm_cor_alpha005.rds')
+fold10 = fit$folds
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_20folds_alpha005.rds')
+fold20 = fit$folds
+```
+
+10 folds
+
+```{r}
+fit_10fold = estimation_func2(y=y,X=X,Vg=V,
+                       w=w,hc.type='jackknife_indep',correction=FALSE,
+                                             calc_cov=F,verbose=T,
+                                             centeringXY=F,
+                                             true.beta = NULL,
+                                             only.add.pos.res=F,
+                                             folds=fold10,
+                                             R01 = R01)
+
+summary_temp(fit_10fold,b,true.beta)
+```
+
+same result as previous one.
+
+only add positive pairs:
+
+```{r}
+fit_10fold_pos = estimation_func2(y=y,X=X,Vg=V,
+                       w=w,hc.type='jackknife_indep',correction=FALSE,
+                                             calc_cov=F,verbose=T,
+                                             centeringXY=F,
+                                             true.beta = NULL,
+                                             only.add.pos.res=T,
+                                             folds=fold10,
+                                             R01 = R01)
+summary_temp(fit_10fold_pos,b,true.beta)
+```
+
+do not use average one: 0.872, 0.977, 0.744, 0.895, 1.000, 0.744
+
+20 folds
+
+```{r}
+fit_20fold = estimation_func2(y=y,X=X,Vg=V,
+                       w=w,hc.type='jackknife_indep',correction=FALSE,
+                                             calc_cov=F,verbose=T,
+                                             centeringXY=F,
+                                             true.beta = NULL,
+                                             only.add.pos.res=F,
+                                             folds=fold20,
+                                             R01 = R01)
+
+summary_temp(fit_20fold,b,true.beta)
+```
+
+
+only add positive pairs:
+
+```{r}
+fit_20fold_pos = estimation_func2(y=y,X=X,Vg=V,
+                       w=w,hc.type='jackknife_indep',correction=FALSE,
+                                             calc_cov=F,verbose=T,
+                                             centeringXY=F,
+                                             true.beta = NULL,
+                                             only.add.pos.res=T,
+                                             folds=fold20,
+                                             R01 = R01)
+
+summary_temp(fit_20fold_pos,b,true.beta)
+```
+
+do not use average one: 0.814 0.965 0.721 0.907 1.000 0.640

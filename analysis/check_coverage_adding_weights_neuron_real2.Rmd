@@ -65,6 +65,8 @@ rownames(y) = gene_names
 
 cor.idx = readRDS('data/neuron/gene12400_cor_idx_alpha005.rds')
 dim(cor.idx)
+R01 = sparseMatrix(i = cor.idx[,1],j = cor.idx[,2],dims = c(G,G))
+diag(R01) = 1
 ```
 
 ```{r}
@@ -430,7 +432,7 @@ table(folds01)
 # fit$folds = folds01
 # saveRDS(fit,file='output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_alpha005.rds')
 
-fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_20folds_alpha005.rds')
+fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_alpha005.rds')
 
 summary_temp(fit,b,true.beta)
 ```
@@ -454,8 +456,9 @@ try new method to get $\hat\beta$.
 
 # fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_littlecor_alpha005.rds')
 
+# folds01 = fit$folds
 # fit = estimation_func2(y=y,X=X,Vg=V,
-#                        w=w,hc.type='jackknife4',correction=FALSE,
+#                        w=w,hc.type='jackknife_indep',correction=FALSE,
 #                                              calc_cov=F,verbose=T,
 #                                              cor.idx=cor.idx,
 #                                              centeringXY=F,
@@ -490,7 +493,7 @@ new method + only add pos res
 # fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_rm_cor_alpha005_add_pos_res.rds')
 
 # fit = estimation_func2(y=y,X=X,Vg=V,
-#                        w=w,hc.type='jackknife4',correction=FALSE,
+#                        w=w,hc.type='jackknife_indep',correction=FALSE,
 #                                              calc_cov=F,verbose=T,
 #                                              cor.idx=cor.idx,
 #                                              centeringXY=F,

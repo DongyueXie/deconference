@@ -424,7 +424,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-09-15
+<strong>Last updated:</strong> 2021-09-23
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreec78951b36de5e601af78fe8904170c1525c59aactargetblankc78951ba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/c78951b36de5e601af78fe8904170c1525c59aac" target="_blank">c78951b</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree39b982e7c2741243781ca685e9734908576905f0targetblank39b982ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/39b982e7c2741243781ca685e9734908576905f0" target="_blank">39b982e</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreec78951b36de5e601af78fe8904170c1525c59aactargetblankc78951ba" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree39b982e7c2741243781ca685e9734908576905f0targetblank39b982ea" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/c78951b36de5e601af78fe8904170c1525c59aac" target="_blank">c78951b</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/39b982e7c2741243781ca685e9734908576905f0" target="_blank">39b982e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -534,7 +534,6 @@ Ignored files:
     Ignored:    .DS_Store
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
-    Ignored:    analysis/figure/
     Ignored:    data/.DS_Store
     Ignored:    output/.DS_Store
 
@@ -631,6 +630,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/39b982e7c2741243781ca685e9734908576905f0/analysis/check_coverage_adding_weights_neuron_real2.Rmd" target="_blank">39b982e</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-23
+</td>
+<td>
+wflow_publish(“analysis/check_coverage_adding_weights_neuron_real2.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/7bf982da7fe0d6a91666f55dba59c0513379c34d/docs/check_coverage_adding_weights_neuron_real2.html" target="_blank">7bf982d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-15
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -806,6 +839,8 @@ rownames(y) = gene_names
 cor.idx = readRDS(&#39;data/neuron/gene12400_cor_idx_alpha005.rds&#39;)
 dim(cor.idx)</code></pre>
 <pre><code>[1] 25653118        2</code></pre>
+<pre class="r"><code>R01 = sparseMatrix(i = cor.idx[,1],j = cor.idx[,2],dims = c(G,G))
+diag(R01) = 1</code></pre>
 <pre class="r"><code>summary_temp = function(fit,b,true.beta){
   boxplot(t(fit$p_hat_se),ylim = range(c(fit$p_hat_se,apply(fit$p_hat,1,sd,na.rm=T)),na.rm = T),
         main = &#39;estimated sd and true sd&#39;)
@@ -1375,6 +1410,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/7bf982da7fe0d6a91666f55dba59c0513379c34d/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-19-1.png" target="_blank">7bf982d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-15
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/f6d44e191e155b182512f5914434538c2f84d786/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-19-1.png" target="_blank">f6d44e1</a>
 </td>
 <td>
@@ -1461,6 +1507,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/7bf982da7fe0d6a91666f55dba59c0513379c34d/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-21-1.png" target="_blank">7bf982d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-15
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/f6d44e191e155b182512f5914434538c2f84d786/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-21-1.png" target="_blank">f6d44e1</a>
 </td>
 <td>
@@ -1507,7 +1564,7 @@ table(folds01)</code></pre>
 # fit$folds = folds01
 # saveRDS(fit,file=&#39;output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_alpha005.rds&#39;)
 
-fit = readRDS(&#39;output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_20folds_alpha005.rds&#39;)
+fit = readRDS(&#39;output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_alpha005.rds&#39;)
 
 summary_temp(fit,b,true.beta)</code></pre>
 <p><img src="figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
@@ -1535,6 +1592,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/7bf982da7fe0d6a91666f55dba59c0513379c34d/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-23-1.png" target="_blank">7bf982d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-15
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/f6d44e191e155b182512f5914434538c2f84d786/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-23-1.png" target="_blank">f6d44e1</a>
 </td>
 <td>
@@ -1548,13 +1616,13 @@ Dongyue Xie
 </table>
 </div>
 </div>
-<pre><code>coverage p:[1] 0.407 0.767 0.419 0.686 0.593 0.465
+<pre><code>coverage p:[1] 0.465 0.640 0.500 0.686 0.674 0.465
 folds
    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16 
- 587  445  836  482 1290  668  734  499  393  278  334  664  554 1014  775  724 
+ 271 4218   64  844 5412   37  158  233  351   37   44   78  286   73   55  117 
   17   18   19   20 
- 522  675  593  333 
-coverage beta:[1] 0.407 0.779 0.442 0.640 0.593 0.465</code></pre>
+  43   20   39   20 
+coverage beta:[1] 0.453 0.628 0.488 0.663 0.651 0.512</code></pre>
 <p>try new method to get <span class="math inline">\(\hat\beta\)</span>.</p>
 <pre class="r"><code># fit = estimation_func2(y=y,X=X,Vg=V,
 #                        w=w,hc.type=&#39;jackknife3&#39;,correction=FALSE,
@@ -1572,8 +1640,9 @@ coverage beta:[1] 0.407 0.779 0.442 0.640 0.593 0.465</code></pre>
 
 # fit = readRDS(&#39;output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_littlecor_alpha005.rds&#39;)
 
+# folds01 = fit$folds
 # fit = estimation_func2(y=y,X=X,Vg=V,
-#                        w=w,hc.type=&#39;jackknife4&#39;,correction=FALSE,
+#                        w=w,hc.type=&#39;jackknife_indep&#39;,correction=FALSE,
 #                                              calc_cov=F,verbose=T,
 #                                              cor.idx=cor.idx,
 #                                              centeringXY=F,
@@ -1588,13 +1657,50 @@ coverage beta:[1] 0.407 0.779 0.442 0.640 0.593 0.465</code></pre>
 fit = readRDS(&#39;output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_rm_cor_alpha005.rds&#39;)
 summary_temp(fit,b,true.beta)</code></pre>
 <p><img src="figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre><code>coverage p:[1] 0.640 0.942 0.605 0.788 0.791 0.593
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-24-1">
+Past versions of unnamed-chunk-24-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-24-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/7bf982da7fe0d6a91666f55dba59c0513379c34d/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-24-1.png" target="_blank">7bf982d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre><code>coverage p:[1] 0.651 0.826 0.570 0.788 0.779 0.612
 folds
    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16 
- 587  445  836  482 1290  668  734  499  393  278  334  664  554 1014  775  724 
+ 271 4218   64  844 5412   37  158  233  351   37   44   78  286   73   55  117 
   17   18   19   20 
- 522  675  593  333 
-coverage beta:[1] 0.640 0.942 0.628 0.776 0.721 0.593</code></pre>
+  43   20   39   20 
+coverage beta:[1] 0.628 0.849 0.570 0.800 0.756 0.612</code></pre>
 <p>new method + only add pos res</p>
 <pre class="r"><code># fit = estimation_func2(y=y,X=X,Vg=V,
 #                        w=w,hc.type=&#39;jackknife3&#39;,correction=FALSE,
@@ -1612,7 +1718,7 @@ coverage beta:[1] 0.640 0.942 0.628 0.776 0.721 0.593</code></pre>
 # fit = readRDS(&#39;output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_20folds_rm_cor_alpha005_add_pos_res.rds&#39;)
 
 # fit = estimation_func2(y=y,X=X,Vg=V,
-#                        w=w,hc.type=&#39;jackknife4&#39;,correction=FALSE,
+#                        w=w,hc.type=&#39;jackknife_indep&#39;,correction=FALSE,
 #                                              calc_cov=F,verbose=T,
 #                                              cor.idx=cor.idx,
 #                                              centeringXY=F,
@@ -1652,6 +1758,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/7bf982da7fe0d6a91666f55dba59c0513379c34d/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-25-1.png" target="_blank">7bf982d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-15
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/f6d44e191e155b182512f5914434538c2f84d786/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-25-1.png" target="_blank">f6d44e1</a>
 </td>
 <td>
@@ -1665,13 +1782,13 @@ Dongyue Xie
 </table>
 </div>
 </div>
-<pre><code>coverage p:[1] 0.814 0.965 0.721 0.907 1.000 0.640
+<pre><code>coverage p:[1] 0.779 0.977 0.674 0.895 1.000 0.674
 folds
    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16 
- 587  445  836  482 1290  668  734  499  393  278  334  664  554 1014  775  724 
+ 271 4218   64  844 5412   37  158  233  351   37   44   78  286   73   55  117 
   17   18   19   20 
- 522  675  593  333 
-coverage beta:[1] 0.860 0.977 0.744 0.849 0.953 0.651</code></pre>
+  43   20   39   20 
+coverage beta:[1] 0.826 0.977 0.674 0.849 0.965 0.663</code></pre>
 <p>Now try spectral clustering:</p>
 <p>We will use the correlation matrix as the similarity matrix W. The entries of similarity matrix are non-negative, so we will use the absolute value of correlation matrix. Ww may also try to set negative correlations to 0 later.</p>
 <p>They are other ways to construct similarity matrix: knn graphs, and fully connect graph with Gaussian similarity kernel.</p>
@@ -1699,6 +1816,43 @@ fit = readRDS(&#39;output/check_coverage_weight_neuron/11ref_jackknife_spectral_
 
 summary_temp(fit,b,true.beta)</code></pre>
 <p><img src="figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-27-1">
+Past versions of unnamed-chunk-27-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-27-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/7bf982da7fe0d6a91666f55dba59c0513379c34d/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-27-1.png" target="_blank">7bf982d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>coverage p:[1] 1 1 1 1 1 1
 folds
     1     2     3     4     5     6     7     8     9    10 
@@ -1775,6 +1929,43 @@ fit = readRDS(&#39;output/check_coverage_weight_neuron/11ref_jackknife_spectral_
 
 summary_temp(fit,b,true.beta)</code></pre>
 <p><img src="figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-32-1">
+Past versions of unnamed-chunk-32-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-32-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/7bf982da7fe0d6a91666f55dba59c0513379c34d/docs/figure/check_coverage_adding_weights_neuron_real2.Rmd/unnamed-chunk-32-1.png" target="_blank">7bf982d</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>coverage p:[1] 0.442 0.779 0.442 0.674 0.570 0.453
 folds
    1    2    3    4    5    6    7    8    9   10 

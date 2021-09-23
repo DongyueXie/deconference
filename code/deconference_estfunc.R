@@ -422,7 +422,7 @@ get_SIGMA3 = function(y,X,beta,V,h,nb,G,K,verbose,hc.type,
 
       #idx = rowSums((res.hc[R01_idx$i,]*res.hc[R01_idx$j,]))>0
       # mean.res = rowMeans(res.hc)
-      # idx = (mean.res[i_idx]*mean.res[j_idx])>0
+      # res_prod = (mean.res[R01_idx$i]*mean.res[R01_idx$j])>0
       A = sparseMatrix(i=R01_idx$i[res_prod],j = R01_idx$j[res_prod],dims = c(G,G))
       Sigma = crossprod(score_mat,A)%*%score_mat
     }

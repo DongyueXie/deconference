@@ -215,19 +215,29 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 
 
-  Sigma = get_SIGMA2(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
-                    V=Vw,h=h,nb=nb,
-                    G=G,K=K,lambda=lambda,verbose=verbose,
-                    calc_cov=calc_cov,hc.type=hc.type,
-                    cor.idx=cor.idx,
-                    only.scale.pos.res=only.scale.pos.res,
-                    only.add.pos.res=only.add.pos.res,
-                    nfold=nfold,
-                    folds=folds,
-                    use_all_pair_for_cov=use_all_pair_for_cov,
-                    b=b,
-                    b_sd=b_sd,
-                    R01=R01)
+  # Sigma = get_SIGMA2(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
+  #                   V=Vw,h=h,nb=nb,
+  #                   G=G,K=K,lambda=lambda,verbose=verbose,
+  #                   calc_cov=calc_cov,hc.type=hc.type,
+  #                   cor.idx=cor.idx,
+  #                   only.scale.pos.res=only.scale.pos.res,
+  #                   only.add.pos.res=only.add.pos.res,
+  #                   nfold=nfold,
+  #                   folds=folds,
+  #                   use_all_pair_for_cov=use_all_pair_for_cov,
+  #                   b=b,
+  #                   b_sd=b_sd,
+  #                   R01=R01)
+  #
+
+  Sigma = get_SIGMA3(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
+                     V=Vw,h=h,nb=nb,
+                     G=G,K=K,verbose=verbose,
+                     hc.type=hc.type,
+                     only.add.pos.res=only.add.pos.res,
+                     nfold=nfold,
+                     folds=folds,
+                     R01=R01)
   covb = Q_inv%*%Sigma%*%Q_inv
 
   #browser()
@@ -382,23 +392,38 @@ get_SIGMA3 = function(y,X,beta,V,h,nb,G,K,verbose,hc.type,
 
   }
 
+  if(verbose){
+    message("calculating covariance matrix")
+  }
+
   if(!is.null(R01)){
     if(!only.add.pos.res){
       Sigma = crossprod(score_mat,R01)%*%score_mat
     }else{
+      #browser()
+      R01_idx = summary(R01)
       # obtain average matrix A
-      i_idx = R01@i+1
-      dp = diff(R01@p)
-      j_idx = rep(seq_along(dp),dp)
-      # res_prod = 0
+      #i_idx = R01_idx$i
+      #dp = diff(R01@p)
+      #j_idx = R01_idx$j
+      if(verbose){
+        message("averaging A over individuals")
+      }
+      res_prod = 0
+      for(i in 1:nb){
+        res_prod = res_prod + (res.hc[R01_idx$i,i]*res.hc[R01_idx$j,i])
+      }
+      res_prod = res_prod>0
+      print(sum(res_prod))
+      # res_prod = 1
       # for(i in 1:nb){
-      #   res_prod = res_prod + (res.hc[i_idx,i]*res.hc[j_idx,i])
+      #   res_prod = res_prod * (res.hc[R01_idx$i,i]*res.hc[R01_idx$j,i])>0
       # }
-      # idx = res_prod>0
-      #idx = rowSums((res.hc[i_idx,]*res.hc[j_idx,]))>0
-      mean.res = rowMeans(res.hc)
-      idx = (mean.res[i_idx]*mean.res[j_idx])>0
-      A = sparseMatrix(i=i_idx[idx],j = j_idx[idx],dims = c(G,G))
+
+      #idx = rowSums((res.hc[R01_idx$i,]*res.hc[R01_idx$j,]))>0
+      # mean.res = rowMeans(res.hc)
+      # idx = (mean.res[i_idx]*mean.res[j_idx])>0
+      A = sparseMatrix(i=R01_idx$i[res_prod],j = R01_idx$j[res_prod],dims = c(G,G))
       Sigma = crossprod(score_mat,A)%*%score_mat
     }
   }else{

@@ -87,10 +87,11 @@ summary_temp = function(fit,b,true.beta){
 ```
 
 ```{r}
-fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids01_10folds_rm_cor_alpha005.rds')
-fold10 = fit$folds
-fit = readRDS('output/check_coverage_weight_neuron/11ref_jackknife_kmedoids_20folds_alpha005.rds')
-fold20 = fit$folds
+R01.dist = as.dist(1-R01)
+library(cluster)
+clusters01 = pam(R01.dist,10,pamonce=5)
+fold10 = clusters01$clustering
+table(fold10)
 ```
 
 10 folds
@@ -126,9 +127,41 @@ summary_temp(fit_10fold_pos,b,true.beta)
 
 do not use average one: 0.872, 0.977, 0.744, 0.895, 1.000, 0.744
 
+A: positive in more than $25\%$ individuals, 383886 pairs
+
+```{r}
+fit = readRDS('output/check_coverage_weight_neuron/25quantileA.rds')
+summary_temp(fit,b,true.beta)
+```
+
+A: positive in more than $50\%$ individuals, 16472198 pairs
+
+```{r}
+fit = readRDS('output/check_coverage_weight_neuron/50quantileA.rds')
+summary_temp(fit,b,true.beta)
+```
+
+A: positive in more than $75\%$ individuals, 25608838 pairs
+
+```{r}
+fit = readRDS('output/check_coverage_weight_neuron/75quantileA.rds')
+summary_temp(fit,b,true.beta)
+```
+
+Take mean of residual first then get A
+
+```{r}
+fit = readRDS('output/check_coverage_weight_neuron/mean_res_A.rds')
+summary_temp(fit,b,true.beta)
+```
+
 20 folds
 
 ```{r}
+clusters01 = pam(R01.dist,20,pamonce=5)
+fold20 = clusters01$clustering
+table(fold20)
+
 fit_20fold = estimation_func2(y=y,X=X,Vg=V,
                        w=w,hc.type='jackknife_indep',correction=FALSE,
                                              calc_cov=F,verbose=T,
@@ -157,4 +190,4 @@ fit_20fold_pos = estimation_func2(y=y,X=X,Vg=V,
 summary_temp(fit_20fold_pos,b,true.beta)
 ```
 
-do not use average one: 0.814 0.965 0.721 0.907 1.000 0.640
+

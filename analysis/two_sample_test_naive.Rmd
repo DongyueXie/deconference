@@ -1,5 +1,5 @@
 ---
-title: "Apply two-samples Wilcoxon test directly to p_hat"
+title: "Apply two-samples test directly to p_hat"
 author: "Dongyue Xie"
 date: "2021-09-24"
 output: workflowr::wflow_html
@@ -7,7 +7,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Introduction
+## correlated gene 500
 
 ```{r,warning=FALSE}
 simu_out = readRDS('output/manuscript/simulation_10bulk_500genecor_fdr05.rds')
@@ -23,7 +23,7 @@ for(i in 1:nreps){
     p_values[i,k] = wilcox.test(simu_out$p_hat[k,1:5,i],simu_out$p_hat[k,6:10,i])$p.value
   }
 }
-
+print('two sample wilcoxon test')
 apply(p_values<0.05,2,mean)
 
 
@@ -35,6 +35,7 @@ for(i in 1:nreps){
   }
 }
 
+print('two sample wilcoxon test, add weights')
 apply(p_values<0.05,2,mean)
 
 # treat as independence
@@ -49,6 +50,7 @@ for(i in 1:nreps){
   }
 }
 
+print('ignoring dependnece')
 apply(p_values<0.05,2,mean,na.rm=T)
 
 p_values = matrix(nrow = nreps,ncol=K)
@@ -61,11 +63,14 @@ for(i in 1:nreps){
   }
 }
 
+print('ignoring dependnece,add weights')
 apply(p_values<0.05,2,mean,na.rm=T)
 ```
 
 
-```{r}
+## correlated gene 300
+
+```{r,warning=FALSE}
 simu_out = readRDS('output/manuscript/simulation_10bulk_300genecor_fdr05.rds')
 
 K = 4
@@ -79,7 +84,7 @@ for(i in 1:nreps){
     p_values[i,k] = wilcox.test(simu_out$p_hat[k,1:5,i],simu_out$p_hat[k,6:10,i])$p.value
   }
 }
-
+print('two sample wilcoxon test')
 apply(p_values<0.05,2,mean)
 
 
@@ -91,6 +96,7 @@ for(i in 1:nreps){
   }
 }
 
+print('two sample wilcoxon test, add weights')
 apply(p_values<0.05,2,mean)
 
 # treat as independence
@@ -105,6 +111,7 @@ for(i in 1:nreps){
   }
 }
 
+print('ignoring dependnece')
 apply(p_values<0.05,2,mean,na.rm=T)
 
 p_values = matrix(nrow = nreps,ncol=K)
@@ -117,6 +124,7 @@ for(i in 1:nreps){
   }
 }
 
+print('ignoring dependnece,add weights')
 apply(p_values<0.05,2,mean,na.rm=T)
 
 ```

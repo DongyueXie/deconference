@@ -13,7 +13,7 @@
 
 <meta name="date" content="2021-09-24" />
 
-<title>Apply two-samples Wilcoxon test directly to p_hat</title>
+<title>Apply two-samples test directly to p_hat</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -397,7 +397,7 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Apply two-samples Wilcoxon test directly to p_hat</h1>
+<h1 class="title toc-ignore">Apply two-samples test directly to p_hat</h1>
 <h4 class="author">Dongyue Xie</h4>
 <h4 class="date">2021-09-24</h4>
 
@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree81b30d89c1f8c32e8a4e40db212e48cde4ed94dctargetblank81b30d8a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/81b30d89c1f8c32e8a4e40db212e48cde4ed94dc" target="_blank">81b30d8</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree9e430010d818a48fc51f9ba84231622423239957targetblank9e43001a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/9e430010d818a48fc51f9ba84231622423239957" target="_blank">9e43001</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree81b30d89c1f8c32e8a4e40db212e48cde4ed94dctargetblank81b30d8a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree9e430010d818a48fc51f9ba84231622423239957targetblank9e43001a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/81b30d89c1f8c32e8a4e40db212e48cde4ed94dc" target="_blank">81b30d8</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/9e430010d818a48fc51f9ba84231622423239957" target="_blank">9e43001</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -635,6 +635,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/9e430010d818a48fc51f9ba84231622423239957/analysis/two_sample_test_naive.Rmd" target="_blank">9e43001</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-28
+</td>
+<td>
+wflow_publish(“analysis/two_sample_test_naive.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/b6267f8590ed31264aee1a507d9a869842acff32/docs/two_sample_test_naive.html" target="_blank">b6267f8</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-28
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/81b30d89c1f8c32e8a4e40db212e48cde4ed94dc/analysis/two_sample_test_naive.Rmd" target="_blank">81b30d8</a>
 </td>
 <td>
@@ -654,8 +688,8 @@ wflow_publish(“analysis/two_sample_test_naive.Rmd”)
 </div>
 </div>
 </div>
-<div id="introduction" class="section level2">
-<h2>Introduction</h2>
+<div id="correlated-gene-500" class="section level2">
+<h2>correlated gene 500</h2>
 <pre class="r"><code>simu_out = readRDS(&#39;output/manuscript/simulation_10bulk_500genecor_fdr05.rds&#39;)
 
 K = 4
@@ -669,8 +703,9 @@ for(i in 1:nreps){
     p_values[i,k] = wilcox.test(simu_out$p_hat[k,1:5,i],simu_out$p_hat[k,6:10,i])$p.value
   }
 }
-
-apply(p_values&lt;0.05,2,mean)</code></pre>
+print(&#39;two sample wilcoxon test&#39;)</code></pre>
+<pre><code>[1] &quot;two sample wilcoxon test&quot;</code></pre>
+<pre class="r"><code>apply(p_values&lt;0.05,2,mean)</code></pre>
 <pre><code>[1] 0.08 0.25 0.69 0.96</code></pre>
 <pre class="r"><code>p_values = matrix(nrow = nreps,ncol=K)
 
@@ -680,7 +715,9 @@ for(i in 1:nreps){
   }
 }
 
-apply(p_values&lt;0.05,2,mean)</code></pre>
+print(&#39;two sample wilcoxon test, add weights&#39;)</code></pre>
+<pre><code>[1] &quot;two sample wilcoxon test, add weights&quot;</code></pre>
+<pre class="r"><code>apply(p_values&lt;0.05,2,mean)</code></pre>
 <pre><code>[1] 0.02 0.62 1.00 1.00</code></pre>
 <pre class="r"><code># treat as independence
 
@@ -694,7 +731,9 @@ for(i in 1:nreps){
   }
 }
 
-apply(p_values&lt;0.05,2,mean,na.rm=T)</code></pre>
+print(&#39;ignoring dependnece&#39;)</code></pre>
+<pre><code>[1] &quot;ignoring dependnece&quot;</code></pre>
+<pre class="r"><code>apply(p_values&lt;0.05,2,mean,na.rm=T)</code></pre>
 <pre><code>[1] 0.05154639 0.39175258 0.92631579 0.97777778</code></pre>
 <pre class="r"><code>p_values = matrix(nrow = nreps,ncol=K)
 
@@ -706,8 +745,13 @@ for(i in 1:nreps){
   }
 }
 
-apply(p_values&lt;0.05,2,mean,na.rm=T)</code></pre>
+print(&#39;ignoring dependnece,add weights&#39;)</code></pre>
+<pre><code>[1] &quot;ignoring dependnece,add weights&quot;</code></pre>
+<pre class="r"><code>apply(p_values&lt;0.05,2,mean,na.rm=T)</code></pre>
 <pre><code>[1] 0.05154639 0.78571429 1.00000000 1.00000000</code></pre>
+</div>
+<div id="correlated-gene-300" class="section level2">
+<h2>correlated gene 300</h2>
 <pre class="r"><code>simu_out = readRDS(&#39;output/manuscript/simulation_10bulk_300genecor_fdr05.rds&#39;)
 
 K = 4
@@ -720,219 +764,9 @@ for(i in 1:nreps){
   for(k in 1:K){
     p_values[i,k] = wilcox.test(simu_out$p_hat[k,1:5,i],simu_out$p_hat[k,6:10,i])$p.value
   }
-}</code></pre>
-<pre><code>Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat[k, 1:5, i], simu_out$p_hat[k, :
-cannot compute exact p-value with ties</code></pre>
+}
+print(&#39;two sample wilcoxon test&#39;)</code></pre>
+<pre><code>[1] &quot;two sample wilcoxon test&quot;</code></pre>
 <pre class="r"><code>apply(p_values&lt;0.05,2,mean)</code></pre>
 <pre><code>[1] 0.02 0.29 0.90 0.98</code></pre>
 <pre class="r"><code>p_values = matrix(nrow = nreps,ncol=K)
@@ -941,32 +775,10 @@ for(i in 1:nreps){
   for(k in 1:K){
     p_values[i,k] = wilcox.test(simu_out$p_hat_weight[k,1:5,i],simu_out$p_hat_weight[k,6:10,i])$p.value
   }
-}</code></pre>
-<pre><code>Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties</code></pre>
-<pre><code>Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties
+}
 
-Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties
-
-Warning in wilcox.test.default(simu_out$p_hat_weight[k, 1:5, i],
-simu_out$p_hat_weight[k, : cannot compute exact p-value with ties</code></pre>
+print(&#39;two sample wilcoxon test, add weights&#39;)</code></pre>
+<pre><code>[1] &quot;two sample wilcoxon test, add weights&quot;</code></pre>
 <pre class="r"><code>apply(p_values&lt;0.05,2,mean)</code></pre>
 <pre><code>[1] 0.01 0.60 1.00 1.00</code></pre>
 <pre class="r"><code># treat as independence
@@ -981,7 +793,9 @@ for(i in 1:nreps){
   }
 }
 
-apply(p_values&lt;0.05,2,mean,na.rm=T)</code></pre>
+print(&#39;ignoring dependnece&#39;)</code></pre>
+<pre><code>[1] &quot;ignoring dependnece&quot;</code></pre>
+<pre class="r"><code>apply(p_values&lt;0.05,2,mean,na.rm=T)</code></pre>
 <pre><code>[1] 0.020000 0.430000 0.979798 1.000000</code></pre>
 <pre class="r"><code>p_values = matrix(nrow = nreps,ncol=K)
 
@@ -993,7 +807,9 @@ for(i in 1:nreps){
   }
 }
 
-apply(p_values&lt;0.05,2,mean,na.rm=T)</code></pre>
+print(&#39;ignoring dependnece,add weights&#39;)</code></pre>
+<pre><code>[1] &quot;ignoring dependnece,add weights&quot;</code></pre>
+<pre class="r"><code>apply(p_values&lt;0.05,2,mean,na.rm=T)</code></pre>
 <pre><code>[1] 0.0700000 0.8787879 1.0000000 1.0000000</code></pre>
 <br>
 <p>

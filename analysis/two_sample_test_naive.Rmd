@@ -1,0 +1,125 @@
+---
+title: "Apply two-samples Wilcoxon test directly to p_hat"
+author: "Dongyue Xie"
+date: "2021-09-24"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+```{r,warning=FALSE}
+simu_out = readRDS('output/manuscript/simulation_10bulk_500genecor_fdr05.rds')
+
+K = 4
+nb = 10
+nreps = 100
+
+p_values = matrix(nrow = nreps,ncol=K)
+
+for(i in 1:nreps){
+  for(k in 1:K){
+    p_values[i,k] = wilcox.test(simu_out$p_hat[k,1:5,i],simu_out$p_hat[k,6:10,i])$p.value
+  }
+}
+
+apply(p_values<0.05,2,mean)
+
+
+p_values = matrix(nrow = nreps,ncol=K)
+
+for(i in 1:nreps){
+  for(k in 1:K){
+    p_values[i,k] = wilcox.test(simu_out$p_hat_weight[k,1:5,i],simu_out$p_hat_weight[k,6:10,i])$p.value
+  }
+}
+
+apply(p_values<0.05,2,mean)
+
+# treat as independence
+
+p_values = matrix(nrow = nreps,ncol=K)
+
+for(i in 1:nreps){
+  for(k in 1:K){
+    z = mean(simu_out$p_hat[k,1:5,i])-mean(simu_out$p_hat[k,6:10,i])
+    z = z/sqrt(1/25*sum(simu_out$p_hat_se_cor[k,,i]^2))
+    p_values[i,k] = 2*(1-pnorm(abs(z)))
+  }
+}
+
+apply(p_values<0.05,2,mean,na.rm=T)
+
+p_values = matrix(nrow = nreps,ncol=K)
+
+for(i in 1:nreps){
+  for(k in 1:K){
+    z = mean(simu_out$p_hat_weight[k,1:5,i])-mean(simu_out$p_hat_weight[k,6:10,i])
+    z = z/sqrt(1/25*sum(simu_out$p_hat_weight_se_cor[k,,i]^2))
+    p_values[i,k] = 2*(1-pnorm(abs(z)))
+  }
+}
+
+apply(p_values<0.05,2,mean,na.rm=T)
+```
+
+
+```{r}
+simu_out = readRDS('output/manuscript/simulation_10bulk_300genecor_fdr05.rds')
+
+K = 4
+nb = 10
+nreps = 100
+
+p_values = matrix(nrow = nreps,ncol=K)
+
+for(i in 1:nreps){
+  for(k in 1:K){
+    p_values[i,k] = wilcox.test(simu_out$p_hat[k,1:5,i],simu_out$p_hat[k,6:10,i])$p.value
+  }
+}
+
+apply(p_values<0.05,2,mean)
+
+
+p_values = matrix(nrow = nreps,ncol=K)
+
+for(i in 1:nreps){
+  for(k in 1:K){
+    p_values[i,k] = wilcox.test(simu_out$p_hat_weight[k,1:5,i],simu_out$p_hat_weight[k,6:10,i])$p.value
+  }
+}
+
+apply(p_values<0.05,2,mean)
+
+# treat as independence
+
+p_values = matrix(nrow = nreps,ncol=K)
+
+for(i in 1:nreps){
+  for(k in 1:K){
+    z = mean(simu_out$p_hat[k,1:5,i])-mean(simu_out$p_hat[k,6:10,i])
+    z = z/sqrt(1/25*sum(simu_out$p_hat_se_cor[k,,i]^2))
+    p_values[i,k] = 2*(1-pnorm(abs(z)))
+  }
+}
+
+apply(p_values<0.05,2,mean,na.rm=T)
+
+p_values = matrix(nrow = nreps,ncol=K)
+
+for(i in 1:nreps){
+  for(k in 1:K){
+    z = mean(simu_out$p_hat_weight[k,1:5,i])-mean(simu_out$p_hat_weight[k,6:10,i])
+    z = z/sqrt(1/25*sum(simu_out$p_hat_weight_se_cor[k,,i]^2))
+    p_values[i,k] = 2*(1-pnorm(abs(z)))
+  }
+}
+
+apply(p_values<0.05,2,mean,na.rm=T)
+
+```
+
+
+

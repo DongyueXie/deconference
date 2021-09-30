@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree84454ae710603108c424b556920971bec72c49f3targetblank84454aea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/84454ae710603108c424b556920971bec72c49f3" target="_blank">84454ae</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreedadadc93e05140436d44926946d793574de4ee84targetblankdadadc9a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/dadadc93e05140436d44926946d793574de4ee84" target="_blank">dadadc9</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree84454ae710603108c424b556920971bec72c49f3targetblank84454aea" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreedadadc93e05140436d44926946d793574de4ee84targetblankdadadc9a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/84454ae710603108c424b556920971bec72c49f3" target="_blank">84454ae</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/dadadc93e05140436d44926946d793574de4ee84" target="_blank">dadadc9</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -639,6 +639,40 @@ Message
 Rmd
 </td>
 <td>
+<a href="https://github.com/DongyueXie/deconference/blob/dadadc93e05140436d44926946d793574de4ee84/analysis/two_sample_test_CI.Rmd" target="_blank">dadadc9</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-30
+</td>
+<td>
+wflow_publish(“analysis/two_sample_test_CI.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/3149b87bd5335309ac9baa793cfa95146308cf56/docs/two_sample_test_CI.html" target="_blank">3149b87</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-09-30
+</td>
+<td>
+Build site.
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
 <a href="https://github.com/DongyueXie/deconference/blob/84454ae710603108c424b556920971bec72c49f3/analysis/two_sample_test_CI.Rmd" target="_blank">84454ae</a>
 </td>
 <td>
@@ -682,17 +716,26 @@ for(i in 1:nreps){
 }
 colMeans(cover.naive)</code></pre>
 <pre><code>[1] 0.98 0.99 0.94 0.98</code></pre>
-<pre class="r"><code>print(&#39;asymptotic&#39;)</code></pre>
-<pre><code>[1] &quot;asymptotic&quot;</code></pre>
+<pre class="r"><code>print(&#39;asymptotic, hc3&#39;)</code></pre>
+<pre><code>[1] &quot;asymptotic, hc3&quot;</code></pre>
 <pre class="r"><code>temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
-cover.asy = temp&lt;1.96
-round(colMeans(cover.asy,na.rm=TRUE),2)</code></pre>
+cover.asy.hc3 = temp&lt;1.96
+round(colMeans(cover.asy.hc3,na.rm=TRUE),2)</code></pre>
 <pre><code>[1] 0.93 0.95 0.95 0.96</code></pre>
+<pre class="r"><code>print(&#39;asymptotic, cv&#39;)</code></pre>
+<pre><code>[1] &quot;asymptotic, cv&quot;</code></pre>
+<pre class="r"><code>temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
+cover.asy.cv = temp&lt;1.96
+round(colMeans(cover.asy.cv,na.rm=TRUE),2)</code></pre>
+<pre><code>[1] 0.96 0.98 0.97 0.98</code></pre>
 <pre class="r"><code>print(&#39;union of two sample t test and asymptotic&#39;)</code></pre>
 <pre><code>[1] &quot;union of two sample t test and asymptotic&quot;</code></pre>
-<pre class="r"><code>cover.union = (cover.naive)|(cover.asy)
+<pre class="r"><code>cover.union = (cover.naive)|(cover.asy.hc3)
 round(colMeans(cover.union,na.rm = T),2)</code></pre>
 <pre><code>[1] 0.99 0.99 0.98 0.99</code></pre>
+<pre class="r"><code>cover.union = (cover.naive)|(cover.asy.cv)
+round(colMeans(cover.union,na.rm = T),2)</code></pre>
+<pre><code>[1] 0.99 0.99 0.99 1.00</code></pre>
 </div>
 <div id="all-diff" class="section level2">
 <h2>All diff</h2>
@@ -718,17 +761,26 @@ for(i in 1:nreps){
 }
 colMeans(cover.naive)</code></pre>
 <pre><code>[1] 0.86 0.86 0.77 0.72</code></pre>
-<pre class="r"><code>print(&#39;asymptotic&#39;)</code></pre>
-<pre><code>[1] &quot;asymptotic&quot;</code></pre>
+<pre class="r"><code>print(&#39;asymptotic, hc3&#39;)</code></pre>
+<pre><code>[1] &quot;asymptotic, hc3&quot;</code></pre>
 <pre class="r"><code>temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
-cover.asy = temp&lt;1.96
-round(colMeans(cover.asy,na.rm=TRUE),2)</code></pre>
+cover.asy.hc3 = temp&lt;1.96
+round(colMeans(cover.asy.hc3,na.rm=TRUE),2)</code></pre>
 <pre><code>[1] 0.90 0.87 0.87 0.87</code></pre>
+<pre class="r"><code>print(&#39;asymptotic, cv&#39;)</code></pre>
+<pre><code>[1] &quot;asymptotic, cv&quot;</code></pre>
+<pre class="r"><code>temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
+cover.asy.cv = temp&lt;1.96
+round(colMeans(cover.asy.cv,na.rm=TRUE),2)</code></pre>
+<pre><code>[1] 0.98 0.99 0.97 0.95</code></pre>
 <pre class="r"><code>print(&#39;union of two sample t test and asymptotic&#39;)</code></pre>
 <pre><code>[1] &quot;union of two sample t test and asymptotic&quot;</code></pre>
-<pre class="r"><code>cover.union = (cover.naive)|(cover.asy)
+<pre class="r"><code>cover.union = (cover.naive)|(cover.asy.hc3)
 round(colMeans(cover.union,na.rm = T),2)</code></pre>
 <pre><code>[1] 0.93 0.92 0.90 0.89</code></pre>
+<pre class="r"><code>cover.union = (cover.naive)|(cover.asy.cv)
+round(colMeans(cover.union,na.rm = T),2)</code></pre>
+<pre><code>[1] 0.98 1.00 0.98 0.96</code></pre>
 </div>
 <div id="one-same" class="section level2">
 <h2>one same</h2>
@@ -754,17 +806,25 @@ for(i in 1:nreps){
 }
 colMeans(cover.naive)</code></pre>
 <pre><code>[1] 0.99 0.92 0.96 0.97</code></pre>
-<pre class="r"><code>print(&#39;asymptotic&#39;)</code></pre>
-<pre><code>[1] &quot;asymptotic&quot;</code></pre>
-<pre class="r"><code>temp = abs(simu_out$diff_hat_weight - rep(1,100)%*%t(dif))/simu_out$diff_hat_weight_se_cor
-cover.asy = temp&lt;1.96
-colMeans(cover.asy)</code></pre>
+<pre class="r"><code>print(&#39;asymptotic, hc3&#39;)</code></pre>
+<pre><code>[1] &quot;asymptotic, hc3&quot;</code></pre>
+<pre class="r"><code>temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
+cover.asy.hc3 = temp&lt;1.96
+round(colMeans(cover.asy.hc3,na.rm=TRUE),2)</code></pre>
 <pre><code>[1] 0.95 0.91 0.93 0.96</code></pre>
-<pre class="r"><code>print(&#39;union of two sample t test and asymptotic&#39;)</code></pre>
+<pre class="r"><code># print(&#39;asymptotic, cv&#39;)
+# temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
+# cover.asy.cv = temp&lt;1.96
+# round(colMeans(cover.asy.cv,na.rm=TRUE),2)
+
+print(&#39;union of two sample t test and asymptotic&#39;)</code></pre>
 <pre><code>[1] &quot;union of two sample t test and asymptotic&quot;</code></pre>
-<pre class="r"><code>cover.union = (cover.naive)|(cover.asy)
-colMeans(cover.union)</code></pre>
+<pre class="r"><code>cover.union = (cover.naive)|(cover.asy.hc3)
+round(colMeans(cover.union,na.rm = T),2)</code></pre>
 <pre><code>[1] 0.99 0.94 0.96 0.99</code></pre>
+<pre class="r"><code># 
+# cover.union = (cover.naive)|(cover.asy.cv)
+# round(colMeans(cover.union,na.rm = T),2)</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

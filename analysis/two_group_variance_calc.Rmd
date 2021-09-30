@@ -1,0 +1,138 @@
+---
+title: "two group variance calculation"
+author: "Dongyue Xie"
+date: "2021-09-27"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+Two methods to calculate $var(\hat\Delta)$, where $\hat\Delta = \sum_i a_i\hat p_i$
+
+1. $var(\hat\Delta) = var(\sum_i a_i\hat p_i) = \sum_{i,j} a_i a_j cov(\hat p_i, \hat p_j)$.
+
+2. $var(\hat\Delta) = \sum_g \left(A_i\Omega^{-1}\phi(\beta_i)_g\right)\left(A_i\Omega^{-1}\phi(\beta_i)_g\right)^T$
+
+```{r}
+source('code/deconference_estfunc.R')
+```
+
+
+```{r}
+# xin_raw <- readRDS("data/pancreas/xin_raw.rds")
+# cell_types = c('alpha', 'beta', 'delta', 'gamma')
+# K = length(cell_types)
+# rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+# rm.indi.idx = which(xin_raw$individual%in%rm.indi)
+# 
+# datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types,
+#                            gene_thresh = 0.05,max_count_quantile_celltype = 0.95,
+#                            max_count_quantile_indi = 0.95,
+#                            w=1)
+# design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,
+#                                   datax.xin$indi_idx,estimator="separate",
+#                                   est_sigma2 = TRUE,meta_mode = 'local',smooth.sigma = F)
+# 
+# ref = design.mat.xin$X
+# sigma2 = design.mat.xin$Sigma
+# 
+# ref = ref+1/nrow(ref)
+# sigma2 = sigma2 + 1/nrow(ref)
+# 
+# saveRDS(list(ref=ref,sigma2=sigma2),file='data/pancreas/xin_ref_sigma9496.rds')
+xin = readRDS('data/pancreas/xin_ref_sigma9496.rds')
+
+ref = xin$ref[1:1000,]
+sigma2 = xin$sigma2[1:1000,]
+
+G = nrow(ref)
+K = ncol(ref)
+
+norm.ref = matrix(nrow=G,ncol=K)
+norm.Sigma = matrix(nrow=G,ncol=K)
+ 
+  for(k in 1:K){
+    norm.ref[,k] = log(ref[,k]^2/sqrt(ref[,k]^2+sigma2[,k]))
+    norm.s = sqrt(log(1+sigma2[,k]/ref[,k]^2))
+    norm.Sigma[,k] = norm.s^2
+  }
+
+d = 50
+A = matrix(0,nrow=G,ncol=G)
+
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+idx = which(A!=0,arr.ind = T)
+library(Matrix)
+A = sparseMatrix(i = idx[,1],j=idx[,2],dims=c(G,G),symmetric = TRUE)
+```
+
+```{r}
+set.seed(12345)
+n_ref = 10
+n_bulk = 20
+b1 = c(0.1,0.1,0.3,0.5)
+b2 = c(0.1,0.2,0.5,0.2)
+nb=n_bulk
+b = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
+
+
+    n.temp = n_ref+n_bulk
+    X_array = array(dim=c(G,K,n.temp))
+
+    for(k in 1:K){
+      X_array[,k,] = exp(matrix(rnorm(G*n.temp,norm.ref[,k],sqrt(norm.Sigma[,k])),ncol=n.temp))
+    }
+
+    #browser()
+
+    X_array_bulk = X_array[,,1:n_bulk]
+    X_array_ref = X_array[,,(n_bulk+1):(n_bulk+n_ref)]
+
+
+
+
+    mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
+    mb = do.call(cbind,mb)
+    thetab = apply(mb,2,function(z){z/sum(z)})
+    y = matrix(rpois(G*n_bulk,500*G*thetab),nrow=G)
+    X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+    V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_ref
+
+
+```
+
+Do not add correlations:
+
+```{r}
+fit1 = estimation_func2(y,X,V,
+                        groups = c(rep(1,nb/2),rep(2,nb/2)),
+                        two_group_method = 'var(delta_hat)',
+                        R01 = NULL)
+fit2 = estimation_func2(y,X,V,
+                        groups = c(rep(1,nb/2),rep(2,nb/2)),
+                        two_group_method = 'asymptotic',
+                        R01 = NULL)
+fit1$two_group_res$diff_hat_se
+fit2$two_group_res$diff_hat_se
+```
+
+Add correlations
+
+```{r}
+fit1 = estimation_func2(y,X,V,
+                        groups = c(rep(1,nb/2),rep(2,nb/2)),
+                        two_group_method = 'var(delta_hat)',
+                        R01 = A)
+fit2 = estimation_func2(y,X,V,
+                        groups = c(rep(1,nb/2),rep(2,nb/2)),
+                        two_group_method = 'asymptotic',
+                        R01 = A)
+fit1$two_group_res$diff_hat_se
+fit2$two_group_res$diff_hat_se
+```

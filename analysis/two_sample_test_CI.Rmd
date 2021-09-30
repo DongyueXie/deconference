@@ -32,14 +32,22 @@ for(i in 1:nreps){
 }
 colMeans(cover.naive)
 
-print('asymptotic')
+print('asymptotic, hc3')
 temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
-cover.asy = temp<1.96
-round(colMeans(cover.asy,na.rm=TRUE),2)
+cover.asy.hc3 = temp<1.96
+round(colMeans(cover.asy.hc3,na.rm=TRUE),2)
+
+print('asymptotic, cv')
+temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
+cover.asy.cv = temp<1.96
+round(colMeans(cover.asy.cv,na.rm=TRUE),2)
 
 print('union of two sample t test and asymptotic')
 
-cover.union = (cover.naive)|(cover.asy)
+cover.union = (cover.naive)|(cover.asy.hc3)
+round(colMeans(cover.union,na.rm = T),2)
+
+cover.union = (cover.naive)|(cover.asy.cv)
 round(colMeans(cover.union,na.rm = T),2)
 
 ```
@@ -68,14 +76,22 @@ for(i in 1:nreps){
 }
 colMeans(cover.naive)
 
-print('asymptotic')
+print('asymptotic, hc3')
 temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
-cover.asy = temp<1.96
-round(colMeans(cover.asy,na.rm=TRUE),2)
+cover.asy.hc3 = temp<1.96
+round(colMeans(cover.asy.hc3,na.rm=TRUE),2)
+
+print('asymptotic, cv')
+temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
+cover.asy.cv = temp<1.96
+round(colMeans(cover.asy.cv,na.rm=TRUE),2)
 
 print('union of two sample t test and asymptotic')
 
-cover.union = (cover.naive)|(cover.asy)
+cover.union = (cover.naive)|(cover.asy.hc3)
+round(colMeans(cover.union,na.rm = T),2)
+
+cover.union = (cover.naive)|(cover.asy.cv)
 round(colMeans(cover.union,na.rm = T),2)
 
 ```
@@ -104,14 +120,23 @@ for(i in 1:nreps){
 }
 colMeans(cover.naive)
 
-print('asymptotic')
-temp = abs(simu_out$diff_hat_weight - rep(1,100)%*%t(dif))/simu_out$diff_hat_weight_se_cor
-cover.asy = temp<1.96
-colMeans(cover.asy)
+
+print('asymptotic, hc3')
+temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
+cover.asy.hc3 = temp<1.96
+round(colMeans(cover.asy.hc3,na.rm=TRUE),2)
+
+# print('asymptotic, cv')
+# temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
+# cover.asy.cv = temp<1.96
+# round(colMeans(cover.asy.cv,na.rm=TRUE),2)
 
 print('union of two sample t test and asymptotic')
 
-cover.union = (cover.naive)|(cover.asy)
-colMeans(cover.union)
+cover.union = (cover.naive)|(cover.asy.hc3)
+round(colMeans(cover.union,na.rm = T),2)
+# 
+# cover.union = (cover.naive)|(cover.asy.cv)
+# round(colMeans(cover.union,na.rm = T),2)
 ```
 

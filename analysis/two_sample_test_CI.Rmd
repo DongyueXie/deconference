@@ -1,0 +1,117 @@
+---
+title: "two sample test confidence interval"
+author: "Dongyue Xie"
+date: "2021-09-27"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## NULL
+
+```{r}
+
+simu_out = readRDS('output/manuscript/simulation_50bulk_500genecor_fdr05_null.rds')
+
+K = 4
+nreps = 100
+nb = 50
+b1 = c(0.5,0.3,0.1,0.1)
+b2 = c(0.5,0.3,0.1,0.1)
+dif = b1-b2
+
+dif
+
+print('two sample t test')
+cover.naive = matrix(nrow = nreps,ncol=K)
+for(i in 1:nreps){
+  for(k in 1:K){
+    temp = t.test(simu_out$p_hat_weight[k,1:(nb/2),i],simu_out$p_hat_weight[k,(nb/2+1):nb,i])
+    cover.naive[i,k] = (dif[k]>temp$conf.int[1])&(dif[k]<temp$conf.int[2])
+  }
+}
+colMeans(cover.naive)
+
+print('asymptotic')
+temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
+cover.asy = temp<1.96
+round(colMeans(cover.asy,na.rm=TRUE),2)
+
+print('union of two sample t test and asymptotic')
+
+cover.union = (cover.naive)|(cover.asy)
+round(colMeans(cover.union,na.rm = T),2)
+
+```
+
+## All diff
+
+```{r}
+simu_out = readRDS('output/manuscript/simulation_50bulk_500genecor_fdr05_all_diff.rds')
+
+K = 4
+nb = 30
+nreps = 100
+b1 = c(0.5,0.3,0.1,0.1)
+b2 = c(0.1,0.1,0.3,0.5)
+dif = b1-b2
+
+dif
+
+print('two sample t test')
+cover.naive = matrix(nrow = nreps,ncol=K)
+for(i in 1:nreps){
+  for(k in 1:K){
+    temp = t.test(simu_out$p_hat_weight[k,1:(nb/2),i],simu_out$p_hat_weight[k,(nb/2+1):nb,i])
+    cover.naive[i,k] = (dif[k]>temp$conf.int[1])&(dif[k]<temp$conf.int[2])
+  }
+}
+colMeans(cover.naive)
+
+print('asymptotic')
+temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
+cover.asy = temp<1.96
+round(colMeans(cover.asy,na.rm=TRUE),2)
+
+print('union of two sample t test and asymptotic')
+
+cover.union = (cover.naive)|(cover.asy)
+round(colMeans(cover.union,na.rm = T),2)
+
+```
+
+## one same
+
+```{r}
+simu_out = readRDS('output/manuscript/simulation_10bulk_500genecor_fdr05.rds')
+
+K = 4
+nb = 10
+nreps = 100
+b1 = c(0.1,0.1,0.3,0.5)
+b2 = c(0.1,0.2,0.5,0.2)
+dif = b1-b2
+
+dif
+
+print('two sample t test')
+cover.naive = matrix(nrow = nreps,ncol=K)
+for(i in 1:nreps){
+  for(k in 1:K){
+    temp = t.test(simu_out$p_hat_weight[k,1:(nb/2),i],simu_out$p_hat_weight[k,(nb/2+1):nb,i])
+    cover.naive[i,k] = (dif[k]>temp$conf.int[1])&(dif[k]<temp$conf.int[2])
+  }
+}
+colMeans(cover.naive)
+
+print('asymptotic')
+temp = abs(simu_out$diff_hat_weight - rep(1,100)%*%t(dif))/simu_out$diff_hat_weight_se_cor
+cover.asy = temp<1.96
+colMeans(cover.asy)
+
+print('union of two sample t test and asymptotic')
+
+cover.union = (cover.naive)|(cover.asy)
+colMeans(cover.union)
+```
+

@@ -5,12 +5,16 @@ library(Rfast)
 
 
 
-# X: gene by individual matrix
+#'@param X gene by individual matrix
+#'@param method testing or thresholding
+#'@param alpha FDR level
 
-get_cor_pairs2 = function(X,alpha=0.05,method='thresholding'){
+get_cor_pairs2 = function(X,alpha=0.05,method='testing'){
 
   p = nrow(X)
   n = ncol(X)
+
+
 
   X.center = scale(t(X),center=TRUE,scale=FALSE)
   S = cova(X.center,center = TRUE)
@@ -22,6 +26,7 @@ get_cor_pairs2 = function(X,alpha=0.05,method='thresholding'){
   }
 
 
+  #browser()
   if(method=='thresholding'){
 
     Threshmat = 2/n*sqrt(log(p)*(S2+(2-n)*S^2))

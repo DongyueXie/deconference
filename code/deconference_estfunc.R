@@ -61,7 +61,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            use_all_pair_for_cov = FALSE,
                            b=NULL,
                            b_sd=NULL,
-                           R01=NULL
+                           R01=NULL,
+                           groups=NULL,
+                           two_group_method = 'asymptotic'
                            ){
 
   #browser()
@@ -228,7 +230,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   #                   b=b,
   #                   b_sd=b_sd,
   #                   R01=R01)
-  #
+
 
   Sigma = get_SIGMA3(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
                      V=Vw,h=h,nb=nb,
@@ -238,6 +240,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                      nfold=nfold,
                      folds=folds,
                      R01=R01)
+  score_mat = Sigma$score_mat
+  Sigma = Sigma$Sigma
   covb = Q_inv%*%Sigma%*%Q_inv
 
   #browser()
@@ -322,9 +326,15 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
   #browser()
 
-  beta_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
-  beta_se = sqrt(diag(asyV))
-  beta_se = matrix(beta_se,ncol=nb)
+  p_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
+  p_hat_se = sqrt(diag(asyV))
+  p_hat_se = matrix(p_hat_se,ncol=nb)
+
+  if(!is.null(groups)){
+    two_group_res = get_two_group_res(score_mat,J,Q_inv,groups,K,p_hat,asyV,two_group_method,R01)
+  }else{
+    two_group_res = NULL
+  }
 
   if(verbose){
     message("done")
@@ -333,13 +343,14 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   #browser()
   # rownames(beta_hat) = colnames(X)
 
-  return(list(p_hat=beta_hat,
-              p_hat_se=beta_se,
+  return(list(p_hat=p_hat,
+              p_hat_se=p_hat_se,
               p_hat_cov = asyV,
               beta_hat=beta_tilde_hat,
               beta_hat_se = matrix(sqrt(diag(covb)),ncol=nb),
               beta_hat_cov = covb,
-              Sigma = Sigma
+              Sigma = Sigma,
+              two_group_res=two_group_res
               #Sigma_ii = Sigma_ii/G^2,
               #J=J,
               #Q_inv = Q_inv,
@@ -352,6 +363,50 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
               #input = input
               ))
 
+}
+
+get_two_group_res = function(score_mat,J,Q_inv,groups,K,p_hat,p_hat_cov,method,R01){
+  nb = length(groups)
+  if(is.factor(groups)){
+    group_name = levels(groups)
+  }else{
+    group_name = levels(as.factor(groups))
+  }
+
+  group1_idx = which(groups==group_name[1])
+  a = c()
+  a[group1_idx] = 1/length(group1_idx)
+
+  group2_idx = which(groups==group_name[2])
+  a[group2_idx] = -1/length(group2_idx)
+
+  diff_group = rowMeans(p_hat[,group1_idx,drop=F]) - rowMeans(p_hat[,group2_idx,drop=F])
+  if(method=='asymptotic'){
+    temp = t(J%*%Q_inv%*%t(score_mat))
+    temp2 = 0
+    for(i in 1:nb){
+      temp2 = temp2 + a[i]*temp[,((i-1)*K+1):(i*K)]
+    }
+    if(!is.null(R01)){
+      V_tilde = crossprod(temp2,R01)%*%temp2
+    }else{
+      V_tilde = crossprod(temp2)
+    }
+
+  }
+  if(method=='var(delta_hat)'){
+    V_tilde = 0
+    idx = c(group1_idx,group2_idx)
+    for(i in idx){
+      for(j in idx){
+        V_tilde = V_tilde + a[i]*a[j]*p_hat_cov[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
+      }
+    }
+  }
+  z_score = diff_group/sqrt(diag(V_tilde))
+  p_value = (1-pnorm(abs(z_score)))*2
+  return(list(p_value = p_value,z_score=z_score,V_tilde=V_tilde,
+              diff_hat=diff_group,diff_hat_se = sqrt(diag(V_tilde)),a=a))
 }
 
 
@@ -398,6 +453,8 @@ get_SIGMA3 = function(y,X,beta,V,h,nb,G,K,verbose,hc.type,
 
   if(!is.null(R01)){
     if(!only.add.pos.res){
+      # R01 01 cor mat, G by G
+      # score_mat G by nK
       Sigma = crossprod(score_mat,R01)%*%score_mat
     }else{
       #browser()
@@ -420,6 +477,8 @@ get_SIGMA3 = function(y,X,beta,V,h,nb,G,K,verbose,hc.type,
       #   res_prod = res_prod * (res.hc[R01_idx$i,i]*res.hc[R01_idx$j,i])>0
       # }
 
+      # res.hc G by n residual matrix
+      # length(R01_idx$i)
       #idx = rowSums((res.hc[R01_idx$i,]*res.hc[R01_idx$j,]))>0
       # mean.res = rowMeans(res.hc)
       # res_prod = (mean.res[R01_idx$i]*mean.res[R01_idx$j])>0
@@ -431,7 +490,7 @@ get_SIGMA3 = function(y,X,beta,V,h,nb,G,K,verbose,hc.type,
   }
 
 
-  Sigma
+  return(list(Sigma=Sigma,score_mat=score_mat))
 
 
 }
@@ -689,6 +748,7 @@ get_jack_res = function(y,X,V,nfold = 10,folds=NULL){
   }
 
 
+  # for the genes in each fold, estimate the beta hat use the genes in the rest folds
   for(f in 1:nfold){
     idx = which(folds==f)
     X.temp = X[-idx,]

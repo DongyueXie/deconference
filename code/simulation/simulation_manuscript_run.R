@@ -1,23 +1,30 @@
+#
+# xin_raw <- readRDS("data/pancreas/xin_raw.rds")
+# cell_types = c('alpha', 'beta', 'delta', 'gamma')
+# K = length(cell_types)
+# rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
+# rm.indi.idx = which(xin_raw$individual%in%rm.indi)
+#
+# datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types,
+#                            gene_thresh = 0.05,max_count_quantile_celltype = 0.95,
+#                            max_count_quantile_indi = 0.95,
+#                            w=1)
+# design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,
+#                                   datax.xin$indi_idx,estimator="separate",
+#                                   est_sigma2 = TRUE,meta_mode = 'local',smooth.sigma = F)
+#
+# ref = design.mat.xin$X
+# sigma2 = design.mat.xin$Sigma
+#
+# ref = ref+1/nrow(ref)
+# sigma2 = sigma2 + 1/nrow(ref)
+#
+# saveRDS(list(ref=ref,sigma2=sigma2),file='data/pancreas/xin_ref_sigma9496.rds')
 
-xin_raw <- readRDS("data/pancreas/xin_raw.rds")
-cell_types = c('alpha', 'beta', 'delta', 'gamma')
-K = length(cell_types)
-rm.indi = c("Non T2D 4","Non T2D 7","Non T2D 10","Non T2D 12")
-rm.indi.idx = which(xin_raw$individual%in%rm.indi)
-
-datax.xin = set_data_decon(Y = xin_raw[,-rm.indi.idx],cell_types = cell_types,
-                           gene_thresh = 0.05,max_count_quantile_celltype = 0.95,
-                           max_count_quantile_indi = 0.95,
-                           w=1)
-design.mat.xin = scRef_multi_proc(datax.xin$Y,datax.xin$cell_type_idx,
-                                  datax.xin$indi_idx,estimator="separate",
-                                  est_sigma2 = TRUE,meta_mode = 'local',smooth.sigma = F)
-
-ref = design.mat.xin$X
-sigma2 = design.mat.xin$Sigma
-
-ref = ref+1/nrow(ref)
-sigma2 = sigma2 + 1/nrow(ref)
+source('code/simulation/simulation_manuscript.R')
+xin = readRDS('data/pancreas/xin_ref_sigma9496.rds')
+ref = xin$ref
+sigma2 = xin$sigma2
 
 b1 = c(0.1,0.1,0.3,0.5)
 b2 = c(0.1,0.2,0.5,0.2)
@@ -28,6 +35,7 @@ G = nrow(ref)
 K = 4
 d = 500
 A = matrix(0,nrow=G,ncol=G)
+
 
 for(i in 1:G){
   for(j in i:min(i+d,G)){
@@ -41,6 +49,32 @@ A = Matrix(A,sparse = TRUE)
 set.seed(12345)
 simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1)
 saveRDS(simu_out,file = 'output/manuscript/simulation_10bulk_500genecor_fdr05.rds')
+
+##############09/28/2021###############
+b1 = c(0.5,0.3,0.1,0.1)
+b2 = c(0.5,0.3,0.1,0.1)
+nb = 50
+b = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1)
+saveRDS(simu_out,file = 'output/manuscript/simulation_50bulk_500genecor_fdr05_null.rds')
+
+b1 = c(0.5,0.3,0.1,0.1)
+b2 = c(0.1,0.1,0.3,0.5)
+nb = 30
+b = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1)
+saveRDS(simu_out,file = 'output/manuscript/simulation_50bulk_500genecor_fdr05_all_diff.rds')
+
+b1 = c(0.1,0.1,0.3,0.5)
+b2 = c(0.1,0.15,0.4,0.35)
+nb = 30
+b = cbind(b1%*%t(rep(1,nb/2)),b2%*%t(rep(1,nb/2)))
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1)
+saveRDS(simu_out,file = 'output/manuscript/simulation_50bulk_500genecor_fdr05_one_diff.rds')
+#######################################
 
 
 d = 300

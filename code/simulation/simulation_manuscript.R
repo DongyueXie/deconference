@@ -30,10 +30,7 @@ simu_study     =   function(ref,
                             groups = c(rep(1,ncol(b)/2),rep(2,ncol(b)/2)),
                             centeringXY = FALSE,
                             true.beta.for.Sigma=FALSE,
-                            calc_cov = TRUE,
                             est_cor = TRUE,
-                            only.scale.pos.res = FALSE,
-                            only.add.pos.res = FALSE,
                             n_bulk_for_cor = 100,
                             cor_method = 'testing'){
 
@@ -74,9 +71,11 @@ simu_study     =   function(ref,
   p_hat = array(dim = c(K,n_bulk,nreps))
   p_hat_se = array(dim = c(K,n_bulk,nreps))
   p_hat_se_cor = array(dim = c(K,n_bulk,nreps))
+  p_hat_se_cor_cv = array(dim = c(K,n_bulk,nreps))
 
   p_hat_weight = array(dim = c(K,n_bulk,nreps))
   p_hat_weight_se_cor = array(dim = c(K,n_bulk,nreps))
+  p_hat_weight_se_cor_cv = array(dim = c(K,n_bulk,nreps))
 
   diff_hat_ols = matrix(nrow=nreps,ncol=K)
   diff_hat_ols_se = matrix(nrow=nreps,ncol=K)
@@ -84,9 +83,11 @@ simu_study     =   function(ref,
   diff_hat = matrix(nrow=nreps,ncol=K)
   diff_hat_se = matrix(nrow=nreps,ncol=K)
   diff_hat_se_cor = matrix(nrow=nreps,ncol=K)
+  diff_hat_se_cor_cv = matrix(nrow=nreps,ncol=K)
 
   diff_hat_weight = matrix(nrow=nreps,ncol=K)
   diff_hat_weight_se_cor = matrix(nrow=nreps,ncol=K)
+  diff_hat_weight_se_cor_cv = matrix(nrow=nreps,ncol=K)
 
 
   gene_names = rownames(ref)
@@ -115,9 +116,12 @@ simu_study     =   function(ref,
   if(!est_cor){
     if(!is.indep){
       cor.idx = which(R!=0,arr.ind = T)
+      R01 = sparseMatrix(i = cor.idx[,1],j = cor.idx[,2],dims=c(G,G))
       cor.idx = cor.idx[(cor.idx[,1]!=cor.idx[,2]),]
+
     }else{
       cor.idx = NULL
+      R01 = NULL
     }
   }else{
 
@@ -134,6 +138,8 @@ simu_study     =   function(ref,
     bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
     rownames(bulk_for_cor) = gene_names
     cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
+    R01 = sparseMatrix(i=cor.idx[,1],j=cor.idx[,2],dims=c(G,G))
+    diag(R01) = 1
 
   }
 
@@ -186,22 +192,20 @@ simu_study     =   function(ref,
 
 
 
+    # ols fit
     fit.ols = ols_hc3(y,X,groups=groups)
 
 
+    # adjust for measurement error, do not adjust for correlation
     fit.err = estimation_func2(y=y,
                                X=X,
                                Vg=V,
                                w=1,
                                hc.type='hc3',
                                correction=FALSE,
-                               calc_cov=calc_cov,
                                verbose=verbose,
-                               cor.idx=NULL,
-                               centeringXY=centeringXY,
-                               true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
-                               only.scale.pos.res=only.scale.pos.res,
-                               only.add.pos.res=only.add.pos.res)
+                               R01=NULL,
+                               true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
 
     fit.err.cor = estimation_func2(y=y,
                                X=X,
@@ -209,13 +213,19 @@ simu_study     =   function(ref,
                                w=1,
                                hc.type='hc3',
                                correction=FALSE,
-                               calc_cov=calc_cov,
                                verbose=verbose,
-                               cor.idx=cor.idx,
-                               centeringXY=centeringXY,
-                               true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
-                               only.scale.pos.res=only.scale.pos.res,
-                               only.add.pos.res=only.add.pos.res)
+                               R01=R01,
+                               true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+
+    fit.err.cor.cv = estimation_func2(y=y,
+                                   X=X,
+                                   Vg=V,
+                                   w=1,
+                                   hc.type='jackknife_indep',
+                                   correction=FALSE,
+                                   verbose=verbose,
+                                   R01=R01,
+                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
 
     fit.vash = vashr::vash(sqrt(rowSums(V)),df=n_ref-1)
     w = 1/(fit.vash$sd.post)^2
@@ -225,13 +235,19 @@ simu_study     =   function(ref,
                                    w=w,
                                    hc.type='hc3',
                                    correction=FALSE,
-                                   calc_cov=calc_cov,
                                    verbose=verbose,
-                                   cor.idx=cor.idx,
-                                   centeringXY=centeringXY,
-                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
-                                   only.scale.pos.res=only.scale.pos.res,
-                                   only.add.pos.res=only.add.pos.res)
+                                   R01=R01,
+                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+
+    fit.err.cor.weight.cv = estimation_func2(y=y,
+                                          X=X,
+                                          Vg=V,
+                                          w=w,
+                                          hc.type='jackknife_indep',
+                                          correction=FALSE,
+                                          verbose=verbose,
+                                          R01=R01,
+                                          true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
 #
 #     temp = list()
 #     temp[[1]] = fit.ols
@@ -244,7 +260,9 @@ simu_study     =   function(ref,
     temp$fit.ols =fit.ols
     temp$fit.err =fit.err
     temp$fit.err.cor = fit.err.cor
+    temp$fit.err.cor.cv = fit.err.cor.cv
     temp$fit.err.cor.weight = fit.err.cor.weight
+    temp$fit.err.cor.weight.cv = fit.err.cor.weight.cv
     all_fit[[reps]] = temp
 
     p_hat_ols[,,reps] = fit.ols$p_hat
@@ -253,10 +271,11 @@ simu_study     =   function(ref,
     p_hat[,,reps] = fit.err$p_hat
     p_hat_se[,,reps] = fit.err$p_hat_se
     p_hat_se_cor[,,reps] = fit.err.cor$p_hat_se
+    p_hat_se_cor_cv[,,reps] = fit.err.cor.cv$p_hat_se
 
     p_hat_weight[,,reps] = fit.err.cor.weight$p_hat
     p_hat_weight_se_cor[,,reps] = fit.err.cor.weight$p_hat_se
-
+    p_hat_weight_se_cor_cv[,,reps] = fit.err.cor.weight.cv$p_hat_se
 
     diff_hat_ols[reps,] = fit.ols$diff_hat
     diff_hat_ols_se[reps,] = fit.ols$diff_hat_se
@@ -268,9 +287,15 @@ simu_study     =   function(ref,
     diff_test_cor = two_group_test(fit.err.cor,groups)
     diff_hat_se_cor[reps,] = c(diff_test_cor$diff_se)
 
+    diff_test_cor_cv = two_group_test(fit.err.cor.cv,groups)
+    diff_hat_se_cor_cv[reps,] = c(diff_test_cor_cv$diff_se)
+
     diff_test_cor_weight = two_group_test(fit.err.cor.weight,groups)
     diff_hat_weight[reps,] = c(diff_test_cor_weight$diff_group)
     diff_hat_weight_se_cor[reps,] = c(diff_test_cor_weight$diff_se)
+
+    diff_test_cor_weight_cv = two_group_test(fit.err.cor.weight.cv,groups)
+    diff_hat_weight_se_cor_cv[reps,] = c(diff_test_cor_weight_cv$diff_se)
 
   }
 
@@ -280,9 +305,11 @@ simu_study     =   function(ref,
               p_hat = p_hat,
               p_hat_se = p_hat_se,
               p_hat_se_cor = p_hat_se_cor,
+              p_hat_se_cor_cv = p_hat_se_cor_cv,
 
               p_hat_weight = p_hat_weight,
               p_hat_weight_se_cor = p_hat_weight_se_cor,
+              p_hat_weight_se_cor_cv = p_hat_weight_se_cor_cv,
 
               diff_hat_ols = diff_hat_ols,
               diff_hat_ols_se = diff_hat_ols_se,
@@ -290,9 +317,11 @@ simu_study     =   function(ref,
               diff_hat = diff_hat,
               diff_hat_se = diff_hat_se,
               diff_hat_se_cor = diff_hat_se_cor,
+              diff_hat_se_cor_cv = diff_hat_se_cor_cv,
 
               diff_hat_weight = diff_hat_weight,
               diff_hat_weight_se_cor = diff_hat_weight_se_cor,
+              diff_hat_weight_se_cor_cv = diff_hat_weight_se_cor_cv,
               input = list(b=b,groups=groups),
               all_fit=all_fit))
 

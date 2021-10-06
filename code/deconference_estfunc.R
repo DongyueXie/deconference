@@ -40,27 +40,29 @@ J_sum2one = function(b,K){
 
 estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            w=NULL,
-                           hc.type='hc3',a=ncol(X)+4,
+                           hc.type='hc3',
+                           a=ncol(X)+4,
                            correction=FALSE,
-                           S=NULL,
-                           calc_cov=TRUE,
+                           #S=NULL,
+                           #calc_cov=TRUE,
                            verbose=FALSE,
-                           X_array = NULL,
-                           use.weight.ref = FALSE,
-                           p.for.weight = "equal",
-                           p.true = NULL,
-                           cor.idx=NULL,
+                           #X_array = NULL,
+                           #use.weight.ref = FALSE,
+                           #p.for.weight = "equal",
+                           #p.true = NULL,
+                           #cor.idx=NULL,
                            true.beta = NULL,
                            centeringXY = FALSE,
-                           asyV.pos = TRUE,
+                           Sigma.pos = TRUE,
                            Q.pos = TRUE,
+                           V_tilde.pos = TRUE,
                            only.scale.pos.res=FALSE,
-                           only.add.pos.res = FALSE,
+                           #only.add.pos.res = FALSE,
                            nfold=10,
                            folds = NULL,
-                           use_all_pair_for_cov = FALSE,
-                           b=NULL,
-                           b_sd=NULL,
+                           #use_all_pair_for_cov = FALSE,
+                           #b=NULL,
+                           #b_sd=NULL,
                            R01=NULL,
                            groups=NULL,
                            two_group_method = 'asymptotic'
@@ -166,6 +168,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
     message("estimating proportions")
   }
   Q = (A-V)
+  if(Q.pos){
+    Q = make.pos.def(Q)
+  }
   Qinv = solve(Q)
 
 
@@ -242,6 +247,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                      R01=R01)
   score_mat = Sigma$score_mat
   Sigma = Sigma$Sigma
+  if(Sigma.pos){
+    Sigma = make.pos.def(Sigma)
+  }
   covb = Q_inv%*%Sigma%*%Q_inv
 
   #browser()
@@ -331,7 +339,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   p_hat_se = matrix(p_hat_se,ncol=nb)
 
   if(!is.null(groups)){
-    two_group_res = get_two_group_res(score_mat,J,Q_inv,groups,K,p_hat,asyV,two_group_method,R01)
+    two_group_res = get_two_group_res(score_mat,J,Q_inv,groups,K,p_hat,asyV,two_group_method,R01,V_tilde.pos)
   }else{
     two_group_res = NULL
   }
@@ -365,7 +373,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 }
 
-get_two_group_res = function(score_mat,J,Q_inv,groups,K,p_hat,p_hat_cov,method,R01){
+get_two_group_res = function(score_mat,J,Q_inv,groups,K,p_hat,p_hat_cov,method,R01,V_tilde.pos){
   nb = length(groups)
   if(is.factor(groups)){
     group_name = levels(groups)
@@ -402,6 +410,9 @@ get_two_group_res = function(score_mat,J,Q_inv,groups,K,p_hat,p_hat_cov,method,R
         V_tilde = V_tilde + a[i]*a[j]*p_hat_cov[((i-1)*K+1):(i*K),((j-1)*K+1):(j*K)]
       }
     }
+  }
+  if(V_tilde.pos){
+    V_tilde = make.pos.def(V_tilde)
   }
   z_score = diff_group/sqrt(diag(V_tilde))
   p_value = (1-pnorm(abs(z_score)))*2
@@ -909,6 +920,22 @@ get_jack_res_indep = function(y,X,V,nfold = 10,folds=NULL,R01){
 
 }
 
+#'@title make a symmetric matrix pos.def
+#'@description by setting the negative evs to be a small number
+#'@param
+make.pos.def = function(X,s=100){
+  attempt = try(chol(X),silent = T)
+  if(class(attempt)=="try-error"){
+    X.evd = eigen(X)
+    D = X.evd$values
+    if(D[1]<0){
+      stop('matrix is negative definite')
+    }
+    D[D<=0] = D[1]/s
+    X = X.evd$vectors%*%diag(D)%*%t(X.evd$vectors)
+  }
+  X
+}
 
 
 # get_jack_res_b = function(y,X,V,nfold = 10,folds=NULL,b,b_sd){

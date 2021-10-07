@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="DongyueXie" />
+
+<meta name="date" content="2021-10-05" />
+
+<title>Testing two group means</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/sandstone.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">deconference</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+<li>
+  <a href="about.html">Data</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/DongyueXie/deconference">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Testing two group means</h1>
+<h4 class="author">DongyueXie</h4>
+<h4 class="date">2021-10-05</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-10-07
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>deconference/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20200403code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20200403)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20200403code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20200403)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreeaa708c05ceba1d76a4a347be15c9017a16a7b4b3targetblankaa708c0a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/aa708c05ceba1d76a4a347be15c9017a16a7b4b3" target="_blank">aa708c0</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreeaa708c05ceba1d76a4a347be15c9017a16a7b4b3targetblankaa708c0a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/aa708c05ceba1d76a4a347be15c9017a16a7b4b3" target="_blank">aa708c0</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    data/.DS_Store
+    Ignored:    output/.DS_Store
+
+Untracked files:
+    Untracked:  analysis/simu_X_from_real.Rmd
+    Untracked:  analysis/simu_check_data_generation.Rmd
+    Untracked:  analysis/simu_correlation_centering.Rmd
+    Untracked:  data/MuSiC/
+    Untracked:  data/V.rds
+    Untracked:  data/X.rds
+    Untracked:  data/gtex/
+    Untracked:  data/neuron/
+    Untracked:  data/pancreas/
+    Untracked:  output/check_coverage_weight_neuron/
+    Untracked:  output/check_coverage_weight_xin/
+    Untracked:  output/geneCorMat_gtexpancreas.rds
+    Untracked:  output/geneCor_gtexpancreas_logtpm.rds
+    Untracked:  output/geneCor_gtexpancreas_tpm.rds
+    Untracked:  output/geneCor_gtexpancreas_tpm.rds.zip
+    Untracked:  output/manuscript/
+    Untracked:  output/neuron/
+    Untracked:  output/simu_corr_xin_G1000_corband10.rds
+    Untracked:  output/simu_corr_xin_G1000_corband100.rds
+    Untracked:  output/simu_corr_xin_G1000_corband5.rds
+    Untracked:  output/simu_corr_xin_G1000_corband50.rds
+    Untracked:  output/simu_corr_xin_G1000_corpair100.rds
+    Untracked:  output/simu_corr_xin_G1000_corpair1000.rds
+    Untracked:  output/simu_corr_xin_G1000_corpair10000.rds
+    Untracked:  output/simu_corr_xin_G1000_corpair1e5.rds
+    Untracked:  output/simu_corr_xin_G1000_corpair5000.rds
+    Untracked:  output/simu_correlation_checkassumption_betahat.rds
+    Untracked:  output/simu_correlation_checkassumption_truebeta.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_hc3.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_hc3_only_pos_ecov.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_jack.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d500_xin_trueb.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha01.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha05.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_alpha05_addjack.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100bulkforcor_thresh.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_100indi.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_10indi.rds
+    Untracked:  output/simu_correlation_checkavariance_betahat_d50_xin_est_cor_10indi_alpha03.rds
+    Untracked:  output/simu_twosample_baron_nb10.rds
+    Untracked:  output/simu_twosample_seger_nb10.rds
+    Untracked:  output/simu_twosample_xin_nb10.rds
+    Untracked:  output/simu_twosample_xin_nb50.rds
+
+Unstaged changes:
+    Modified:   analysis/MuSiC.Rmd
+    Modified:   analysis/geneCor_gtexpancreas.Rmd
+    Modified:   analysis/gene_weights.Rmd
+    Modified:   analysis/gene_weights_addmusic.Rmd
+    Modified:   analysis/multiref_random_nondiag.Rmd
+    Modified:   analysis/neuron_simu_MLN.Rmd
+    Modified:   analysis/simu_correlation_checkvariance.Rmd
+    Modified:   analysis/two_sample_test_CI.Rmd
+    Modified:   analysis/two_sample_test_naive.Rmd
+    Modified:   analysis/xin_16_indi.Rmd
+    Modified:   code/simulation/simulation_manuscript_run.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/two_group_mean_dirichlet.Rmd</code>) and HTML (<code>docs/two_group_mean_dirichlet.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/aa708c05ceba1d76a4a347be15c9017a16a7b4b3/analysis/two_group_mean_dirichlet.Rmd" target="_blank">aa708c0</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-10-07
+</td>
+<td>
+wflow_publish(“analysis/two_group_mean_dirichlet.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/14ff19b82cd889faa6b711e4e00d0c3130a4a7dd/analysis/two_group_mean_dirichlet.Rmd" target="_blank">14ff19b</a>
+</td>
+<td>
+DongyueXie
+</td>
+<td>
+2021-10-07
+</td>
+<td>
+revise
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>In this simulation, we set two groups with either equal or unequal means <span class="math inline">\(p_1,p_2\)</span>, then generate proportions using a Dirichlet distribution with parameters <span class="math inline">\(p*10\)</span>.</p>
+<pre class="r"><code>get_rmse = function(p_hat,b){
+  K = dim(p_hat)[1]
+  nb = dim(p_hat)[2]
+  nreps = dim(p_hat)[3]
+  rmses = c()
+  for(i in 1:nb){
+    err = c()
+    for(j in 1:nreps){
+      err[j] = sum((p_hat[,i,j]-b[,i])^2)
+    }
+    rmses[i] = sqrt(mean(err))
+  }
+  names(rmses) = paste(&#39;bulk&#39;,1:nb)
+  round(rmses,3)
+
+}
+
+get_coverage_p = function(p_hat,p_hat_se,b){
+
+  K = dim(p_hat)[1]
+  nb = dim(p_hat)[2]
+  z = array(dim = dim(p_hat))
+  for(i in 1:dim(z)[3]){
+    z[,,i] = (p_hat[,,i]-b)/p_hat_se[,,i]
+  }
+  crg = apply(z,c(1,2),function(z){round(mean(abs(z)&lt;1.96,na.rm=T),3)})
+  rownames(crg) = paste(&#39;cell&#39;,1:K)
+  colnames(crg) = paste(&#39;bulk&#39;,1:nb)
+  crg
+}</code></pre>
+<p><span class="math inline">\((true.cor, est.cor)*(nb=50,nb=100)*(&quot;null&quot;,&quot;all_diff&quot;)*(dirichlet5,dirichlet10)\)</span></p>
+<p>For each case, we look at:</p>
+<ol style="list-style-type: decimal">
+<li>two group mean coverage, and standard errors, of: two sample t test on our method, and music, and our method(non-weighted, weighted, and hc3, cv)</li>
+</ol>
+<pre class="r"><code>K = 4
+nreps = 100
+alpha.cors = c(0,0.5)
+cases = c(&quot;null&quot;,&quot;all_diff&quot;)
+nbs = c(50,100)
+dirichlet.scale = c(5,10)
+
+set.seed(12345)
+for(case in cases){
+
+  if(case==&#39;null&#39;){
+    p1 = c(0.5,0.3,0.1,0.1)
+    p2 = c(0.5,0.3,0.1,0.1)
+  }else if(case==&#39;all_diff&#39;){
+    p1 = c(0.4,0.3,0.2,0.1)
+    p2 = c(0.1,0.1,0.3,0.5)
+  }
+  dif = p1-p2
+
+  for(nb in nbs){
+    for(aa in dirichlet.scale){
+
+      #b1 = t(rdirichlet(nb/2,p1*aa))
+      #b2 = t(rdirichlet(nb/2,p2*aa))
+      #b = cbind(b1,b2)
+
+      for(alpha.cor in alpha.cors){
+
+        if(alpha.cor==0){
+          est_cor = FALSE
+          cor.status = &#39;trueR&#39;
+        }else{
+          est_cor=TRUE
+          cor.status = paste(&#39;cor0&#39;,alpha.cor*10,sep = &#39;&#39;)
+        }
+
+        print(paste(&#39;Running:&#39;,case,&#39;nb=&#39;,nb,&#39;cor:&#39;,cor.status,&#39;dirichlet scale=&#39;,aa))
+
+        #simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
+        simu_out = readRDS(file = paste(&#39;/Volumes/Samsung USB/output/manuscript/simulation/simulation_&#39;,nb,&#39;bulk_500genecor_&#39;,cor.status,&#39;_&#39;,case,&#39;_dirichlet&#39;,aa,&#39;.rds&#39;,sep=&#39;&#39;))
+        
+        print(&#39;two sample t test, weighted meaurement error model&#39;)
+cover.naive = matrix(nrow = nreps,ncol=K)
+sd.naive = matrix(nrow = nreps,ncol=K)
+for(i in 1:nreps){
+  for(k in 1:K){
+    temp = t.test(simu_out$p_hat_weight[k,1:(nb/2),i],simu_out$p_hat_weight[k,(nb/2+1):nb,i])
+    sd.naive[i,k] = temp$stderr
+    cover.naive[i,k] = (dif[k]&gt;temp$conf.int[1])&amp;(dif[k]&lt;temp$conf.int[2])
+  }
+}
+print(paste(&quot;coverage&quot;,colMeans(cover.naive)))
+print(paste(&#39;standard error&#39;,round(colMeans(sd.naive),3)))
+
+print(&#39;two sample t test, music&#39;)
+cover.naive.music = matrix(nrow = nreps,ncol=K)
+sd.naive.music = matrix(nrow = nreps,ncol=K)
+for(i in 1:nreps){
+  for(k in 1:K){
+    temp = t.test(simu_out$p_hat_music[k,1:(nb/2),i],simu_out$p_hat_music[k,(nb/2+1):nb,i])
+    sd.naive.music[i,k] = temp$stderr
+    cover.naive.music[i,k] = (dif[k]&gt;temp$conf.int[1])&amp;(dif[k]&lt;temp$conf.int[2])
+  }
+}
+print(paste(&quot;coverage&quot;,colMeans(cover.naive.music)))
+print(paste(&#39;standard error&#39;,round(colMeans(sd.naive.music),3)))
+
+print(&#39;asymptotic,hc3&#39;)
+temp = abs(simu_out$diff_hat - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_se_cor
+cover.asy.hc3 = temp&lt;1.96
+print(paste(&quot;coverage&quot;,round(colMeans(cover.asy.hc3,na.rm=TRUE),2)))
+print(paste(&#39;standard error&#39;,round(colMeans(simu_out$diff_hat_se_cor),3)))
+
+print(&#39;asymptotic, weighted, hc3&#39;)
+temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
+cover.asy.hc3 = temp&lt;1.96
+round(colMeans(cover.asy.hc3,na.rm=TRUE),2)
+round(colMeans(simu_out$diff_hat_weight_se_cor),3)
+
+print(&#39;asymptotic, weighted, cv&#39;)
+temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
+cover.asy.cv = temp&lt;1.96
+print(paste(&quot;coverage:&quot;,round(colMeans(cover.asy.cv,na.rm=TRUE),2)))
+print(paste(&quot;standard error:&quot;,round(colMeans(simu_out$diff_hat_weight_se_cor_cv),3)))
+        
+print(&quot;rmse:&quot;)
+print(paste(&quot;our:&quot;,mean(get_rmse(simu_out$p_hat_weight,simu_out$input$b))))
+print(paste(&quot;music:&quot;,mean(get_rmse(simu_out$p_hat_music,simu_out$input$b))))
+
+print(&quot;coverage of p&quot;)
+mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor,simu_out$input$b))
+mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor_cv,simu_out$input$b))
+
+      }
+    }
+  }
+}</code></pre>
+<pre><code>[1] &quot;Running: null nb= 50 cor: trueR dirichlet scale= 5&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.91&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.12&quot;
+[1] &quot;standard error 0.063&quot; &quot;standard error 0.065&quot; &quot;standard error 0.024&quot;
+[4] &quot;standard error 0.031&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.86&quot; &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 0.31&quot;
+[1] &quot;standard error 0.047&quot; &quot;standard error 0.046&quot; &quot;standard error 0.021&quot;
+[4] &quot;standard error 0.026&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.89&quot;
+[1] &quot;standard error 0.09&quot;  &quot;standard error 0.079&quot; &quot;standard error 0.031&quot;
+[4] &quot;standard error 0.052&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 0.99&quot; &quot;coverage: 1&quot;    &quot;coverage: 0.93&quot; &quot;coverage: 0.98&quot;
+[1] &quot;standard error: 0.092&quot; &quot;standard error: 0.085&quot; &quot;standard error: 0.017&quot;
+[4] &quot;standard error: 0.063&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.14012&quot;
+[1] &quot;music: 0.1728&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: null nb= 50 cor: cor05 dirichlet scale= 5&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.85&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.13&quot;
+[1] &quot;standard error 0.063&quot; &quot;standard error 0.066&quot; &quot;standard error 0.025&quot;
+[4] &quot;standard error 0.031&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.82&quot; &quot;coverage 1&quot;    &quot;coverage 0.98&quot; &quot;coverage 0.29&quot;
+[1] &quot;standard error 0.047&quot; &quot;standard error 0.046&quot; &quot;standard error 0.022&quot;
+[4] &quot;standard error 0.025&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.79&quot;
+[1] &quot;standard error 0.084&quot; &quot;standard error 0.074&quot; &quot;standard error 0.031&quot;
+[4] &quot;standard error 0.049&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.98&quot; &quot;coverage: 0.97&quot;
+[1] &quot;standard error: 0.092&quot; &quot;standard error: 0.085&quot; &quot;standard error: 0.02&quot; 
+[4] &quot;standard error: 0.065&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.13742&quot;
+[1] &quot;music: 0.16908&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: null nb= 50 cor: trueR dirichlet scale= 10&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.97&quot;
+[1] &quot;standard error 0.049&quot; &quot;standard error 0.05&quot;  &quot;standard error 0.023&quot;
+[4] &quot;standard error 0.029&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.93&quot;
+[1] &quot;standard error 0.037&quot; &quot;standard error 0.036&quot; &quot;standard error 0.021&quot;
+[4] &quot;standard error 0.023&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot;
+[1] &quot;standard error 0.086&quot; &quot;standard error 0.076&quot; &quot;standard error 0.029&quot;
+[4] &quot;standard error 0.048&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
+[1] &quot;standard error: 0.089&quot; &quot;standard error: 0.082&quot; &quot;standard error: 0.017&quot;
+[4] &quot;standard error: 0.058&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.14024&quot;
+[1] &quot;music: 0.15676&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: null nb= 50 cor: cor05 dirichlet scale= 10&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.94&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot;
+[1] &quot;standard error 0.052&quot; &quot;standard error 0.049&quot; &quot;standard error 0.027&quot;
+[4] &quot;standard error 0.029&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.96&quot; &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 0.97&quot;
+[1] &quot;standard error 0.039&quot; &quot;standard error 0.035&quot; &quot;standard error 0.024&quot;
+[4] &quot;standard error 0.024&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 0.99&quot; &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
+[1] &quot;standard error 0.075&quot; &quot;standard error 0.067&quot; &quot;standard error 0.028&quot;
+[4] &quot;standard error 0.043&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
+[1] &quot;standard error: 0.093&quot; &quot;standard error: 0.087&quot; &quot;standard error: 0.023&quot;
+[4] &quot;standard error: 0.063&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.13512&quot;
+[1] &quot;music: 0.15444&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: null nb= 100 cor: trueR dirichlet scale= 5&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 0.96&quot;
+[1] &quot;standard error 0.047&quot; &quot;standard error 0.046&quot; &quot;standard error 0.018&quot;
+[4] &quot;standard error 0.024&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 0.96&quot; &quot;coverage 0.99&quot; &quot;coverage 0.91&quot;
+[1] &quot;standard error 0.035&quot; &quot;standard error 0.033&quot; &quot;standard error 0.015&quot;
+[4] &quot;standard error 0.019&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot; &quot;coverage 1&quot; &quot;coverage 1&quot; &quot;coverage 1&quot;
+[1] &quot;standard error 13.203&quot; &quot;standard error 13.683&quot; &quot;standard error 4.293&quot; 
+[4] &quot;standard error 6.458&quot; 
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
+[1] &quot;standard error: 0.094&quot; &quot;standard error: 0.086&quot; &quot;standard error: 0.017&quot;
+[4] &quot;standard error: 0.064&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.13625&quot;
+[1] &quot;music: 0.17453&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: null nb= 100 cor: cor05 dirichlet scale= 5&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.92&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;   
+[1] &quot;standard error 0.044&quot; &quot;standard error 0.044&quot; &quot;standard error 0.016&quot;
+[4] &quot;standard error 0.031&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.92&quot; &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
+[1] &quot;standard error 0.033&quot; &quot;standard error 0.032&quot; &quot;standard error 0.015&quot;
+[4] &quot;standard error 0.024&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot; &quot;coverage 1&quot; &quot;coverage 1&quot; &quot;coverage 1&quot;
+[1] &quot;standard error 0.072&quot; &quot;standard error 0.064&quot; &quot;standard error 0.026&quot;
+[4] &quot;standard error 0.042&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
+[1] &quot;standard error: 0.085&quot; &quot;standard error: 0.079&quot; &quot;standard error: 0.018&quot;
+[4] &quot;standard error: 0.059&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.13689&quot;
+[1] &quot;music: 0.1708&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: null nb= 100 cor: trueR dirichlet scale= 10&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot;
+[1] &quot;standard error 0.038&quot; &quot;standard error 0.032&quot; &quot;standard error 0.019&quot;
+[4] &quot;standard error 0.023&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.94&quot; &quot;coverage 0.99&quot;
+[1] &quot;standard error 0.029&quot; &quot;standard error 0.023&quot; &quot;standard error 0.016&quot;
+[4] &quot;standard error 0.019&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.98&quot; &quot;coverage 1&quot;   
+[1] &quot;standard error 0.08&quot;  &quot;standard error 0.069&quot; &quot;standard error 0.028&quot;
+[4] &quot;standard error 0.045&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.86&quot; &quot;coverage: 1&quot;   
+[1] &quot;standard error: 0.086&quot; &quot;standard error: 0.078&quot; &quot;standard error: 0.016&quot;
+[4] &quot;standard error: 0.058&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.13603&quot;
+[1] &quot;music: 0.15867&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: null nb= 100 cor: cor05 dirichlet scale= 10&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.95&quot;
+[1] &quot;standard error 0.034&quot; &quot;standard error 0.034&quot; &quot;standard error 0.018&quot;
+[4] &quot;standard error 0.017&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 0.99&quot; &quot;coverage 0.97&quot; &quot;coverage 0.95&quot;
+[1] &quot;standard error 0.026&quot; &quot;standard error 0.024&quot; &quot;standard error 0.015&quot;
+[4] &quot;standard error 0.014&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot; &quot;coverage 1&quot;   
+[1] &quot;standard error 3.312&quot; &quot;standard error 2.893&quot; &quot;standard error 0.851&quot;
+[4] &quot;standard error 1.787&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
+[1] &quot;standard error: 0.085&quot; &quot;standard error: 0.077&quot; &quot;standard error: 0.02&quot; 
+[4] &quot;standard error: 0.059&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.13735&quot;
+[1] &quot;music: 0.15386&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: all_diff nb= 50 cor: trueR dirichlet scale= 5&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 0.97&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
+[1] &quot;standard error 0.053&quot; &quot;standard error 0.052&quot; &quot;standard error 0.043&quot;
+[4] &quot;standard error 0.042&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.79&quot; &quot;coverage 0.89&quot; &quot;coverage 0.97&quot; &quot;coverage 0.1&quot; 
+[1] &quot;standard error 0.043&quot; &quot;standard error 0.039&quot; &quot;standard error 0.037&quot;
+[4] &quot;standard error 0.036&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.86&quot; &quot;coverage 0.93&quot;
+[1] &quot;standard error 0.109&quot; &quot;standard error 0.095&quot; &quot;standard error 0.043&quot;
+[4] &quot;standard error 0.07&quot; 
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.12&quot; &quot;coverage: 1&quot;   
+[1] &quot;standard error: 0.092&quot; &quot;standard error: 0.086&quot; &quot;standard error: 0.021&quot;
+[4] &quot;standard error: 0.065&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.12608&quot;
+[1] &quot;music: 0.20742&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: all_diff nb= 50 cor: cor05 dirichlet scale= 5&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.82&quot; &quot;coverage 0.97&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
+[1] &quot;standard error 0.045&quot; &quot;standard error 0.046&quot; &quot;standard error 0.052&quot;
+[4] &quot;standard error 0.058&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.2&quot;  &quot;coverage 0.26&quot; &quot;coverage 0.77&quot; &quot;coverage 0.14&quot;
+[1] &quot;standard error 0.039&quot; &quot;standard error 0.036&quot; &quot;standard error 0.044&quot;
+[4] &quot;standard error 0.048&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 0.76&quot; &quot;coverage 0.94&quot;
+[1] &quot;standard error 0.108&quot; &quot;standard error 0.093&quot; &quot;standard error 0.043&quot;
+[4] &quot;standard error 0.07&quot; 
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;   &quot;coverage: 1&quot;   &quot;coverage: 0.3&quot; &quot;coverage: 1&quot;  
+[1] &quot;standard error: 0.101&quot; &quot;standard error: 0.096&quot; &quot;standard error: 0.029&quot;
+[4] &quot;standard error: 0.074&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.12416&quot;
+[1] &quot;music: 0.20814&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: all_diff nb= 50 cor: trueR dirichlet scale= 10&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.98&quot; &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
+[1] &quot;standard error 0.035&quot; &quot;standard error 0.037&quot; &quot;standard error 0.036&quot;
+[4] &quot;standard error 0.032&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.5&quot;  &quot;coverage 0.52&quot; &quot;coverage 0.96&quot; &quot;coverage 0.16&quot;
+[1] &quot;standard error 0.031&quot; &quot;standard error 0.03&quot;  &quot;standard error 0.033&quot;
+[4] &quot;standard error 0.03&quot; 
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.96&quot; &quot;coverage 0.98&quot;
+[1] &quot;standard error 0.108&quot; &quot;standard error 0.093&quot; &quot;standard error 0.042&quot;
+[4] &quot;standard error 0.072&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.97&quot; &quot;coverage: 1&quot;   
+[1] &quot;standard error: 0.083&quot; &quot;standard error: 0.078&quot; &quot;standard error: 0.02&quot; 
+[4] &quot;standard error: 0.058&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.12352&quot;
+[1] &quot;music: 0.2078&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: all_diff nb= 50 cor: cor05 dirichlet scale= 10&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.99&quot; &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
+[1] &quot;standard error 0.039&quot; &quot;standard error 0.036&quot; &quot;standard error 0.036&quot;
+[4] &quot;standard error 0.037&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.38&quot; &quot;coverage 0.45&quot; &quot;coverage 0.79&quot; &quot;coverage 0.25&quot;
+[1] &quot;standard error 0.035&quot; &quot;standard error 0.03&quot;  &quot;standard error 0.032&quot;
+[4] &quot;standard error 0.033&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.9&quot;  &quot;coverage 0.99&quot;
+[1] &quot;standard error 0.106&quot; &quot;standard error 0.088&quot; &quot;standard error 0.042&quot;
+[4] &quot;standard error 0.075&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.91&quot; &quot;coverage: 1&quot;   
+[1] &quot;standard error: 0.101&quot; &quot;standard error: 0.095&quot; &quot;standard error: 0.03&quot; 
+[4] &quot;standard error: 0.073&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.1229&quot;
+[1] &quot;music: 0.20256&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: all_diff nb= 100 cor: trueR dirichlet scale= 5&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.59&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.9&quot; 
+[1] &quot;standard error 0.037&quot; &quot;standard error 0.036&quot; &quot;standard error 0.027&quot;
+[4] &quot;standard error 0.034&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.86&quot; &quot;coverage 0.47&quot; &quot;coverage 0.97&quot; &quot;coverage 0.34&quot;
+[1] &quot;standard error 0.03&quot;  &quot;standard error 0.027&quot; &quot;standard error 0.023&quot;
+[4] &quot;standard error 0.028&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.98&quot; &quot;coverage 1&quot;   
+[1] &quot;standard error 0.11&quot;  &quot;standard error 0.092&quot; &quot;standard error 0.041&quot;
+[4] &quot;standard error 0.075&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.85&quot; &quot;coverage: 1&quot;   
+[1] &quot;standard error: 0.088&quot; &quot;standard error: 0.08&quot;  &quot;standard error: 0.019&quot;
+[4] &quot;standard error: 0.06&quot; 
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.12259&quot;
+[1] &quot;music: 0.21583&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: all_diff nb= 100 cor: cor05 dirichlet scale= 5&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.93&quot; &quot;coverage 1&quot;    &quot;coverage 0.51&quot; &quot;coverage 0.95&quot;
+[1] &quot;standard error 0.036&quot; &quot;standard error 0.037&quot; &quot;standard error 0.037&quot;
+[4] &quot;standard error 0.037&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.17&quot; &quot;coverage 0.41&quot; &quot;coverage 0.24&quot; &quot;coverage 0.47&quot;
+[1] &quot;standard error 0.03&quot;  &quot;standard error 0.028&quot; &quot;standard error 0.031&quot;
+[4] &quot;standard error 0.03&quot; 
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 0.54&quot; &quot;coverage 1&quot;   
+[1] &quot;standard error 82.68&quot;  &quot;standard error 48.011&quot; &quot;standard error 28.604&quot;
+[4] &quot;standard error 90.173&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.19&quot; &quot;coverage: 1&quot;   
+[1] &quot;standard error: 0.117&quot; &quot;standard error: 0.107&quot; &quot;standard error: 0.03&quot; 
+[4] &quot;standard error: 0.084&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.12395&quot;
+[1] &quot;music: 0.22413&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: all_diff nb= 100 cor: trueR dirichlet scale= 10&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.86&quot; &quot;coverage 0.7&quot;  &quot;coverage 0.99&quot; &quot;coverage 0.99&quot;
+[1] &quot;standard error 0.029&quot; &quot;standard error 0.029&quot; &quot;standard error 0.024&quot;
+[4] &quot;standard error 0.025&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.18&quot; &quot;coverage 0.7&quot;  &quot;coverage 0.95&quot; &quot;coverage 0.02&quot;
+[1] &quot;standard error 0.025&quot; &quot;standard error 0.023&quot; &quot;standard error 0.021&quot;
+[4] &quot;standard error 0.022&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 0.99&quot; &quot;coverage 0.98&quot;
+[1] &quot;standard error 0.111&quot; &quot;standard error 0.095&quot; &quot;standard error 0.044&quot;
+[4] &quot;standard error 0.075&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.93&quot; &quot;coverage: 1&quot;   
+[1] &quot;standard error: 0.084&quot; &quot;standard error: 0.078&quot; &quot;standard error: 0.019&quot;
+[4] &quot;standard error: 0.06&quot; 
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.12505&quot;
+[1] &quot;music: 0.20181&quot;
+[1] &quot;coverage of p&quot;
+[1] &quot;Running: all_diff nb= 100 cor: cor05 dirichlet scale= 10&quot;
+[1] &quot;two sample t test, weighted meaurement error model&quot;
+[1] &quot;coverage 0.99&quot; &quot;coverage 0.92&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
+[1] &quot;standard error 0.03&quot;  &quot;standard error 0.027&quot; &quot;standard error 0.029&quot;
+[4] &quot;standard error 0.029&quot;
+[1] &quot;two sample t test, music&quot;
+[1] &quot;coverage 0.28&quot; &quot;coverage 0.48&quot; &quot;coverage 0.89&quot; &quot;coverage 0.1&quot; 
+[1] &quot;standard error 0.026&quot; &quot;standard error 0.022&quot; &quot;standard error 0.025&quot;
+[4] &quot;standard error 0.025&quot;
+[1] &quot;asymptotic,hc3&quot;
+[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot;
+[1] &quot;standard error 49.116&quot; &quot;standard error 25.457&quot; &quot;standard error 14.043&quot;
+[4] &quot;standard error 41.824&quot;
+[1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;asymptotic, weighted, cv&quot;
+[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
+[1] &quot;standard error: 0.104&quot; &quot;standard error: 0.096&quot; &quot;standard error: 0.031&quot;
+[4] &quot;standard error: 0.072&quot;
+[1] &quot;rmse:&quot;
+[1] &quot;our: 0.12157&quot;
+[1] &quot;music: 0.21066&quot;
+[1] &quot;coverage of p&quot;</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.0.3 (2020-10-10)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS High Sierra 10.13.6
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] workflowr_1.6.2
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5        rstudioapi_0.11   whisker_0.4       knitr_1.30       
+ [5] magrittr_2.0.1    R6_2.4.1          rlang_0.4.10      stringr_1.4.0    
+ [9] tools_4.0.3       xfun_0.18         git2r_0.27.1      htmltools_0.5.1.1
+[13] ellipsis_0.3.1    rprojroot_1.3-2   yaml_2.2.1        digest_0.6.27    
+[17] tibble_3.0.4      lifecycle_1.0.0   crayon_1.3.4      later_1.1.0.1    
+[21] vctrs_0.3.7       promises_1.1.1    fs_1.5.0          glue_1.4.2       
+[25] evaluate_0.14     rmarkdown_2.5     stringi_1.5.3     compiler_4.0.3   
+[29] pillar_1.4.6      backports_1.1.10  httpuv_1.5.4      pkgconfig_2.0.3  </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

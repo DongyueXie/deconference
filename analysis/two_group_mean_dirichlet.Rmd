@@ -108,8 +108,10 @@ for(i in 1:nreps){
     cover.naive[i,k] = (dif[k]>temp$conf.int[1])&(dif[k]<temp$conf.int[2])
   }
 }
-print(paste("coverage",colMeans(cover.naive)))
-print(paste('standard error',round(colMeans(sd.naive),3)))
+print("coverage")
+print(colMeans(cover.naive))
+print('standard error')
+print(round(colMeans(sd.naive),3))
 
 print('two sample t test, music')
 cover.naive.music = matrix(nrow = nreps,ncol=K)
@@ -121,34 +123,44 @@ for(i in 1:nreps){
     cover.naive.music[i,k] = (dif[k]>temp$conf.int[1])&(dif[k]<temp$conf.int[2])
   }
 }
-print(paste("coverage",colMeans(cover.naive.music)))
-print(paste('standard error',round(colMeans(sd.naive.music),3)))
+print("coverage")
+print(colMeans(cover.naive.music))
+print('standard error')
+print(round(colMeans(sd.naive.music),3))
 
 print('asymptotic,hc3')
 temp = abs(simu_out$diff_hat - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_se_cor
 cover.asy.hc3 = temp<1.96
-print(paste("coverage",round(colMeans(cover.asy.hc3,na.rm=TRUE),2)))
-print(paste('standard error',round(colMeans(simu_out$diff_hat_se_cor),3)))
+
+print("coverage")
+print(round(colMeans(cover.asy.hc3,na.rm=TRUE),2))
+print('standard error')
+print(round(colMeans(simu_out$diff_hat_se_cor),3))
 
 print('asymptotic, weighted, hc3')
 temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
 cover.asy.hc3 = temp<1.96
-round(colMeans(cover.asy.hc3,na.rm=TRUE),2)
-round(colMeans(simu_out$diff_hat_weight_se_cor),3)
+
+print("coverage")
+print(round(colMeans(cover.asy.hc3,na.rm=TRUE),2))
+print('standard error')
+print(round(colMeans(simu_out$diff_hat_weight_se_cor),3))
 
 print('asymptotic, weighted, cv')
 temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
 cover.asy.cv = temp<1.96
-print(paste("coverage:",round(colMeans(cover.asy.cv,na.rm=TRUE),2)))
-print(paste("standard error:",round(colMeans(simu_out$diff_hat_weight_se_cor_cv),3)))
+print("coverage")
+print(round(colMeans(cover.asy.cv,na.rm=TRUE),2))
+print("standard error")
+print(round(colMeans(simu_out$diff_hat_weight_se_cor_cv),3))
         
 print("rmse:")
 print(paste("our:",mean(get_rmse(simu_out$p_hat_weight,simu_out$input$b))))
 print(paste("music:",mean(get_rmse(simu_out$p_hat_music,simu_out$input$b))))
 
 print("coverage of p")
-mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor,simu_out$input$b))
-mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor_cv,simu_out$input$b))
+print(mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor,simu_out$input$b)))
+print(mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor_cv,simu_out$input$b)))
 
       }
     }

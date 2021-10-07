@@ -2,7 +2,7 @@
 ############## Run Simulation for manuscript ###############
 source('code/deconference_main.R')
 source('code/simulation/get_cor_pairs.R')
-
+devtools::load_all('D://githubs/MuSiC')
 
 #'@description Generate data: based on real Xin data, generate uncorrelated or correlated individual reference matrices.
 #'Compare methods: ols, adjust for measurement error, adjust for both measurement error and correlation, adjust for both measurement error and correlation and add weights.
@@ -32,7 +32,8 @@ simu_study     =   function(ref,
                             true.beta.for.Sigma=FALSE,
                             est_cor = TRUE,
                             n_bulk_for_cor = 100,
-                            cor_method = 'testing'){
+                            cor_method = 'testing',
+                            add.music=TRUE){
 
   is.identity = function(X){
     if(!is.null(X)){
@@ -71,7 +72,7 @@ simu_study     =   function(ref,
   p_hat = array(dim = c(K,n_bulk,nreps))
   p_hat_se = array(dim = c(K,n_bulk,nreps))
   p_hat_se_cor = array(dim = c(K,n_bulk,nreps))
-  p_hat_se_cor_cv = array(dim = c(K,n_bulk,nreps))
+  #p_hat_se_cor_cv = array(dim = c(K,n_bulk,nreps))
 
   p_hat_weight = array(dim = c(K,n_bulk,nreps))
   p_hat_weight_se_cor = array(dim = c(K,n_bulk,nreps))
@@ -83,7 +84,7 @@ simu_study     =   function(ref,
   diff_hat = matrix(nrow=nreps,ncol=K)
   diff_hat_se = matrix(nrow=nreps,ncol=K)
   diff_hat_se_cor = matrix(nrow=nreps,ncol=K)
-  diff_hat_se_cor_cv = matrix(nrow=nreps,ncol=K)
+  #diff_hat_se_cor_cv = matrix(nrow=nreps,ncol=K)
 
   diff_hat_weight = matrix(nrow=nreps,ncol=K)
   diff_hat_weight_se_cor = matrix(nrow=nreps,ncol=K)
@@ -93,6 +94,7 @@ simu_study     =   function(ref,
   gene_names = rownames(ref)
   true_betas = matrix(nrow=nreps,ncol=n_bulk*K)
 
+  p_hat_music = array(dim = c(K,n_bulk,nreps))
 
   ## pre calculate MLN and generate independent normal
 
@@ -136,6 +138,7 @@ simu_study     =   function(ref,
     mb = apply(X_array,3,function(z){z%*%genp(K)})
     thetab = apply(mb,2,function(z){z/sum(z)})
     bulk_for_cor = matrix(rpois(G*n_bulk_for_cor,bulk_lib_size*G*thetab),nrow=G)
+    bulk_for_cor = apply(bulk_for_cor,2,function(z){z/sum(z)*1e6})
     rownames(bulk_for_cor) = gene_names
     cor.idx = get_cor_pairs2(bulk_for_cor,alpha=alpha.cor,method=cor_method)
     R01 = sparseMatrix(i=cor.idx[,1],j=cor.idx[,2],dims=c(G,G))
@@ -217,15 +220,15 @@ simu_study     =   function(ref,
                                R01=R01,
                                true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
 
-    fit.err.cor.cv = estimation_func2(y=y,
-                                   X=X,
-                                   Vg=V,
-                                   w=1,
-                                   hc.type='jackknife_indep',
-                                   correction=FALSE,
-                                   verbose=verbose,
-                                   R01=R01,
-                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+    # fit.err.cor.cv = estimation_func2(y=y,
+    #                                X=X,
+    #                                Vg=V,
+    #                                w=1,
+    #                                hc.type='jackknife_indep',
+    #                                correction=FALSE,
+    #                                verbose=verbose,
+    #                                R01=R01,
+    #                                true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
 
     fit.vash = vashr::vash(sqrt(rowSums(V)),df=n_ref-1)
     w = 1/(fit.vash$sd.post)^2
@@ -248,6 +251,16 @@ simu_study     =   function(ref,
                                           verbose=verbose,
                                           R01=R01,
                                           true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+
+    if(add.music){
+      Sigma.music = t(apply(X_array_ref,c(1),function(z){diag(cov(t(z),use = 'complete.obs'))}))
+      Est.prop.allgene = NULL
+      for(bb in 1:n_bulk){
+        fit.music = music.basic(y[,bb],X,S=1,Sigma.music,iter.max=1000,nu=1e-4,eps=0.01)
+        Est.prop.allgene = cbind(Est.prop.allgene, fit.music$p.nnls)
+      }
+      p_hat_music[,,reps] = Est.prop.allgene
+    }
 #
 #     temp = list()
 #     temp[[1]] = fit.ols
@@ -260,7 +273,7 @@ simu_study     =   function(ref,
     temp$fit.ols =fit.ols
     temp$fit.err =fit.err
     temp$fit.err.cor = fit.err.cor
-    temp$fit.err.cor.cv = fit.err.cor.cv
+    #temp$fit.err.cor.cv = fit.err.cor.cv
     temp$fit.err.cor.weight = fit.err.cor.weight
     temp$fit.err.cor.weight.cv = fit.err.cor.weight.cv
     all_fit[[reps]] = temp
@@ -271,7 +284,7 @@ simu_study     =   function(ref,
     p_hat[,,reps] = fit.err$p_hat
     p_hat_se[,,reps] = fit.err$p_hat_se
     p_hat_se_cor[,,reps] = fit.err.cor$p_hat_se
-    p_hat_se_cor_cv[,,reps] = fit.err.cor.cv$p_hat_se
+    #p_hat_se_cor_cv[,,reps] = fit.err.cor.cv$p_hat_se
 
     p_hat_weight[,,reps] = fit.err.cor.weight$p_hat
     p_hat_weight_se_cor[,,reps] = fit.err.cor.weight$p_hat_se
@@ -287,8 +300,8 @@ simu_study     =   function(ref,
     diff_test_cor = two_group_test(fit.err.cor,groups)
     diff_hat_se_cor[reps,] = c(diff_test_cor$diff_se)
 
-    diff_test_cor_cv = two_group_test(fit.err.cor.cv,groups)
-    diff_hat_se_cor_cv[reps,] = c(diff_test_cor_cv$diff_se)
+    #diff_test_cor_cv = two_group_test(fit.err.cor.cv,groups)
+    #diff_hat_se_cor_cv[reps,] = c(diff_test_cor_cv$diff_se)
 
     diff_test_cor_weight = two_group_test(fit.err.cor.weight,groups)
     diff_hat_weight[reps,] = c(diff_test_cor_weight$diff_group)
@@ -305,7 +318,7 @@ simu_study     =   function(ref,
               p_hat = p_hat,
               p_hat_se = p_hat_se,
               p_hat_se_cor = p_hat_se_cor,
-              p_hat_se_cor_cv = p_hat_se_cor_cv,
+              #p_hat_se_cor_cv = p_hat_se_cor_cv,
 
               p_hat_weight = p_hat_weight,
               p_hat_weight_se_cor = p_hat_weight_se_cor,
@@ -317,11 +330,14 @@ simu_study     =   function(ref,
               diff_hat = diff_hat,
               diff_hat_se = diff_hat_se,
               diff_hat_se_cor = diff_hat_se_cor,
-              diff_hat_se_cor_cv = diff_hat_se_cor_cv,
+              #diff_hat_se_cor_cv = diff_hat_se_cor_cv,
 
               diff_hat_weight = diff_hat_weight,
               diff_hat_weight_se_cor = diff_hat_weight_se_cor,
               diff_hat_weight_se_cor_cv = diff_hat_weight_se_cor_cv,
+
+              p_hat_music = p_hat_music,
+
               input = list(b=b,groups=groups),
               all_fit=all_fit))
 

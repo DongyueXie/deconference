@@ -77,6 +77,163 @@ saveRDS(simu_out,file = 'output/manuscript/simulation_50bulk_500genecor_fdr05_on
 #######################################
 
 
+##############10/05/2021###############
+library(gtools)
+source('code/simulation/simulation_manuscript.R')
+xin = readRDS('data/pancreas/xin_ref_sigma9496.rds')
+ref = xin$ref
+sigma2 = xin$sigma2
+G = nrow(ref)
+K = 4
+d = 500
+A = matrix(0,nrow=G,ncol=G)
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+
+
+alpha.cors = 0.5
+
+
+for(nb in c(50,100)){
+  set.seed(12345)
+  b1 = t(rdirichlet(nb/2,p1*10))
+  b2 = t(rdirichlet(nb/2,p2*10))
+  b = cbind(b1,b2)
+  set.seed(12345)
+  simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor)
+  saveRDS(simu_out,file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_fdr0',alpha.cor*10,'_null_dirichlet.rds',sep=''))
+}
+
+
+## all diff
+p1 = c(0.5,0.3,0.1,0.1)
+p2 = c(0.1,0.1,0.3,0.5)
+nb = 100
+# generate group proportions using dirichlet distribution
+set.seed(12345)
+b1 = t(rdirichlet(nb/2,p1*10))
+b2 = t(rdirichlet(nb/2,p2*10))
+b = cbind(b1,b2)
+
+
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor)
+saveRDS(simu_out,file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_fdr0',alpha.cor*10,'_all_diff_dirichlet.rds',sep=''))
+
+nb = 50
+# generate group proportions using dirichlet distribution
+set.seed(12345)
+b1 = t(rdirichlet(nb/2,p1*10))
+b2 = t(rdirichlet(nb/2,p2*10))
+b = cbind(b1,b2)
+
+
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor)
+saveRDS(simu_out,file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_fdr0',alpha.cor*10,'_all_diff_dirichlet.rds',sep=''))
+
+## one diff
+p1 = c(0.1,0.1,0.3,0.5)
+p2 = c(0.1,0.15,0.4,0.35)
+nb = 100
+# generate group proportions using dirichlet distribution
+set.seed(12345)
+b1 = t(rdirichlet(nb/2,p1*10))
+b2 = t(rdirichlet(nb/2,p2*10))
+b = cbind(b1,b2)
+
+
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor)
+saveRDS(simu_out,file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_fdr0',alpha.cor*10,'_one_diff_dirichlet.rds',sep=''))
+
+nb = 50
+# generate group proportions using dirichlet distribution
+set.seed(12345)
+b1 = t(rdirichlet(nb/2,p1*10))
+b2 = t(rdirichlet(nb/2,p2*10))
+b = cbind(b1,b2)
+
+
+set.seed(12345)
+simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor)
+saveRDS(simu_out,file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_fdr0',alpha.cor*10,'_one_diff_dirichlet.rds',sep=''))
+
+#######################################
+
+##############10/06/2021###############
+library(gtools)
+source('code/simulation/simulation_manuscript.R')
+xin = readRDS('data/pancreas/xin_ref_sigma9496.rds')
+ref = xin$ref
+sigma2 = xin$sigma2
+G = nrow(ref)
+K = 4
+d = 500
+A = matrix(0,nrow=G,ncol=G)
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+
+
+
+
+alpha.cors = c(0.5)
+cases = c("null","all_diff")
+nbs = c(50,100)
+dirichlet.scale = c(5,10)
+
+set.seed(12345)
+for(case in cases){
+
+  if(case=='null'){
+    p1 = c(0.5,0.3,0.1,0.1)
+    p2 = c(0.5,0.3,0.1,0.1)
+  }else if(case=='all_diff'){
+    p1 = c(0.4,0.3,0.2,0.1)
+    p2 = c(0.1,0.1,0.3,0.5)
+  }
+
+  for(nb in nbs){
+    for(aa in dirichlet.scale){
+
+
+      b1 = t(rdirichlet(nb/2,p1*aa))
+      b2 = t(rdirichlet(nb/2,p2*aa))
+      b = cbind(b1,b2)
+
+      for(alpha.cor in alpha.cors){
+
+        if(alpha.cor==0){
+          est_cor = FALSE
+          cor.status = 'trueR'
+        }else{
+          est_cor=TRUE
+          cor.status = paste('cor0',alpha.cor*10,sep = '')
+        }
+
+        print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'aa=',aa))
+
+        simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
+        saveRDS(simu_out,file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
+
+      }
+    }
+  }
+}
+#######################################
+
 d = 300
 A = matrix(0,nrow=G,ncol=G)
 
@@ -90,11 +247,11 @@ library(Matrix)
 A = Matrix(A,sparse = TRUE)
 set.seed(12345)
 simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1)
-saveRDS(simu_out,file = 'output/manuscript/simulation_10bulk_300genecor_fdr05.rds')
+saveRDS(simu_out,file = 'output/manuscript/simulation/simulation_10bulk_300genecor_fdr05.rds')
 
 set.seed(12345)
 simu_out = simu_study(ref,b,R=NULL,sigma2,printevery = 1)
-saveRDS(simu_out,file = 'output/manuscript/simulation_10bulk_0genecor_fdr05.rds')
+saveRDS(simu_out,file = 'output/manuscript/simulation/simulation_10bulk_0genecor_fdr05.rds')
 
 
 # for(t in 1:7){

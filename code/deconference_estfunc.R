@@ -43,7 +43,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            hc.type='hc3',
                            a=ncol(X)+4,
                            correction=FALSE,
-                           #S=NULL,
+                           S=NULL,
                            #calc_cov=TRUE,
                            verbose=FALSE,
                            #X_array = NULL,
@@ -57,7 +57,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            Q.pos = TRUE,
                            V_tilde.pos = TRUE,
                            only.scale.pos.res=FALSE,
-                           #only.add.pos.res = FALSE,
+                           only.add.pos.res = FALSE,
                            nfold=10,
                            folds = NULL,
                            #use_all_pair_for_cov = FALSE,
@@ -925,7 +925,7 @@ get_jack_res_indep = function(y,X,V,nfold = 10,folds=NULL,R01){
 #'@param
 make.pos.def = function(X,s=100){
   attempt = try(chol(X),silent = T)
-  if(class(attempt)=="try-error"){
+  if(class(attempt)[1]=="try-error"){
     X.evd = eigen(X)
     D = X.evd$values
     if(D[1]<0){

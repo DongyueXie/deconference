@@ -515,16 +515,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreeaa708c05ceba1d76a4a347be15c9017a16a7b4b3targetblankaa708c0a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/aa708c05ceba1d76a4a347be15c9017a16a7b4b3" target="_blank">aa708c0</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree3570b861220c136669f022a51ea61c45ec9ef19etargetblank3570b86a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/DongyueXie/deconference/tree/3570b861220c136669f022a51ea61c45ec9ef19e" target="_blank">3570b86</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetreeaa708c05ceba1d76a4a347be15c9017a16a7b4b3targetblankaa708c0a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomDongyueXiedeconferencetree3570b861220c136669f022a51ea61c45ec9ef19etargetblank3570b86a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/aa708c05ceba1d76a4a347be15c9017a16a7b4b3" target="_blank">aa708c0</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/DongyueXie/deconference/tree/3570b861220c136669f022a51ea61c45ec9ef19e" target="_blank">3570b86</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -632,6 +632,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/DongyueXie/deconference/blob/3570b861220c136669f022a51ea61c45ec9ef19e/analysis/two_group_mean_dirichlet.Rmd" target="_blank">3570b86</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-10-07
+</td>
+<td>
+wflow_publish(“analysis/two_group_mean_dirichlet.Rmd”)
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/DongyueXie/deconference/7a626f6fd66fd822bbccc5f5882eeaa5a1c813e5/docs/two_group_mean_dirichlet.html" target="_blank">7a626f6</a>
+</td>
+<td>
+Dongyue Xie
+</td>
+<td>
+2021-10-07
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -762,8 +796,10 @@ for(i in 1:nreps){
     cover.naive[i,k] = (dif[k]&gt;temp$conf.int[1])&amp;(dif[k]&lt;temp$conf.int[2])
   }
 }
-print(paste(&quot;coverage&quot;,colMeans(cover.naive)))
-print(paste(&#39;standard error&#39;,round(colMeans(sd.naive),3)))
+print(&quot;coverage&quot;)
+print(colMeans(cover.naive))
+print(&#39;standard error&#39;)
+print(round(colMeans(sd.naive),3))
 
 print(&#39;two sample t test, music&#39;)
 cover.naive.music = matrix(nrow = nreps,ncol=K)
@@ -775,34 +811,44 @@ for(i in 1:nreps){
     cover.naive.music[i,k] = (dif[k]&gt;temp$conf.int[1])&amp;(dif[k]&lt;temp$conf.int[2])
   }
 }
-print(paste(&quot;coverage&quot;,colMeans(cover.naive.music)))
-print(paste(&#39;standard error&#39;,round(colMeans(sd.naive.music),3)))
+print(&quot;coverage&quot;)
+print(colMeans(cover.naive.music))
+print(&#39;standard error&#39;)
+print(round(colMeans(sd.naive.music),3))
 
 print(&#39;asymptotic,hc3&#39;)
 temp = abs(simu_out$diff_hat - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_se_cor
 cover.asy.hc3 = temp&lt;1.96
-print(paste(&quot;coverage&quot;,round(colMeans(cover.asy.hc3,na.rm=TRUE),2)))
-print(paste(&#39;standard error&#39;,round(colMeans(simu_out$diff_hat_se_cor),3)))
+
+print(&quot;coverage&quot;)
+print(round(colMeans(cover.asy.hc3,na.rm=TRUE),2))
+print(&#39;standard error&#39;)
+print(round(colMeans(simu_out$diff_hat_se_cor),3))
 
 print(&#39;asymptotic, weighted, hc3&#39;)
 temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor
 cover.asy.hc3 = temp&lt;1.96
-round(colMeans(cover.asy.hc3,na.rm=TRUE),2)
-round(colMeans(simu_out$diff_hat_weight_se_cor),3)
+
+print(&quot;coverage&quot;)
+print(round(colMeans(cover.asy.hc3,na.rm=TRUE),2))
+print(&#39;standard error&#39;)
+print(round(colMeans(simu_out$diff_hat_weight_se_cor),3))
 
 print(&#39;asymptotic, weighted, cv&#39;)
 temp = abs(simu_out$diff_hat_weight - rep(1,nreps)%*%t(dif))/simu_out$diff_hat_weight_se_cor_cv
 cover.asy.cv = temp&lt;1.96
-print(paste(&quot;coverage:&quot;,round(colMeans(cover.asy.cv,na.rm=TRUE),2)))
-print(paste(&quot;standard error:&quot;,round(colMeans(simu_out$diff_hat_weight_se_cor_cv),3)))
+print(&quot;coverage&quot;)
+print(round(colMeans(cover.asy.cv,na.rm=TRUE),2))
+print(&quot;standard error&quot;)
+print(round(colMeans(simu_out$diff_hat_weight_se_cor_cv),3))
         
 print(&quot;rmse:&quot;)
 print(paste(&quot;our:&quot;,mean(get_rmse(simu_out$p_hat_weight,simu_out$input$b))))
 print(paste(&quot;music:&quot;,mean(get_rmse(simu_out$p_hat_music,simu_out$input$b))))
 
 print(&quot;coverage of p&quot;)
-mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor,simu_out$input$b))
-mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor_cv,simu_out$input$b))
+print(mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor,simu_out$input$b)))
+print(mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor_cv,simu_out$input$b)))
 
       }
     }
@@ -810,356 +856,516 @@ mean(get_coverage_p(simu_out$p_hat_weight,simu_out$p_hat_weight_se_cor_cv,simu_o
 }</code></pre>
 <pre><code>[1] &quot;Running: null nb= 50 cor: trueR dirichlet scale= 5&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.91&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.12&quot;
-[1] &quot;standard error 0.063&quot; &quot;standard error 0.065&quot; &quot;standard error 0.024&quot;
-[4] &quot;standard error 0.031&quot;
+[1] &quot;coverage&quot;
+[1] 0.91 1.00 1.00 0.12
+[1] &quot;standard error&quot;
+[1] 0.063 0.065 0.024 0.031
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.86&quot; &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 0.31&quot;
-[1] &quot;standard error 0.047&quot; &quot;standard error 0.046&quot; &quot;standard error 0.021&quot;
-[4] &quot;standard error 0.026&quot;
+[1] &quot;coverage&quot;
+[1] 0.86 0.99 1.00 0.31
+[1] &quot;standard error&quot;
+[1] 0.047 0.046 0.021 0.026
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.89&quot;
-[1] &quot;standard error 0.09&quot;  &quot;standard error 0.079&quot; &quot;standard error 0.031&quot;
-[4] &quot;standard error 0.052&quot;
+[1] &quot;coverage&quot;
+[1] 0.99 1.00 1.00 0.89
+[1] &quot;standard error&quot;
+[1] 0.090 0.079 0.031 0.052
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 0.95 1.00 0.76 0.89
+[1] &quot;standard error&quot;
+[1] 0.074 0.068 0.014 0.051
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 0.99&quot; &quot;coverage: 1&quot;    &quot;coverage: 0.93&quot; &quot;coverage: 0.98&quot;
-[1] &quot;standard error: 0.092&quot; &quot;standard error: 0.085&quot; &quot;standard error: 0.017&quot;
-[4] &quot;standard error: 0.063&quot;
+[1] &quot;coverage&quot;
+[1] 0.99 1.00 0.93 0.98
+[1] &quot;standard error&quot;
+[1] 0.092 0.085 0.017 0.063
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.14012&quot;
 [1] &quot;music: 0.1728&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.99995
+[1] 0.99995
 [1] &quot;Running: null nb= 50 cor: cor05 dirichlet scale= 5&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.85&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.13&quot;
-[1] &quot;standard error 0.063&quot; &quot;standard error 0.066&quot; &quot;standard error 0.025&quot;
-[4] &quot;standard error 0.031&quot;
+[1] &quot;coverage&quot;
+[1] 0.85 1.00 1.00 0.13
+[1] &quot;standard error&quot;
+[1] 0.063 0.066 0.025 0.031
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.82&quot; &quot;coverage 1&quot;    &quot;coverage 0.98&quot; &quot;coverage 0.29&quot;
-[1] &quot;standard error 0.047&quot; &quot;standard error 0.046&quot; &quot;standard error 0.022&quot;
-[4] &quot;standard error 0.025&quot;
+[1] &quot;coverage&quot;
+[1] 0.82 1.00 0.98 0.29
+[1] &quot;standard error&quot;
+[1] 0.047 0.046 0.022 0.025
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.79&quot;
-[1] &quot;standard error 0.084&quot; &quot;standard error 0.074&quot; &quot;standard error 0.031&quot;
-[4] &quot;standard error 0.049&quot;
+[1] &quot;coverage&quot;
+[1] 0.98 1.00 1.00 0.79
+[1] &quot;standard error&quot;
+[1] 0.084 0.074 0.031 0.049
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 0.85 1.00 0.68 0.83
+[1] &quot;standard error&quot;
+[1] 0.068 0.063 0.014 0.048
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.98&quot; &quot;coverage: 0.97&quot;
-[1] &quot;standard error: 0.092&quot; &quot;standard error: 0.085&quot; &quot;standard error: 0.02&quot; 
-[4] &quot;standard error: 0.065&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.98 0.97
+[1] &quot;standard error&quot;
+[1] 0.092 0.085 0.020 0.065
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.13742&quot;
 [1] &quot;music: 0.16908&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.99985
+[1] 1
 [1] &quot;Running: null nb= 50 cor: trueR dirichlet scale= 10&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.97&quot;
-[1] &quot;standard error 0.049&quot; &quot;standard error 0.05&quot;  &quot;standard error 0.023&quot;
-[4] &quot;standard error 0.029&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 1.00 0.97
+[1] &quot;standard error&quot;
+[1] 0.049 0.050 0.023 0.029
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.93&quot;
-[1] &quot;standard error 0.037&quot; &quot;standard error 0.036&quot; &quot;standard error 0.021&quot;
-[4] &quot;standard error 0.023&quot;
+[1] &quot;coverage&quot;
+[1] 0.99 1.00 1.00 0.93
+[1] &quot;standard error&quot;
+[1] 0.037 0.036 0.021 0.023
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot;
-[1] &quot;standard error 0.086&quot; &quot;standard error 0.076&quot; &quot;standard error 0.029&quot;
-[4] &quot;standard error 0.048&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 1.00 0.99
+[1] &quot;standard error&quot;
+[1] 0.086 0.076 0.029 0.048
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.071 0.065 0.013 0.047
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
-[1] &quot;standard error: 0.089&quot; &quot;standard error: 0.082&quot; &quot;standard error: 0.017&quot;
-[4] &quot;standard error: 0.058&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.089 0.082 0.017 0.058
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.14024&quot;
 [1] &quot;music: 0.15676&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.99985
+[1] 1
 [1] &quot;Running: null nb= 50 cor: cor05 dirichlet scale= 10&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.94&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot;
-[1] &quot;standard error 0.052&quot; &quot;standard error 0.049&quot; &quot;standard error 0.027&quot;
-[4] &quot;standard error 0.029&quot;
+[1] &quot;coverage&quot;
+[1] 0.94 1.00 1.00 0.99
+[1] &quot;standard error&quot;
+[1] 0.052 0.049 0.027 0.029
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.96&quot; &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 0.97&quot;
-[1] &quot;standard error 0.039&quot; &quot;standard error 0.035&quot; &quot;standard error 0.024&quot;
-[4] &quot;standard error 0.024&quot;
+[1] &quot;coverage&quot;
+[1] 0.96 0.99 1.00 0.97
+[1] &quot;standard error&quot;
+[1] 0.039 0.035 0.024 0.024
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 0.99&quot; &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
-[1] &quot;standard error 0.075&quot; &quot;standard error 0.067&quot; &quot;standard error 0.028&quot;
-[4] &quot;standard error 0.043&quot;
+[1] &quot;coverage&quot;
+[1] 0.99 0.99 1.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.075 0.067 0.028 0.043
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.97 1.00
+[1] &quot;standard error&quot;
+[1] 0.062 0.058 0.013 0.042
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
-[1] &quot;standard error: 0.093&quot; &quot;standard error: 0.087&quot; &quot;standard error: 0.023&quot;
-[4] &quot;standard error: 0.063&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.093 0.087 0.023 0.063
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.13512&quot;
 [1] &quot;music: 0.15444&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.99975
+[1] 1
 [1] &quot;Running: null nb= 100 cor: trueR dirichlet scale= 5&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 0.96&quot;
-[1] &quot;standard error 0.047&quot; &quot;standard error 0.046&quot; &quot;standard error 0.018&quot;
-[4] &quot;standard error 0.024&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 0.98 1.00 0.96
+[1] &quot;standard error&quot;
+[1] 0.047 0.046 0.018 0.024
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 0.96&quot; &quot;coverage 0.99&quot; &quot;coverage 0.91&quot;
-[1] &quot;standard error 0.035&quot; &quot;standard error 0.033&quot; &quot;standard error 0.015&quot;
-[4] &quot;standard error 0.019&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 0.96 0.99 0.91
+[1] &quot;standard error&quot;
+[1] 0.035 0.033 0.015 0.019
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot; &quot;coverage 1&quot; &quot;coverage 1&quot; &quot;coverage 1&quot;
-[1] &quot;standard error 13.203&quot; &quot;standard error 13.683&quot; &quot;standard error 4.293&quot; 
-[4] &quot;standard error 6.458&quot; 
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 13.203 13.683  4.293  6.458
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.074 0.068 0.014 0.051
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
-[1] &quot;standard error: 0.094&quot; &quot;standard error: 0.086&quot; &quot;standard error: 0.017&quot;
-[4] &quot;standard error: 0.064&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.094 0.086 0.017 0.064
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.13625&quot;
 [1] &quot;music: 0.17453&quot;
 [1] &quot;coverage of p&quot;
+[1] 1
+[1] 1
 [1] &quot;Running: null nb= 100 cor: cor05 dirichlet scale= 5&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.92&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;   
-[1] &quot;standard error 0.044&quot; &quot;standard error 0.044&quot; &quot;standard error 0.016&quot;
-[4] &quot;standard error 0.031&quot;
+[1] &quot;coverage&quot;
+[1] 0.92 1.00 1.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.044 0.044 0.016 0.031
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.92&quot; &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
-[1] &quot;standard error 0.033&quot; &quot;standard error 0.032&quot; &quot;standard error 0.015&quot;
-[4] &quot;standard error 0.024&quot;
+[1] &quot;coverage&quot;
+[1] 0.92 0.98 1.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.033 0.032 0.015 0.024
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot; &quot;coverage 1&quot; &quot;coverage 1&quot; &quot;coverage 1&quot;
-[1] &quot;standard error 0.072&quot; &quot;standard error 0.064&quot; &quot;standard error 0.026&quot;
-[4] &quot;standard error 0.042&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.072 0.064 0.026 0.042
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.060 0.056 0.012 0.042
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
-[1] &quot;standard error: 0.085&quot; &quot;standard error: 0.079&quot; &quot;standard error: 0.018&quot;
-[4] &quot;standard error: 0.059&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.085 0.079 0.018 0.059
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.13689&quot;
 [1] &quot;music: 0.1708&quot;
 [1] &quot;coverage of p&quot;
+[1] 1
+[1] 1
 [1] &quot;Running: null nb= 100 cor: trueR dirichlet scale= 10&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot;
-[1] &quot;standard error 0.038&quot; &quot;standard error 0.032&quot; &quot;standard error 0.019&quot;
-[4] &quot;standard error 0.023&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 1.00 0.99
+[1] &quot;standard error&quot;
+[1] 0.038 0.032 0.019 0.023
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.94&quot; &quot;coverage 0.99&quot;
-[1] &quot;standard error 0.029&quot; &quot;standard error 0.023&quot; &quot;standard error 0.016&quot;
-[4] &quot;standard error 0.019&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.94 0.99
+[1] &quot;standard error&quot;
+[1] 0.029 0.023 0.016 0.019
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.98&quot; &quot;coverage 1&quot;   
-[1] &quot;standard error 0.08&quot;  &quot;standard error 0.069&quot; &quot;standard error 0.028&quot;
-[4] &quot;standard error 0.045&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.98 1.00
+[1] &quot;standard error&quot;
+[1] 0.080 0.069 0.028 0.045
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.57 1.00
+[1] &quot;standard error&quot;
+[1] 0.068 0.062 0.013 0.046
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.86&quot; &quot;coverage: 1&quot;   
-[1] &quot;standard error: 0.086&quot; &quot;standard error: 0.078&quot; &quot;standard error: 0.016&quot;
-[4] &quot;standard error: 0.058&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.86 1.00
+[1] &quot;standard error&quot;
+[1] 0.086 0.078 0.016 0.058
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.13603&quot;
 [1] &quot;music: 0.15867&quot;
 [1] &quot;coverage of p&quot;
+[1] 1
+[1] 1
 [1] &quot;Running: null nb= 100 cor: cor05 dirichlet scale= 10&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.95&quot;
-[1] &quot;standard error 0.034&quot; &quot;standard error 0.034&quot; &quot;standard error 0.018&quot;
-[4] &quot;standard error 0.017&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 1.00 0.95
+[1] &quot;standard error&quot;
+[1] 0.034 0.034 0.018 0.017
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 0.99&quot; &quot;coverage 0.97&quot; &quot;coverage 0.95&quot;
-[1] &quot;standard error 0.026&quot; &quot;standard error 0.024&quot; &quot;standard error 0.015&quot;
-[4] &quot;standard error 0.014&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 0.99 0.97 0.95
+[1] &quot;standard error&quot;
+[1] 0.026 0.024 0.015 0.014
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot; &quot;coverage 1&quot;   
-[1] &quot;standard error 3.312&quot; &quot;standard error 2.893&quot; &quot;standard error 0.851&quot;
-[4] &quot;standard error 1.787&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.99 1.00
+[1] &quot;standard error&quot;
+[1] 3.312 2.893 0.851 1.787
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.75 1.00
+[1] &quot;standard error&quot;
+[1] 0.058 0.053 0.012 0.040
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
-[1] &quot;standard error: 0.085&quot; &quot;standard error: 0.077&quot; &quot;standard error: 0.02&quot; 
-[4] &quot;standard error: 0.059&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.085 0.077 0.020 0.059
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.13735&quot;
 [1] &quot;music: 0.15386&quot;
 [1] &quot;coverage of p&quot;
+[1] 1
+[1] 1
 [1] &quot;Running: all_diff nb= 50 cor: trueR dirichlet scale= 5&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 0.97&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
-[1] &quot;standard error 0.053&quot; &quot;standard error 0.052&quot; &quot;standard error 0.043&quot;
-[4] &quot;standard error 0.042&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 0.97 1.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.053 0.052 0.043 0.042
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.79&quot; &quot;coverage 0.89&quot; &quot;coverage 0.97&quot; &quot;coverage 0.1&quot; 
-[1] &quot;standard error 0.043&quot; &quot;standard error 0.039&quot; &quot;standard error 0.037&quot;
-[4] &quot;standard error 0.036&quot;
+[1] &quot;coverage&quot;
+[1] 0.79 0.89 0.97 0.10
+[1] &quot;standard error&quot;
+[1] 0.043 0.039 0.037 0.036
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.86&quot; &quot;coverage 0.93&quot;
-[1] &quot;standard error 0.109&quot; &quot;standard error 0.095&quot; &quot;standard error 0.043&quot;
-[4] &quot;standard error 0.07&quot; 
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.86 0.93
+[1] &quot;standard error&quot;
+[1] 0.109 0.095 0.043 0.070
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.06 1.00
+[1] &quot;standard error&quot;
+[1] 0.074 0.070 0.018 0.053
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.12&quot; &quot;coverage: 1&quot;   
-[1] &quot;standard error: 0.092&quot; &quot;standard error: 0.086&quot; &quot;standard error: 0.021&quot;
-[4] &quot;standard error: 0.065&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.12 1.00
+[1] &quot;standard error&quot;
+[1] 0.092 0.086 0.021 0.065
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.12608&quot;
 [1] &quot;music: 0.20742&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.998
+[1] 0.99935
 [1] &quot;Running: all_diff nb= 50 cor: cor05 dirichlet scale= 5&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.82&quot; &quot;coverage 0.97&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
-[1] &quot;standard error 0.045&quot; &quot;standard error 0.046&quot; &quot;standard error 0.052&quot;
-[4] &quot;standard error 0.058&quot;
+[1] &quot;coverage&quot;
+[1] 0.82 0.97 1.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.045 0.046 0.052 0.058
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.2&quot;  &quot;coverage 0.26&quot; &quot;coverage 0.77&quot; &quot;coverage 0.14&quot;
-[1] &quot;standard error 0.039&quot; &quot;standard error 0.036&quot; &quot;standard error 0.044&quot;
-[4] &quot;standard error 0.048&quot;
+[1] &quot;coverage&quot;
+[1] 0.20 0.26 0.77 0.14
+[1] &quot;standard error&quot;
+[1] 0.039 0.036 0.044 0.048
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 0.76&quot; &quot;coverage 0.94&quot;
-[1] &quot;standard error 0.108&quot; &quot;standard error 0.093&quot; &quot;standard error 0.043&quot;
-[4] &quot;standard error 0.07&quot; 
+[1] &quot;coverage&quot;
+[1] 0.99 1.00 0.76 0.94
+[1] &quot;standard error&quot;
+[1] 0.108 0.093 0.043 0.070
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 0.98 1.00 0.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.066 0.063 0.016 0.049
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;   &quot;coverage: 1&quot;   &quot;coverage: 0.3&quot; &quot;coverage: 1&quot;  
-[1] &quot;standard error: 0.101&quot; &quot;standard error: 0.096&quot; &quot;standard error: 0.029&quot;
-[4] &quot;standard error: 0.074&quot;
+[1] &quot;coverage&quot;
+[1] 1.0 1.0 0.3 1.0
+[1] &quot;standard error&quot;
+[1] 0.101 0.096 0.029 0.074
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.12416&quot;
 [1] &quot;music: 0.20814&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.99855
+[1] 0.99995
 [1] &quot;Running: all_diff nb= 50 cor: trueR dirichlet scale= 10&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.98&quot; &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
-[1] &quot;standard error 0.035&quot; &quot;standard error 0.037&quot; &quot;standard error 0.036&quot;
-[4] &quot;standard error 0.032&quot;
+[1] &quot;coverage&quot;
+[1] 0.98 0.98 1.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.035 0.037 0.036 0.032
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.5&quot;  &quot;coverage 0.52&quot; &quot;coverage 0.96&quot; &quot;coverage 0.16&quot;
-[1] &quot;standard error 0.031&quot; &quot;standard error 0.03&quot;  &quot;standard error 0.033&quot;
-[4] &quot;standard error 0.03&quot; 
+[1] &quot;coverage&quot;
+[1] 0.50 0.52 0.96 0.16
+[1] &quot;standard error&quot;
+[1] 0.031 0.030 0.033 0.030
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.96&quot; &quot;coverage 0.98&quot;
-[1] &quot;standard error 0.108&quot; &quot;standard error 0.093&quot; &quot;standard error 0.042&quot;
-[4] &quot;standard error 0.072&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.96 0.98
+[1] &quot;standard error&quot;
+[1] 0.108 0.093 0.042 0.072
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.96 1.00
+[1] &quot;standard error&quot;
+[1] 0.067 0.063 0.016 0.048
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.97&quot; &quot;coverage: 1&quot;   
-[1] &quot;standard error: 0.083&quot; &quot;standard error: 0.078&quot; &quot;standard error: 0.02&quot; 
-[4] &quot;standard error: 0.058&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.97 1.00
+[1] &quot;standard error&quot;
+[1] 0.083 0.078 0.020 0.058
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.12352&quot;
 [1] &quot;music: 0.2078&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.9972
+[1] 0.9989
 [1] &quot;Running: all_diff nb= 50 cor: cor05 dirichlet scale= 10&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.99&quot; &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
-[1] &quot;standard error 0.039&quot; &quot;standard error 0.036&quot; &quot;standard error 0.036&quot;
-[4] &quot;standard error 0.037&quot;
+[1] &quot;coverage&quot;
+[1] 0.99 0.98 1.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.039 0.036 0.036 0.037
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.38&quot; &quot;coverage 0.45&quot; &quot;coverage 0.79&quot; &quot;coverage 0.25&quot;
-[1] &quot;standard error 0.035&quot; &quot;standard error 0.03&quot;  &quot;standard error 0.032&quot;
-[4] &quot;standard error 0.033&quot;
+[1] &quot;coverage&quot;
+[1] 0.38 0.45 0.79 0.25
+[1] &quot;standard error&quot;
+[1] 0.035 0.030 0.032 0.033
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.9&quot;  &quot;coverage 0.99&quot;
-[1] &quot;standard error 0.106&quot; &quot;standard error 0.088&quot; &quot;standard error 0.042&quot;
-[4] &quot;standard error 0.075&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.90 0.99
+[1] &quot;standard error&quot;
+[1] 0.106 0.088 0.042 0.075
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.43 1.00
+[1] &quot;standard error&quot;
+[1] 0.064 0.059 0.016 0.047
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.91&quot; &quot;coverage: 1&quot;   
-[1] &quot;standard error: 0.101&quot; &quot;standard error: 0.095&quot; &quot;standard error: 0.03&quot; 
-[4] &quot;standard error: 0.073&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.91 1.00
+[1] &quot;standard error&quot;
+[1] 0.101 0.095 0.030 0.073
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.1229&quot;
 [1] &quot;music: 0.20256&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.99835
+[1] 1
 [1] &quot;Running: all_diff nb= 100 cor: trueR dirichlet scale= 5&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.59&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.9&quot; 
-[1] &quot;standard error 0.037&quot; &quot;standard error 0.036&quot; &quot;standard error 0.027&quot;
-[4] &quot;standard error 0.034&quot;
+[1] &quot;coverage&quot;
+[1] 0.59 1.00 1.00 0.90
+[1] &quot;standard error&quot;
+[1] 0.037 0.036 0.027 0.034
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.86&quot; &quot;coverage 0.47&quot; &quot;coverage 0.97&quot; &quot;coverage 0.34&quot;
-[1] &quot;standard error 0.03&quot;  &quot;standard error 0.027&quot; &quot;standard error 0.023&quot;
-[4] &quot;standard error 0.028&quot;
+[1] &quot;coverage&quot;
+[1] 0.86 0.47 0.97 0.34
+[1] &quot;standard error&quot;
+[1] 0.030 0.027 0.023 0.028
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.98&quot; &quot;coverage 1&quot;   
-[1] &quot;standard error 0.11&quot;  &quot;standard error 0.092&quot; &quot;standard error 0.041&quot;
-[4] &quot;standard error 0.075&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.98 1.00
+[1] &quot;standard error&quot;
+[1] 0.110 0.092 0.041 0.075
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1.0 1.0 0.7 1.0
+[1] &quot;standard error&quot;
+[1] 0.070 0.064 0.016 0.049
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.85&quot; &quot;coverage: 1&quot;   
-[1] &quot;standard error: 0.088&quot; &quot;standard error: 0.08&quot;  &quot;standard error: 0.019&quot;
-[4] &quot;standard error: 0.06&quot; 
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.85 1.00
+[1] &quot;standard error&quot;
+[1] 0.088 0.080 0.019 0.060
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.12259&quot;
 [1] &quot;music: 0.21583&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.999225
+[1] 0.99985
 [1] &quot;Running: all_diff nb= 100 cor: cor05 dirichlet scale= 5&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.93&quot; &quot;coverage 1&quot;    &quot;coverage 0.51&quot; &quot;coverage 0.95&quot;
-[1] &quot;standard error 0.036&quot; &quot;standard error 0.037&quot; &quot;standard error 0.037&quot;
-[4] &quot;standard error 0.037&quot;
+[1] &quot;coverage&quot;
+[1] 0.93 1.00 0.51 0.95
+[1] &quot;standard error&quot;
+[1] 0.036 0.037 0.037 0.037
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.17&quot; &quot;coverage 0.41&quot; &quot;coverage 0.24&quot; &quot;coverage 0.47&quot;
-[1] &quot;standard error 0.03&quot;  &quot;standard error 0.028&quot; &quot;standard error 0.031&quot;
-[4] &quot;standard error 0.03&quot; 
+[1] &quot;coverage&quot;
+[1] 0.17 0.41 0.24 0.47
+[1] &quot;standard error&quot;
+[1] 0.030 0.028 0.031 0.030
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 0.99&quot; &quot;coverage 1&quot;    &quot;coverage 0.54&quot; &quot;coverage 1&quot;   
-[1] &quot;standard error 82.68&quot;  &quot;standard error 48.011&quot; &quot;standard error 28.604&quot;
-[4] &quot;standard error 90.173&quot;
+[1] &quot;coverage&quot;
+[1] 0.99 1.00 0.54 1.00
+[1] &quot;standard error&quot;
+[1] 82.680 48.011 28.604 90.173
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 0 1
+[1] &quot;standard error&quot;
+[1] 0.063 0.058 0.015 0.047
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.19&quot; &quot;coverage: 1&quot;   
-[1] &quot;standard error: 0.117&quot; &quot;standard error: 0.107&quot; &quot;standard error: 0.03&quot; 
-[4] &quot;standard error: 0.084&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.19 1.00
+[1] &quot;standard error&quot;
+[1] 0.117 0.107 0.030 0.084
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.12395&quot;
 [1] &quot;music: 0.22413&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.99915
+[1] 0.999975
 [1] &quot;Running: all_diff nb= 100 cor: trueR dirichlet scale= 10&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.86&quot; &quot;coverage 0.7&quot;  &quot;coverage 0.99&quot; &quot;coverage 0.99&quot;
-[1] &quot;standard error 0.029&quot; &quot;standard error 0.029&quot; &quot;standard error 0.024&quot;
-[4] &quot;standard error 0.025&quot;
+[1] &quot;coverage&quot;
+[1] 0.86 0.70 0.99 0.99
+[1] &quot;standard error&quot;
+[1] 0.029 0.029 0.024 0.025
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.18&quot; &quot;coverage 0.7&quot;  &quot;coverage 0.95&quot; &quot;coverage 0.02&quot;
-[1] &quot;standard error 0.025&quot; &quot;standard error 0.023&quot; &quot;standard error 0.021&quot;
-[4] &quot;standard error 0.022&quot;
+[1] &quot;coverage&quot;
+[1] 0.18 0.70 0.95 0.02
+[1] &quot;standard error&quot;
+[1] 0.025 0.023 0.021 0.022
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 0.98&quot; &quot;coverage 1&quot;    &quot;coverage 0.99&quot; &quot;coverage 0.98&quot;
-[1] &quot;standard error 0.111&quot; &quot;standard error 0.095&quot; &quot;standard error 0.044&quot;
-[4] &quot;standard error 0.075&quot;
+[1] &quot;coverage&quot;
+[1] 0.98 1.00 0.99 0.98
+[1] &quot;standard error&quot;
+[1] 0.111 0.095 0.044 0.075
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.92 1.00
+[1] &quot;standard error&quot;
+[1] 0.067 0.062 0.015 0.048
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot;    &quot;coverage: 1&quot;    &quot;coverage: 0.93&quot; &quot;coverage: 1&quot;   
-[1] &quot;standard error: 0.084&quot; &quot;standard error: 0.078&quot; &quot;standard error: 0.019&quot;
-[4] &quot;standard error: 0.06&quot; 
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 0.93 1.00
+[1] &quot;standard error&quot;
+[1] 0.084 0.078 0.019 0.060
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.12505&quot;
 [1] &quot;music: 0.20181&quot;
 [1] &quot;coverage of p&quot;
+[1] 0.99905
+[1] 0.999775
 [1] &quot;Running: all_diff nb= 100 cor: cor05 dirichlet scale= 10&quot;
 [1] &quot;two sample t test, weighted meaurement error model&quot;
-[1] &quot;coverage 0.99&quot; &quot;coverage 0.92&quot; &quot;coverage 1&quot;    &quot;coverage 1&quot;   
-[1] &quot;standard error 0.03&quot;  &quot;standard error 0.027&quot; &quot;standard error 0.029&quot;
-[4] &quot;standard error 0.029&quot;
+[1] &quot;coverage&quot;
+[1] 0.99 0.92 1.00 1.00
+[1] &quot;standard error&quot;
+[1] 0.030 0.027 0.029 0.029
 [1] &quot;two sample t test, music&quot;
-[1] &quot;coverage 0.28&quot; &quot;coverage 0.48&quot; &quot;coverage 0.89&quot; &quot;coverage 0.1&quot; 
-[1] &quot;standard error 0.026&quot; &quot;standard error 0.022&quot; &quot;standard error 0.025&quot;
-[4] &quot;standard error 0.025&quot;
+[1] &quot;coverage&quot;
+[1] 0.28 0.48 0.89 0.10
+[1] &quot;standard error&quot;
+[1] 0.026 0.022 0.025 0.025
 [1] &quot;asymptotic,hc3&quot;
-[1] &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 1&quot;    &quot;coverage 0.99&quot;
-[1] &quot;standard error 49.116&quot; &quot;standard error 25.457&quot; &quot;standard error 14.043&quot;
-[4] &quot;standard error 41.824&quot;
+[1] &quot;coverage&quot;
+[1] 1.00 1.00 1.00 0.99
+[1] &quot;standard error&quot;
+[1] 49.116 25.457 14.043 41.824
 [1] &quot;asymptotic, weighted, hc3&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.061 0.057 0.015 0.044
 [1] &quot;asymptotic, weighted, cv&quot;
-[1] &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot; &quot;coverage: 1&quot;
-[1] &quot;standard error: 0.104&quot; &quot;standard error: 0.096&quot; &quot;standard error: 0.031&quot;
-[4] &quot;standard error: 0.072&quot;
+[1] &quot;coverage&quot;
+[1] 1 1 1 1
+[1] &quot;standard error&quot;
+[1] 0.104 0.096 0.031 0.072
 [1] &quot;rmse:&quot;
 [1] &quot;our: 0.12157&quot;
 [1] &quot;music: 0.21066&quot;
-[1] &quot;coverage of p&quot;</code></pre>
+[1] &quot;coverage of p&quot;
+[1] 0.999525
+[1] 1</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

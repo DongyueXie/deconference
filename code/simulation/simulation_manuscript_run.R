@@ -189,7 +189,7 @@ A = Matrix(A,sparse = TRUE)
 
 
 
-alpha.cors = c(0.5)
+alpha.cors = c(0,0.5)
 cases = c("null","all_diff")
 nbs = c(50,100)
 dirichlet.scale = c(5,10)

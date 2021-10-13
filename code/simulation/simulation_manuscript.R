@@ -9,7 +9,10 @@ devtools::load_all('D://githubs/MuSiC')
 #'For simplicity, we only simulate data at individual level. - only generate X from U;
 
 #'@param ref population gene expression matrix U, of dimension G by K
-#'@param b a K by n_bulk matrix of cell type proportions
+#'@param p1 first group mean
+#'@param p2 second group mean
+#'@param n_bulk number of bulk data
+#'@param dirichlet whether generate random p
 #'@param R correlation matrix, sparse form
 #'@param sigma2 biological variance matrix across individuals, of dimension G by K
 #'@param alpha significance level of confidence interval
@@ -17,9 +20,13 @@ devtools::load_all('D://githubs/MuSiC')
 #'@param groups indicates two groups of bulk individual
 #'@param n_bulk_for_cor number of bulk data generated for inferring correlations
 simu_study     =   function(ref,
-                            b,
-                            R=NULL,
                             sigma2,
+                            p1,
+                            p2,
+                            n_bulk=100,
+                            dirichlet = TRUE,
+                            dirichlet.scale = 10,
+                            R=NULL,
                             nreps = 100,
                             bulk_lib_size = 500,
                             n_ref = 10,
@@ -27,7 +34,7 @@ simu_study     =   function(ref,
                             verbose=FALSE,
                             alpha=0.05,
                             alpha.cor = 0.5,
-                            groups = c(rep(1,ncol(b)/2),rep(2,ncol(b)/2)),
+                            groups = c(rep(1,n_bulk/2),rep(2,n_bulk/2)),
                             centeringXY = FALSE,
                             true.beta.for.Sigma=FALSE,
                             est_cor = TRUE,
@@ -51,20 +58,10 @@ simu_study     =   function(ref,
 
   G = nrow(ref)
   K = ncol(ref)
-  n_bulk = ncol(b)
-  b = apply(b,2,function(z){z/sum(z)})
   is.indep = (is.identity(R))|(is.null(R))
 
 
-  # p_hat_ols = matrix(nrow=nreps,ncol=n_bulk*K)
-  # p_hat_ols_se = matrix(nrow=nreps,ncol=n_bulk*K)
-  #
-  # p_hat = matrix(nrow=nreps,ncol=n_bulk*K)
-  # p_hat_se = matrix(nrow=nreps,ncol=n_bulk*K)
-  # p_hat_se_cor = matrix(nrow=nreps,ncol=n_bulk*K)
-  #
-  # p_hat_weight = matrix(nrow=nreps,ncol=n_bulk*K)
-  # p_hat_weight_se_cor = matrix(nrow=nreps,ncol=n_bulk*K)
+
 
   p_hat_ols = array(dim = c(K,n_bulk,nreps))
   p_hat_ols_se = array(dim = c(K,n_bulk,nreps))
@@ -146,13 +143,26 @@ simu_study     =   function(ref,
 
   }
 
-  all_fit = list()
+  # all_fit = list()
+  true_p = array(dim = c(K,n_bulk,nreps))
 
   for(reps in 1:nreps){
 
     if(reps%%printevery==0){print(sprintf("running %d (out of %d)",reps,nreps))}
 
-    # generate individual reference matrices
+    ## generate group p's
+    nb1 = table(groups)[1]
+    nb2 = n_bulk - nb1
+    if(dirichlet){
+      b1 = t(gtools::rdirichlet(nb1,p1*dirichlet.scale))
+      b2 = t(gtools::rdirichlet(nb2,p2*dirichlet.scale))
+      b = cbind(b1,b2)
+    }else{
+      b = cbind(matrix(p1,ncol=nb1),matrix(p2,ncol=nb2))
+    }
+    true_p[,,reps] = b
+
+    ## generate individual reference matrices
 
     n.temp = n_ref+n_bulk
     X_array = array(dim=c(G,K,n.temp))
@@ -269,14 +279,14 @@ simu_study     =   function(ref,
 #     temp[[4]] = fit.err.cor.weight
 #     all_fit[[reps]] = temp
 
-    temp = list()
-    temp$fit.ols =fit.ols
-    temp$fit.err =fit.err
-    temp$fit.err.cor = fit.err.cor
-    #temp$fit.err.cor.cv = fit.err.cor.cv
-    temp$fit.err.cor.weight = fit.err.cor.weight
-    temp$fit.err.cor.weight.cv = fit.err.cor.weight.cv
-    all_fit[[reps]] = temp
+    # temp = list()
+    # temp$fit.ols =fit.ols
+    # temp$fit.err =fit.err
+    # temp$fit.err.cor = fit.err.cor
+    # #temp$fit.err.cor.cv = fit.err.cor.cv
+    # temp$fit.err.cor.weight = fit.err.cor.weight
+    # temp$fit.err.cor.weight.cv = fit.err.cor.weight.cv
+    # all_fit[[reps]] = temp
 
     p_hat_ols[,,reps] = fit.ols$p_hat
     p_hat_ols_se[,,reps] = fit.ols$p_hat_se
@@ -337,9 +347,9 @@ simu_study     =   function(ref,
               diff_hat_weight_se_cor_cv = diff_hat_weight_se_cor_cv,
 
               p_hat_music = p_hat_music,
+              true_p = true_p,
 
-              input = list(b=b,groups=groups),
-              all_fit=all_fit))
+              input = list(p1=p1,p2=p2,groups=groups)))
 
 
 

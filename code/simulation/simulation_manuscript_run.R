@@ -21,7 +21,69 @@
 #
 # saveRDS(list(ref=ref,sigma2=sigma2),file='data/pancreas/xin_ref_sigma9496.rds')
 
+########10/12/2021#####################
 
+# do not use real reference and sigma2
+
+G = 500
+set.seed(12345)
+ref = matrix(rnorm(G*K),nrow=G)
+ref = abs(ref)
+ref = apply(ref, 2, function(z){z/sum(z)})*G
+sigma2 = ref/2
+
+K = 4
+d = 25
+A = matrix(0,nrow=G,ncol=G)
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+alpha.cors = c(0)
+cases = c("null","all_diff")
+nbs = c(50,100)
+dirichlet.scale = c(5,10)
+
+set.seed(12345)
+for(case in cases){
+
+  if(case=='null'){
+    p1 = c(0.5,0.3,0.1,0.1)
+    p2 = c(0.5,0.3,0.1,0.1)
+  }else if(case=='all_diff'){
+    p1 = c(0.15,0.2,0.45,0.2)
+    p2 = c(0.1,0.1,0.3,0.5)
+  }
+
+  for(nb in nbs){
+    for(aa in dirichlet.scale){
+      for(alpha.cor in alpha.cors){
+
+        if(alpha.cor==0){
+          est_cor = FALSE
+          cor.status = 'trueR'
+        }else{
+          est_cor=TRUE
+          cor.status = paste('cor0',alpha.cor*10,sep = '')
+        }
+
+        print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'aa=',aa))
+
+        simu_out = simu_study(ref,sigma2,p1,p2,n_bulk = nb,dirichlet.scale=aa,
+                              R=A,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor,nreps = 100)
+        saveRDS(simu_out,file = paste('output/manuscript/simulation/test/',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
+
+      }
+    }
+  }
+}
+
+
+#######################################
 
 ########10/06/2021#####################
 library(gtools)

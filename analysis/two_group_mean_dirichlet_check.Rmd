@@ -100,7 +100,8 @@ for(case in cases){
         #simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
         simu_out = readRDS(file = paste('output/manuscript/simulation/test/',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
         
-        boxplot(t(apply(simu_out$p_hat_weight_se_cor,c(1,2),mean)),ylim = c(0,0.5),xlab='cell types')
+        boxplot(t(apply(simu_out$p_hat_weight_se_cor,c(1,2),mean)),
+                ylim = c(0.05,0.17),xlab='cell types')
         lines(rowMeans(apply(simu_out$p_hat_weight,c(1,2),sd)),type='p',col='yellow',pch=17)
      
         rr = c(get_rmse_array(simu_out$p_hat_ols,simu_out$true_p),

@@ -267,7 +267,7 @@ simu_study     =   function(ref,
       Est.prop.allgene = NULL
       for(bb in 1:n_bulk){
         fit.music = music.basic(y[,bb],X,S=1,Sigma.music,iter.max=1000,nu=1e-4,eps=0.01)
-        Est.prop.allgene = cbind(Est.prop.allgene, fit.music$p.nnls)
+        Est.prop.allgene = cbind(Est.prop.allgene, fit.music$p.weight)
       }
       p_hat_music[,,reps] = Est.prop.allgene
     }

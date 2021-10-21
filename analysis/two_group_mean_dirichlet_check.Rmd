@@ -214,7 +214,7 @@ for(case in cases){
         print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'dirichlet scale=',aa))
 
         #simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
-        simu_out = readRDS(file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
+        simu_out = readRDS(file = paste('output/manuscript/simulation/test/',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
         
         #print("coverage of p")
         cc = c(mean(get_coverage_p(simu_out$p_hat_ols,simu_out$p_hat_ols_se,simu_out$true_p)),
@@ -280,7 +280,7 @@ for(case in cases){
         print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'dirichlet scale=',aa))
 
         #simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
-        simu_out = readRDS(file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
+        simu_out = readRDS(file = paste('output/manuscript/simulation/test/',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
         
         #print("coverage of p")
         cc = c(mean(get_coverage_p(simu_out$p_hat_ols,simu_out$p_hat_ols_se,simu_out$true_p)),
@@ -346,7 +346,7 @@ for(case in cases){
         print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'dirichlet scale=',aa))
 
         #simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
-        simu_out = readRDS(file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
+        simu_out = readRDS(file = paste('output/manuscript/simulation/test/',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
         
         #print('two sample t test, on true p')
         cover.naive0 = matrix(nrow = nreps,ncol=K)
@@ -460,7 +460,7 @@ for(case in cases){
         print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'dirichlet scale=',aa))
 
         #simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
-        simu_out = readRDS(file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
+        simu_out = readRDS(file = paste('output/manuscript/simulation/test/',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
         
         #print('two sample t test, on true p')
         cover.naive0 = matrix(nrow = nreps,ncol=K)
@@ -574,7 +574,7 @@ for(case in cases){
         print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'dirichlet scale=',aa))
 
         #simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
-        simu_out = readRDS(file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
+        simu_out = readRDS(file = paste('output/manuscript/simulation/test/',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
         
         #print('two sample t test, on true p')
         cover.naive0 = matrix(nrow = nreps,ncol=K)
@@ -687,7 +687,7 @@ for(case in cases){
         print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'dirichlet scale=',aa))
 
         #simu_out = simu_study(ref,b,R=A,sigma2,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
-        simu_out = readRDS(file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
+        simu_out = readRDS(file = paste('output/manuscript/simulation/test/',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'.rds',sep=''))
         
         #print('two sample t test, on true p')
         cover.naive0 = matrix(nrow = nreps,ncol=K)

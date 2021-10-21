@@ -535,8 +535,8 @@ for(case in cases){
                     mean(cover.naive.music),
                mean(cover.naive1),
                mean(cover.naive),
-               mean(cover.asy.hc3),
-               mean(cover.asy.cv))
+               mean(cover.asy.hc3,na.rm=TRUE),
+               mean(cover.asy.cv,na.rm=TRUE))
         coverages = cbind(coverages,cc)
    
 
@@ -648,8 +648,8 @@ for(case in cases){
                     mean(cover.naive.music),
                mean(cover.naive1),
                mean(cover.naive),
-               mean(cover.asy.hc3),
-               mean(cover.asy.cv))
+               mean(cover.asy.hc3,na.rm=TRUE),
+               mean(cover.asy.cv,na.rm=TRUE))
         coverages = cbind(coverages,cc)
    
 

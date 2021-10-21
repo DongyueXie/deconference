@@ -40,7 +40,8 @@ simu_study     =   function(ref,
                             est_cor = TRUE,
                             n_bulk_for_cor = 100,
                             cor_method = 'testing',
-                            add.music=TRUE){
+                            add.music=TRUE,
+                            make.cov.pos = FALSE){
 
   is.identity = function(X){
     if(!is.null(X)){
@@ -72,6 +73,7 @@ simu_study     =   function(ref,
   #p_hat_se_cor_cv = array(dim = c(K,n_bulk,nreps))
 
   p_hat_weight = array(dim = c(K,n_bulk,nreps))
+  p_hat_weight_se = array(dim = c(K,n_bulk,nreps))
   p_hat_weight_se_cor = array(dim = c(K,n_bulk,nreps))
   p_hat_weight_se_cor_cv = array(dim = c(K,n_bulk,nreps))
 
@@ -84,6 +86,7 @@ simu_study     =   function(ref,
   #diff_hat_se_cor_cv = matrix(nrow=nreps,ncol=K)
 
   diff_hat_weight = matrix(nrow=nreps,ncol=K)
+  diff_hat_weight_se = matrix(nrow=nreps,ncol=K)
   diff_hat_weight_se_cor = matrix(nrow=nreps,ncol=K)
   diff_hat_weight_se_cor_cv = matrix(nrow=nreps,ncol=K)
 
@@ -158,7 +161,7 @@ simu_study     =   function(ref,
       b2 = t(gtools::rdirichlet(nb2,p2*dirichlet.scale))
       b = cbind(b1,b2)
     }else{
-      b = cbind(matrix(p1,ncol=nb1),matrix(p2,ncol=nb2))
+      b = cbind(matrix(p1,ncol=nb1,nrow=K),matrix(p2,ncol=nb2,nrow=K))
     }
     true_p[,,reps] = b
 
@@ -218,7 +221,11 @@ simu_study     =   function(ref,
                                correction=FALSE,
                                verbose=verbose,
                                R01=NULL,
-                               true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+                               true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+                               groups = groups,
+                               Q.pos = make.cov.pos,
+                               Sigma.pos = make.cov.pos,
+                               V_tilde.pos = make.cov.pos)
 
     fit.err.cor = estimation_func2(y=y,
                                X=X,
@@ -228,7 +235,13 @@ simu_study     =   function(ref,
                                correction=FALSE,
                                verbose=verbose,
                                R01=R01,
-                               true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+                               true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+                               groups = groups,
+                               Q.pos = make.cov.pos,
+                               Sigma.pos = make.cov.pos,
+                               V_tilde.pos = make.cov.pos)
+
+
 
     # fit.err.cor.cv = estimation_func2(y=y,
     #                                X=X,
@@ -242,6 +255,21 @@ simu_study     =   function(ref,
 
     fit.vash = vashr::vash(sqrt(rowSums(V)),df=n_ref-1)
     w = 1/(fit.vash$sd.post)^2
+
+    fit.err.weight = estimation_func2(y=y,
+                                      X=X,
+                                      Vg=V,
+                                      w=w,
+                                      hc.type='hc3',
+                                      correction=FALSE,
+                                      verbose=verbose,
+                                      R01=NULL,
+                                      true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+                                      groups = groups,
+                                      Q.pos = make.cov.pos,
+                                      Sigma.pos = make.cov.pos,
+                                      V_tilde.pos = make.cov.pos)
+
     fit.err.cor.weight = estimation_func2(y=y,
                                    X=X,
                                    Vg=V,
@@ -250,7 +278,11 @@ simu_study     =   function(ref,
                                    correction=FALSE,
                                    verbose=verbose,
                                    R01=R01,
-                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+                                   true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+                                   groups = groups,
+                                   Q.pos = make.cov.pos,
+                                   Sigma.pos = make.cov.pos,
+                                   V_tilde.pos = make.cov.pos)
 
     fit.err.cor.weight.cv = estimation_func2(y=y,
                                           X=X,
@@ -260,7 +292,11 @@ simu_study     =   function(ref,
                                           correction=FALSE,
                                           verbose=verbose,
                                           R01=R01,
-                                          true.beta = if(true.beta.for.Sigma){true.beta}else{NULL})
+                                          true.beta = if(true.beta.for.Sigma){true.beta}else{NULL},
+                                          groups = groups,
+                                          Q.pos = make.cov.pos,
+                                          Sigma.pos = make.cov.pos,
+                                          V_tilde.pos = make.cov.pos)
 
     if(add.music){
       Sigma.music = t(apply(X_array_ref,c(1),function(z){diag(cov(t(z),use = 'complete.obs'))}))
@@ -297,28 +333,32 @@ simu_study     =   function(ref,
     #p_hat_se_cor_cv[,,reps] = fit.err.cor.cv$p_hat_se
 
     p_hat_weight[,,reps] = fit.err.cor.weight$p_hat
+    p_hat_weight_se[,,reps] = fit.err.weight$p_hat_se
     p_hat_weight_se_cor[,,reps] = fit.err.cor.weight$p_hat_se
     p_hat_weight_se_cor_cv[,,reps] = fit.err.cor.weight.cv$p_hat_se
 
     diff_hat_ols[reps,] = fit.ols$diff_hat
     diff_hat_ols_se[reps,] = fit.ols$diff_hat_se
 
-    diff_test = two_group_test(fit.err,groups)
-    diff_hat[reps,] = c(diff_test$diff_group)
-    diff_hat_se[reps,] = c(diff_test$diff_se)
+    #diff_test = two_group_test(fit.err,groups)
+    diff_hat[reps,] = fit.err$two_group_res$diff_hat
+    diff_hat_se[reps,] = fit.err$two_group_res$diff_hat_se
 
-    diff_test_cor = two_group_test(fit.err.cor,groups)
-    diff_hat_se_cor[reps,] = c(diff_test_cor$diff_se)
+    #diff_test_cor = two_group_test(fit.err.cor,groups)
+    diff_hat_se_cor[reps,] = fit.err.cor$two_group_res$diff_hat_se
 
     #diff_test_cor_cv = two_group_test(fit.err.cor.cv,groups)
     #diff_hat_se_cor_cv[reps,] = c(diff_test_cor_cv$diff_se)
 
-    diff_test_cor_weight = two_group_test(fit.err.cor.weight,groups)
-    diff_hat_weight[reps,] = c(diff_test_cor_weight$diff_group)
-    diff_hat_weight_se_cor[reps,] = c(diff_test_cor_weight$diff_se)
+    #diff_test_cor_weight = two_group_test(fit.err.cor.weight,groups)
+    diff_hat_weight[reps,] = fit.err.cor.weight$two_group_res$diff_hat
+    diff_hat_weight_se_cor[reps,] = fit.err.cor.weight$two_group_res$diff_hat_se
 
-    diff_test_cor_weight_cv = two_group_test(fit.err.cor.weight.cv,groups)
-    diff_hat_weight_se_cor_cv[reps,] = c(diff_test_cor_weight_cv$diff_se)
+
+    diff_hat_weight_se[reps,] = fit.err.weight$two_group_res$diff_hat_se
+
+    #diff_test_cor_weight_cv = two_group_test(fit.err.cor.weight.cv,groups)
+    diff_hat_weight_se_cor_cv[reps,] = fit.err.cor.weight.cv$two_group_res$diff_hat_se
 
   }
 
@@ -331,6 +371,7 @@ simu_study     =   function(ref,
               #p_hat_se_cor_cv = p_hat_se_cor_cv,
 
               p_hat_weight = p_hat_weight,
+              p_hat_weight_se = p_hat_weight_se,
               p_hat_weight_se_cor = p_hat_weight_se_cor,
               p_hat_weight_se_cor_cv = p_hat_weight_se_cor_cv,
 
@@ -343,6 +384,7 @@ simu_study     =   function(ref,
               #diff_hat_se_cor_cv = diff_hat_se_cor_cv,
 
               diff_hat_weight = diff_hat_weight,
+              diff_hat_weight_se = diff_hat_weight_se,
               diff_hat_weight_se_cor = diff_hat_weight_se_cor,
               diff_hat_weight_se_cor_cv = diff_hat_weight_se_cor_cv,
 

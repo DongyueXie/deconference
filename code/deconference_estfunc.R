@@ -169,6 +169,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   }
   Q = (A-V)
   if(Q.pos){
+    #print(isSymmetric(Q))
+    Q = (Q+t(Q))/2
     Q = make.pos.def(Q)
   }
   Qinv = solve(Q)
@@ -248,6 +250,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   score_mat = Sigma$score_mat
   Sigma = Sigma$Sigma
   if(Sigma.pos){
+    #print(isSymmetric(Sigma))
     Sigma = make.pos.def(Sigma)
   }
   covb = Q_inv%*%Sigma%*%Q_inv
@@ -412,6 +415,8 @@ get_two_group_res = function(score_mat,J,Q_inv,groups,K,p_hat,p_hat_cov,method,R
     }
   }
   if(V_tilde.pos){
+    #print(isSymmetric(V_tilde))
+    V_tilde = (V_tilde+t(V_tilde))/2
     V_tilde = make.pos.def(V_tilde)
   }
   z_score = diff_group/sqrt(diag(V_tilde))
@@ -467,6 +472,7 @@ get_SIGMA3 = function(y,X,beta,V,h,nb,G,K,verbose,hc.type,
       # R01 01 cor mat, G by G
       # score_mat G by nK
       Sigma = crossprod(score_mat,R01)%*%score_mat
+
     }else{
       #browser()
       R01_idx = summary(R01)
@@ -501,6 +507,7 @@ get_SIGMA3 = function(y,X,beta,V,h,nb,G,K,verbose,hc.type,
   }
 
 
+  Sigma = (Sigma+t(Sigma))/2
   return(list(Sigma=Sigma,score_mat=score_mat))
 
 

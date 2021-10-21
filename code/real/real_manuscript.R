@@ -13,7 +13,9 @@ sce_to_es = function(sce){
 }
 
 neuron_simu_study = function(indis_ref,day30sce,
-                             p1,p2,dirichlet=FALSE,p1.prop=0.5,
+                             p1,p2,dirichlet=FALSE,
+                             p1.prop=0.5,
+                             dirichlet.scale = 10,
                              bulk_lib_size = 500,
                              n_ref=11,n_rep=1,seed=12345,
                              verbose=FALSE,
@@ -30,7 +32,7 @@ neuron_simu_study = function(indis_ref,day30sce,
   n.p1.temp =  round(n_bulk*p1.prop)
   groups = c(rep(1,n.p1.temp),rep(2,n_bulk-n.p1.temp))
   if(dirichlet){
-    b = cbind(t(rdirichlet(n.p1.temp,p1*10)),t(rdirichlet(n_bulk-n.p1.temp,p2*10)))
+    b = cbind(t(rdirichlet(n.p1.temp,p1*dirichlet.scale)),t(rdirichlet(n_bulk-n.p1.temp,p2*dirichlet.scale)))
   }else{
     b = cbind(p1%*%t(rep(1,n.p1.temp)),p2%*%t(rep(1,n_bulk-n.p1.temp)))
   }

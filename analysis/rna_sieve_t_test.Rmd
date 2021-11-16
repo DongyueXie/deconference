@@ -1,0 +1,178 @@
+---
+title: "rna sieve t test coverage test"
+author: "DongyueXie"
+date: "2021-11-13"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Introduction
+
+take A LOOK at $\hat d - \hat d_{true}$ and $\hat d_{true} - d$
+
+```{r}
+p1 = c(0.15,0.15,0.1,0.1,0.2,0.3)
+p2 = c(0.1,0.1,0.2,0.3,0.15,0.15)
+d = p1 - p2
+```
+
+load rna-sieve results:
+
+```{r}
+aa = 10
+case = 'all_diff'
+n_ref=11
+K = 6
+n_rep = 100
+nreps = 100
+n_bulk = 86
+celltypes = c("DA" ,"Epen1","Sert","FPP","P_FPP","U_Neur")
+celltypes_sieve = c('DA', 'Epen1', 'FPP', 'P_FPP', 'Sert', 'U_Neur')
+
+library(reticulate)
+np <- import("numpy")
+
+p_hat_sieve = np$load(paste("output/manuscript/real/rnasieve/neuron_ref",n_ref,"_rep",n_rep,"_dirichlet",aa,"_",case,'_p_hat.npy',sep=''))
+for(r in 1:nreps){
+  p_hat_sieve[,,r] = p_hat_sieve[match(celltypes,celltypes_sieve),,r]
+}
+```
+
+## all_diff case
+
+```{r}
+p1 = c(0.15,0.15,0.1,0.1,0.2,0.3)
+p2 = c(0.1,0.1,0.2,0.3,0.15,0.15)
+d = p1 - p2
+```
+
+load rna-sieve results:
+
+```{r}
+aa = 10
+case = 'all_diff'
+n_ref=11
+K = 6
+n_rep = 100
+n_bulk = 86
+celltypes = c("DA" ,"Epen1","Sert","FPP","P_FPP","U_Neur")
+celltypes_sieve = c('DA', 'Epen1', 'FPP', 'P_FPP', 'Sert', 'U_Neur')
+
+library(reticulate)
+np <- import("numpy")
+
+p_hat_sieve = np$load(paste("output/manuscript/real/rnasieve/neuron_ref",n_ref,"_rep",n_rep,"_dirichlet",aa,"_",case,'_p_hat.npy',sep=''))
+for(r in 1:nreps){
+  p_hat_sieve[,,r] = p_hat_sieve[match(celltypes,celltypes_sieve),,r]
+}
+```
+
+Look at $\hat d - \hat d_{true}$
+
+```{r}
+
+groups = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_dirichlet",aa,"_12400by97_",case,'_groups_mat.rds',sep=''))
+true_p = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_dirichlet",aa,"_12400by97_",case,'_bulk_p.rds',sep=''))
+
+diff_hat_true = matrix(nrow=nreps,ncol=K)
+diff_hat = matrix(nrow=nreps,ncol=K)
+for(i in 1:nreps){
+  diff_hat[i,] = rowMeans(p_hat_sieve[,groups[i,]==1,i]) - rowMeans(p_hat_sieve[,groups[i,]==2,i])
+  diff_hat_true[i,] = rowMeans(true_p[[i]][,groups[i,]==1]) - rowMeans(true_p[[i]][,groups[i,]==2])    
+}
+diff_true = matrix(d,nrow=n_rep,ncol=K,byrow = T)
+```
+
+
+
+```{r}
+sqrt(colMeans(diff_hat - diff_hat_true)^2)
+sqrt(colMeans(diff_hat_true - diff_true)^2)
+```
+
+
+
+```{r}
+cover.naive.rnasieve = matrix(nrow = nreps,ncol=K)
+    sd.naive.rnasieve = matrix(nrow = nreps,ncol=K)
+    for(i in 1:nreps){
+      for(k in 1:K){
+        temp = t.test(p_hat_sieve[k,groups[i,]==1,i],p_hat_sieve[k,groups[i,]==2,i])
+        sd.naive.rnasieve[i,k] = temp$stderr
+        cover.naive.rnasieve[i,k] = (d[k]>temp$conf.int[1])&(d[k]<temp$conf.int[2])
+      }
+    }
+mean(cover.naive.rnasieve)
+colMeans(cover.naive.rnasieve)
+```
+
+So the conclusion is that for the last cell type the estimate from rna-sieve is far from the true ones so the coverage is pretty low.
+
+## null case
+
+```{r}
+ p1 = c(0.3,0.2,0.15,0.15,0.1,0.1)
+      p2 = c(0.3,0.2,0.15,0.15,0.1,0.1)
+d = p1 - p2
+```
+
+load rna-sieve results:
+
+```{r}
+aa = 10
+case = 'null'
+n_ref=11
+K = 6
+n_rep = 100
+n_bulk = 86
+celltypes = c("DA" ,"Epen1","Sert","FPP","P_FPP","U_Neur")
+celltypes_sieve = c('DA', 'Epen1', 'FPP', 'P_FPP', 'Sert', 'U_Neur')
+
+library(reticulate)
+np <- import("numpy")
+
+p_hat_sieve = np$load(paste("output/manuscript/real/rnasieve/neuron_ref",n_ref,"_rep",n_rep,"_dirichlet",aa,"_",case,'_p_hat.npy',sep=''))
+for(r in 1:nreps){
+  p_hat_sieve[,,r] = p_hat_sieve[match(celltypes,celltypes_sieve),,r]
+}
+```
+
+Look at $\hat d - \hat d_{true}$
+
+```{r}
+
+groups = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_dirichlet",aa,"_12400by97_",case,'_groups_mat.rds',sep=''))
+true_p = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_dirichlet",aa,"_12400by97_",case,'_bulk_p.rds',sep=''))
+
+diff_hat_true = matrix(nrow=nreps,ncol=K)
+diff_hat = matrix(nrow=nreps,ncol=K)
+for(i in 1:nreps){
+  diff_hat[i,] = rowMeans(p_hat_sieve[,groups[i,]==1,i]) - rowMeans(p_hat_sieve[,groups[i,]==2,i])
+  diff_hat_true[i,] = rowMeans(true_p[[i]][,groups[i,]==1]) - rowMeans(true_p[[i]][,groups[i,]==2])    
+}
+diff_true = matrix(d,nrow=n_rep,ncol=K,byrow = T)
+```
+
+
+
+```{r}
+sqrt(colMeans(diff_hat - diff_hat_true)^2)
+sqrt(colMeans(diff_hat_true - diff_true)^2)
+```
+
+
+
+```{r}
+cover.naive.rnasieve = matrix(nrow = nreps,ncol=K)
+    sd.naive.rnasieve = matrix(nrow = nreps,ncol=K)
+    for(i in 1:nreps){
+      for(k in 1:K){
+        temp = t.test(p_hat_sieve[k,groups[i,]==1,i],p_hat_sieve[k,groups[i,]==2,i])
+        sd.naive.rnasieve[i,k] = temp$stderr
+        cover.naive.rnasieve[i,k] = (d[k]>temp$conf.int[1])&(d[k]<temp$conf.int[2])
+      }
+    }
+mean(cover.naive.rnasieve)
+colMeans(cover.naive.rnasieve)
+```

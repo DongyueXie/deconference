@@ -53,9 +53,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            #cor.idx=NULL,
                            true.beta = NULL,
                            centeringXY = FALSE,
-                           Sigma.pos = TRUE,
-                           Q.pos = TRUE,
-                           V_tilde.pos = TRUE,
+                           Sigma.pos = FALSE,
+                           Q.pos = FALSE,
+                           V_tilde.pos = FALSE,
                            only.scale.pos.res=FALSE,
                            only.add.pos.res = FALSE,
                            nfold=10,
@@ -300,6 +300,7 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   }
 
   beta_tilde_hat = cbind(beta_tilde_hat)
+  rownames(beta_tilde_hat) = colnames(X)
   J = matrix(0,nrow=(nb*K),ncol=(nb*K))
 
   if(is.null(true.beta)){
@@ -340,6 +341,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   p_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
   p_hat_se = sqrt(diag(asyV))
   p_hat_se = matrix(p_hat_se,ncol=nb)
+  rownames(p_hat) = colnames(X)
+  rownames(p_hat_se) = colnames(X)
 
   if(!is.null(groups)){
     two_group_res = get_two_group_res(score_mat,J,Q_inv,groups,K,p_hat,asyV,two_group_method,R01,V_tilde.pos)
@@ -352,7 +355,9 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   }
 
   #browser()
-  # rownames(beta_hat) = colnames(X)
+
+
+
 
   return(list(p_hat=p_hat,
               p_hat_se=p_hat_se,

@@ -36,7 +36,7 @@ J_sum2one = function(b,K){
 #'@param nfold if using jacknife, the number of fold to be used.
 #'@param folds if using jackknife, the folds to be used. folds looks like 111222333.
 #'@param R01 the 0-1 correlation matrix
-#'@param calc_cov whether calculate the covariance among bulk samples.
+#'@param calc_var whether calculate the covariance matrices.
 
 estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            w=NULL,
@@ -65,7 +65,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            #b_sd=NULL,
                            R01=NULL,
                            groups=NULL,
-                           two_group_method = 'asymptotic'
+                           two_group_method = 'asymptotic',
+                           calc_var=TRUE
                            ){
 
   #browser()
@@ -217,167 +218,190 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
   #browser()
 
-  Q_inv = kronecker(diag(nb),Qinv)
-  #H = t(t(X%*%Qinv%*%t(X))*w)/G
-  #h = rowSums((X%*%Qinv)*X)*w
-  h = rowSums((Xw%*%Qinv)*Xw)
+  if(calc_var){
+
+    Q_inv = kronecker(diag(nb),Qinv)
+    #H = t(t(X%*%Qinv%*%t(X))*w)/G
+    #h = rowSums((X%*%Qinv)*X)*w
+    h = rowSums((Xw%*%Qinv)*Xw)
 
 
 
-  # Sigma = get_SIGMA2(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
-  #                   V=Vw,h=h,nb=nb,
-  #                   G=G,K=K,lambda=lambda,verbose=verbose,
-  #                   calc_cov=calc_cov,hc.type=hc.type,
-  #                   cor.idx=cor.idx,
-  #                   only.scale.pos.res=only.scale.pos.res,
-  #                   only.add.pos.res=only.add.pos.res,
-  #                   nfold=nfold,
-  #                   folds=folds,
-  #                   use_all_pair_for_cov=use_all_pair_for_cov,
-  #                   b=b,
-  #                   b_sd=b_sd,
-  #                   R01=R01)
+    # Sigma = get_SIGMA2(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
+    #                   V=Vw,h=h,nb=nb,
+    #                   G=G,K=K,lambda=lambda,verbose=verbose,
+    #                   calc_cov=calc_cov,hc.type=hc.type,
+    #                   cor.idx=cor.idx,
+    #                   only.scale.pos.res=only.scale.pos.res,
+    #                   only.add.pos.res=only.add.pos.res,
+    #                   nfold=nfold,
+    #                   folds=folds,
+    #                   use_all_pair_for_cov=use_all_pair_for_cov,
+    #                   b=b,
+    #                   b_sd=b_sd,
+    #                   R01=R01)
 
 
-  Sigma = get_SIGMA3(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
-                     V=Vw,h=h,nb=nb,
-                     G=G,K=K,verbose=verbose,
-                     hc.type=hc.type,
-                     only.add.pos.res=only.add.pos.res,
-                     nfold=nfold,
-                     folds=folds,
-                     R01=R01)
-  score_mat = Sigma$score_mat
-  Sigma = Sigma$Sigma
-  if(Sigma.pos){
-    #print(isSymmetric(Sigma))
-    Sigma = make.pos.def(Sigma)
-  }
-  covb = Q_inv%*%Sigma%*%Q_inv
-
-  #browser()
-
-  # if(is.null(R)){
-  #   browser()
-  # }
-
-  #browser()
-
-  # if(!is.null(R)){
-  #   print(paste('adjusted for corr:',sum(diag(Sigma))))
-  # }else{
-  #   print(paste('not adjusted for corr:',sum(diag(Sigma))))
-  # }
-
-  #print("Looking at sum of Q_invSignaQ_inv")
-
-  # if(!is.null(R)){
-  #   print(paste('adjusted for corr:',sum(covb)*1000))
-  # }else{
-  #   print(paste('not adjusted for corr:',sum(covb)*1000))
-  # }
-
-  #print("Looking at diagonal of Q_invSignaQ_inv")
-
-  # if(!is.null(R)){
-  #   print(paste('adjusted for corr:',sum(diag(covb))))
-  # }else{
-  #   print(paste('not adjusted for corr:',sum(diag(covb))))
-  # }
-
-  #browser()
-
-
-
-
-  # delta method
-
-  # covb is a (nb*K)*(nb*K) cov matrix
-  # formulate Jacobian matrix
-
-  if(verbose){
-    message("performing delta method")
-  }
-
-  beta_tilde_hat = cbind(beta_tilde_hat)
-  rownames(beta_tilde_hat) = colnames(X)
-  J = matrix(0,nrow=(nb*K),ncol=(nb*K))
-
-  if(is.null(true.beta)){
-
-    for(i in 1:nb){
-      J[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = J_sum2one(beta_tilde_hat[,i],K)
+    Sigma = get_SIGMA3(y=yw,X=Xw,beta=if(is.null(true.beta)){beta_tilde_hat}else{true.beta},
+                       V=Vw,h=h,nb=nb,
+                       G=G,K=K,verbose=verbose,
+                       hc.type=hc.type,
+                       only.add.pos.res=only.add.pos.res,
+                       nfold=nfold,
+                       folds=folds,
+                       R01=R01)
+    score_mat = Sigma$score_mat
+    Sigma = Sigma$Sigma
+    if(Sigma.pos){
+      #print(isSymmetric(Sigma))
+      Sigma = make.pos.def(Sigma)
     }
+    covb = Q_inv%*%Sigma%*%Q_inv
+
+    #browser()
+
+    # if(is.null(R)){
+    #   browser()
+    # }
+
+    #browser()
+
+    # if(!is.null(R)){
+    #   print(paste('adjusted for corr:',sum(diag(Sigma))))
+    # }else{
+    #   print(paste('not adjusted for corr:',sum(diag(Sigma))))
+    # }
+
+    #print("Looking at sum of Q_invSignaQ_inv")
+
+    # if(!is.null(R)){
+    #   print(paste('adjusted for corr:',sum(covb)*1000))
+    # }else{
+    #   print(paste('not adjusted for corr:',sum(covb)*1000))
+    # }
+
+    #print("Looking at diagonal of Q_invSignaQ_inv")
+
+    # if(!is.null(R)){
+    #   print(paste('adjusted for corr:',sum(diag(covb))))
+    # }else{
+    #   print(paste('not adjusted for corr:',sum(diag(covb))))
+    # }
+
+    #browser()
+
+
+
+
+    # delta method
+
+    # covb is a (nb*K)*(nb*K) cov matrix
+    # formulate Jacobian matrix
+
+    if(verbose){
+      message("performing delta method")
+    }
+
+    beta_tilde_hat = cbind(beta_tilde_hat)
+    rownames(beta_tilde_hat) = colnames(X)
+    J = matrix(0,nrow=(nb*K),ncol=(nb*K))
+
+    if(is.null(true.beta)){
+
+      for(i in 1:nb){
+        J[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = J_sum2one(beta_tilde_hat[,i],K)
+      }
+
+    }else{
+
+      for(i in 1:nb){
+        J[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = J_sum2one(true.beta[,i],K)
+      }
+
+    }
+
+
+
+    asyV = (J)%*%covb%*%t(J)
+    # if(asyV.pos){
+    #   diag(asyV) = pmax(diag(asyV),0)
+    # }
+
+    # if(!is.null(R)){
+    #   print(paste('adjusted for corr:',sum(asyV)))
+    # }else{
+    #   print(paste('not adjusted for corr:',sum(asyV)))
+    # }
+
+    # if(!is.null(R)){
+    #   print(paste('adjusted for corr:',sum(diag(asyV))))
+    # }else{
+    #   print(paste('not adjusted for corr:',sum(diag(asyV))))
+    # }
+
+    #browser()
+
+    p_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
+    p_hat_se = sqrt(diag(asyV))
+    p_hat_se = matrix(p_hat_se,ncol=nb)
+    rownames(p_hat) = colnames(X)
+    rownames(p_hat_se) = colnames(X)
+
+    if(!is.null(groups)){
+      two_group_res = get_two_group_res(score_mat,J,Q_inv,groups,K,p_hat,asyV,two_group_method,R01,V_tilde.pos)
+    }else{
+      two_group_res = NULL
+    }
+
+    if(verbose){
+      message("done")
+    }
+
+    #browser()
+
+
+
+
+    return(list(p_hat=p_hat,
+                p_hat_se=p_hat_se,
+                p_hat_cov = asyV,
+                beta_hat=beta_tilde_hat,
+                beta_hat_se = matrix(sqrt(diag(covb)),ncol=nb),
+                beta_hat_cov = covb,
+                Sigma = Sigma,
+                two_group_res=two_group_res
+                #Sigma_ii = Sigma_ii/G^2,
+                #J=J,
+                #Q_inv = Q_inv,
+                #Q=Q,
+                #V=V,
+                #A=A,
+                #h=h,
+                #H=H,
+                #lambda=lambda0,
+                #input = input
+    ))
 
   }else{
 
-    for(i in 1:nb){
-      J[((i-1)*K+1):(i*K),((i-1)*K+1):(i*K)] = J_sum2one(true.beta[,i],K)
-    }
+    p_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
+    return(list(p_hat=p_hat,
+                beta_hat=beta_tilde_hat
+                #Sigma_ii = Sigma_ii/G^2,
+                #J=J,
+                #Q_inv = Q_inv,
+                #Q=Q,
+                #V=V,
+                #A=A,
+                #h=h,
+                #H=H,
+                #lambda=lambda0,
+                #input = input
+    ))
 
   }
 
 
-
-  asyV = (J)%*%covb%*%t(J)
-  # if(asyV.pos){
-  #   diag(asyV) = pmax(diag(asyV),0)
-  # }
-
-  # if(!is.null(R)){
-  #   print(paste('adjusted for corr:',sum(asyV)))
-  # }else{
-  #   print(paste('not adjusted for corr:',sum(asyV)))
-  # }
-
-  # if(!is.null(R)){
-  #   print(paste('adjusted for corr:',sum(diag(asyV))))
-  # }else{
-  #   print(paste('not adjusted for corr:',sum(diag(asyV))))
-  # }
-
-  #browser()
-
-  p_hat = apply(beta_tilde_hat,2,function(z){z/sum(z)})
-  p_hat_se = sqrt(diag(asyV))
-  p_hat_se = matrix(p_hat_se,ncol=nb)
-  rownames(p_hat) = colnames(X)
-  rownames(p_hat_se) = colnames(X)
-
-  if(!is.null(groups)){
-    two_group_res = get_two_group_res(score_mat,J,Q_inv,groups,K,p_hat,asyV,two_group_method,R01,V_tilde.pos)
-  }else{
-    two_group_res = NULL
-  }
-
-  if(verbose){
-    message("done")
-  }
-
-  #browser()
-
-
-
-
-  return(list(p_hat=p_hat,
-              p_hat_se=p_hat_se,
-              p_hat_cov = asyV,
-              beta_hat=beta_tilde_hat,
-              beta_hat_se = matrix(sqrt(diag(covb)),ncol=nb),
-              beta_hat_cov = covb,
-              Sigma = Sigma,
-              two_group_res=two_group_res
-              #Sigma_ii = Sigma_ii/G^2,
-              #J=J,
-              #Q_inv = Q_inv,
-              #Q=Q,
-              #V=V,
-              #A=A,
-              #h=h,
-              #H=H,
-              #lambda=lambda0,
-              #input = input
-              ))
 
 }
 

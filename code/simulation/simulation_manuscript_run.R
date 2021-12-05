@@ -21,7 +21,71 @@
 #
 # saveRDS(list(ref=ref,sigma2=sigma2),file='data/pancreas/xin_ref_sigma9496.rds')
 
+########################################################
+########### use neuron data for simulation #############
+source('code/simulation/simulation_manuscript.R')
+indis_ref = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+ref = apply(indis_ref,c(1,2),mean,na.rm=TRUE)
+sigma2 = apply(indis_ref,c(1,2),var,na.rm=TRUE)
 
+
+G = nrow(ref)
+K = ncol(ref)
+d = 500
+A = matrix(0,nrow=G,ncol=G)
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+alpha.cors = c(0)
+cases = c("null")
+nbs = c(4)
+dirichlet.scale = c(5)
+
+# test
+# temp = simu_study(ref[1:100,],sigma2[1:100,],c(0.5,0.3,0.1,0.1),c(0.5,0.3,0.1,0.1),
+#                   n_bulk = 50,dirichlet.scale=5,
+#                   R=A[1:100,1:100],printevery = 1,est_cor=FALSE,nreps = 5)
+
+set.seed(12345)
+for(case in cases){
+
+  if(case=='null'){
+    #p1 = c(0.3,0.2,0.15,0.15,0.1,0.1)
+    #p2 = c(0.3,0.2,0.15,0.15,0.1,0.1)
+    p1 = c(0.15,0.15,0.1,0.1,0.2,0.3)
+    p2 = c(0.15,0.15,0.1,0.1,0.2,0.3)
+  }else if(case=='all_diff'){
+    p1 = c(0.15,0.15,0.1,0.1,0.2,0.3)
+    p2 = c(0.1,0.1,0.2,0.3,0.15,0.15)
+  }
+
+  for(nb in nbs){
+    for(aa in dirichlet.scale){
+      for(alpha.cor in alpha.cors){
+
+        if(alpha.cor==0){
+          est_cor = FALSE
+          cor.status = 'trueR'
+        }else{
+          est_cor=TRUE
+          cor.status = paste('cor0',alpha.cor*10,sep = '')
+        }
+
+        print(paste('Running:',case,'nb=',nb,'cor:',cor.status,'aa=',aa))
+
+        simu_out2 = simu_study(ref,sigma2,p1,p2,n_bulk = nb,dirichlet.scale=aa,nreps = 100,
+                              R=A,printevery = 1,alpha.cor = alpha.cor,est_cor=est_cor)
+        #saveRDS(simu_out,file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_',cor.status,'_',case,'_dirichlet',aa,'no_pd.rds',sep=''))
+
+      }
+    }
+  }
+}
 
 ########10/20evening/2021#####################
 
@@ -98,7 +162,7 @@ xin = readRDS('data/pancreas/xin_ref_sigma9496.rds')
 ref = xin$ref
 sigma2 = xin$sigma2
 G = nrow(ref)
-K = 4
+K = ncol(ref)
 d = 500
 A = matrix(0,nrow=G,ncol=G)
 for(i in 1:G){

@@ -2,6 +2,7 @@
 ############## Run Simulation for manuscript ###############
 source('code/deconference_main.R')
 source('code/ols_hc3.R')
+source('code/CIBERSORT.R')
 source('code/simulation/get_cor_pairs.R')
 devtools::load_all('D://githubs/MuSiC')
 
@@ -20,7 +21,7 @@ devtools::load_all('D://githubs/MuSiC')
 #'@param alpha.cor fdr level of detecting correlations
 #'@param groups indicates two groups of bulk individual
 #'@param n_bulk_for_cor number of bulk data generated for inferring correlations
-simu_study     =   function(ref,
+simu_study = function(ref,
                             sigma2,
                             p1,
                             p2,
@@ -42,7 +43,10 @@ simu_study     =   function(ref,
                             n_bulk_for_cor = 100,
                             cor_method = 'testing',
                             add.music=TRUE,
-                            make.cov.pos = FALSE){
+                            make.cov.pos = FALSE,
+                            calc_var=FALSE,
+                            method_list=c('ols','mea.err','mea.err.cor','mea.err.weight','mea.err.weight.cor','mea.err.weight.cor.cv')
+                      ){
 
   is.identity = function(X){
     if(!is.null(X)){
@@ -77,6 +81,8 @@ simu_study     =   function(ref,
   p_hat_weight_se = array(dim = c(K,n_bulk,nreps))
   p_hat_weight_se_cor = array(dim = c(K,n_bulk,nreps))
   p_hat_weight_se_cor_cv = array(dim = c(K,n_bulk,nreps))
+
+  p_hat_weight_marker = array(dim = c(K,n_bulk,nreps))
 
   diff_hat_ols = matrix(nrow=nreps,ncol=K)
   diff_hat_ols_se = matrix(nrow=nreps,ncol=K)
@@ -414,6 +420,174 @@ calc_ci = function(b,V,alpha=0.05,eps=1e-7,logit=TRUE){
     ci.r = b+qnorm(1-alpha/2)*sqrt(diag(V))
     return(cbind(ci.l,ci.r))
   }
+
+}
+
+
+
+
+simu_study_marker = function(ref,
+                      sigma2,
+                      p1,
+                      p2,
+                      n_bulk=100,
+                      dirichlet = TRUE,
+                      dirichlet.scale = 10,
+                      R=NULL,
+                      nreps = 100,
+                      bulk_lib_size = 500,
+                      n_ref = 10,
+                      printevery=10,
+                      verbose=FALSE,
+                      alpha=0.05,
+                      alpha.cor = 0.5,
+                      groups = c(rep(1,n_bulk/2),rep(2,n_bulk/2))
+                      ){
+
+  is.identity = function(X){
+    if(!is.null(X)){
+      (sum(X)==nrow(X))
+    }else{
+      FALSE
+    }
+
+  }
+
+  genp = function(K){
+    p = runif(K)
+    p/sum(p)
+  }
+
+  G = nrow(ref)
+  K = ncol(ref)
+  is.indep = (is.identity(R))|(is.null(R))
+
+
+
+
+
+
+  p_hat_weight_marker = array(dim = c(K,n_bulk,nreps))
+
+  gene_names = rownames(ref)
+  true_betas = matrix(nrow=nreps,ncol=n_bulk*K)
+
+
+
+  ## pre calculate MLN and generate independent normal
+
+  norm.ref = matrix(nrow=G,ncol=K)
+  norm.Sigma.chol = list()
+  norm.Sigma = matrix(nrow=G,ncol=K)
+  if(!is.indep){
+    chol.R = chol(R)
+  }
+  for(k in 1:K){
+    norm.ref[,k] = log(ref[,k]^2/sqrt(ref[,k]^2+sigma2[,k]))
+    norm.s = sqrt(log(1+sigma2[,k]/ref[,k]^2))
+    if(!is.indep){
+      norm.Sigma.chol[[k]] = t(norm.s*t(chol.R))
+    }else{
+      norm.Sigma[,k] = norm.s^2
+    }
+  }
+
+
+
+  # all_fit = list()
+  true_p = array(dim = c(K,n_bulk,nreps))
+
+  for(reps in 1:nreps){
+
+    if(reps%%printevery==0){print(sprintf("running %d (out of %d)",reps,nreps))}
+
+    ## generate group p's
+    nb1 = table(groups)[1]
+    nb2 = n_bulk - nb1
+    if(dirichlet){
+      b1 = t(gtools::rdirichlet(nb1,p1*dirichlet.scale))
+      b2 = t(gtools::rdirichlet(nb2,p2*dirichlet.scale))
+      b = cbind(b1,b2)
+    }else{
+      b = cbind(matrix(p1,ncol=nb1,nrow=K),matrix(p2,ncol=nb2,nrow=K))
+    }
+    true_p[,,reps] = b
+
+    ## generate individual reference matrices
+
+    n.temp = n_ref+n_bulk
+    X_array = array(dim=c(G,K,n.temp))
+
+    for(k in 1:K){
+      if(is.indep){
+        X_array[,k,] = exp(matrix(rnorm(G*n.temp,norm.ref[,k],sqrt(norm.Sigma[,k])),ncol=n.temp))
+      }else{
+        X_array[,k,] = t(exp(mvnfast::rmvn(n.temp,mu = norm.ref[,k],sigma = norm.Sigma.chol[[k]],isChol = TRUE)))
+      }
+    }
+
+    #browser()
+
+    dimnames(X_array)[[1]] = gene_names
+    dimnames(X_array)[[2]] = colnames(ref)
+    X_array_bulk = X_array[,,1:n_bulk]
+    X_array_ref = X_array[,,(n_bulk+1):(n_bulk+n_ref)]
+    mb = lapply(1:n_bulk,function(i){X_array_bulk[,,i]%*%b[,i]})
+    mb = do.call(cbind,mb)
+    true.beta = t(t(b)*c(apply(mb,2,function(z){bulk_lib_size*G/sum(z)})))
+    true_betas[reps,] = c(true.beta)
+    thetab = apply(mb,2,function(z){z/sum(z)})
+    #browser()
+    y = matrix(rpois(G*n_bulk,bulk_lib_size*G*thetab),nrow=G)
+    rownames(y) = gene_names
+    # fit model
+    #browser()
+    X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+    V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_ref
+    #fit.vash = vashr::vash(sqrt(rowSums(V)),df=n_ref-1)
+    #w = 1/(fit.vash$sd.post)^2
+
+    # select markers
+
+    ref_samples = c()
+    for(k in 1:K){
+      temp = X_array_ref[,k,]
+      colnames(temp) = rep(colnames(ref)[k],n_ref)
+      ref_samples = cbind(ref_samples,temp)
+    }
+    #browser()
+    sig_genes = rownames(build_signature_matrix_CIBERSORT(ref_samples))
+    temp.idx = match(sig_genes,gene_names)
+
+    fit.err.cor.weight.cv.marker = estimation_func2(y=y[temp.idx,],
+                                             X=X[temp.idx,],
+                                             Vg=V[temp.idx,],
+                                             w=1,
+                                             calc_var = F,
+                                             hc.type='jackknife_indep',
+                                             correction=FALSE,
+                                             verbose=verbose,
+                                             R01=NULL,
+                                             true.beta = NULL,
+                                             groups = groups,
+                                             Q.pos = F,
+                                             Sigma.pos = F,
+                                             V_tilde.pos = F)
+
+
+
+    p_hat_weight_marker[,,reps] = fit.err.cor.weight.cv.marker$p_hat
+
+
+  }
+
+  return(list(p_hat_weight_marker = p_hat_weight_marker,
+              true_p = true_p,
+              input = list(p1=p1,p2=p2,groups=groups)))
+
+
+
+
 
 }
 

@@ -1,3 +1,119 @@
+#################2021/12/03##########################
+#####################################################
+#####################################################
+# try fdr=0.3,a=20,null, my method
+
+source('code/real/real_manuscript2.R')
+indis_ref = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+
+
+n_rep = 100
+dirichlet.scales = c(20)
+n_bulks = c(86)
+n_refs = 11
+cases = c('null')
+cor_fdrs = c(0.3)
+for(n_bulk in n_bulks){
+  for(case in cases){
+    for(aa in dirichlet.scales){
+      for(n_ref in n_refs){
+
+
+
+        ref_idx_mat = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_12400by97_",case,'_ref_idx.rds',sep=''))
+        bulk_p_array = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_12400by97_",case,'_bulk_p.rds',sep=''))
+        groups_mat = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_12400by97_",case,'_groups_mat.rds',sep=''))
+        bulk_idx_mat = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_12400by97_",case,'_bulk_idx_mat.rds',sep=''))
+
+        for(cor_fdr in cor_fdrs){
+          print(paste('Running:',case,'dirichlet.scale=',aa,"n_bulk=",n_bulk,'n_ref=',n_ref,'cor_fdr',cor_fdr))
+
+
+            R01 = readRDS("data/neuron/R01_neuron_G12400_alpha03.rds")
+            R01.dist = as.dist(1-R01)
+            clusters01 = cluster::pam(R01.dist,10,pamonce=5)
+            folds01 = clusters01$clustering
+            table(folds01)
+            rm(R01.dist)
+
+
+          neuron_simu_study(indis_ref,
+                            ref_idx_mat,
+                            bulk_idx_mat,
+                            bulk_p_array,
+                            groups_mat,
+                            case,
+                            R01 = R01,
+                            folds = folds01,
+                            cor_fdr = cor_fdr,
+                            add_bulk_bias=TRUE,
+                            verbose = TRUE,
+                            method_list = c('my'))
+
+        }
+
+      }
+    }
+  }
+}
+
+
+
+##########################################
+##########################################
+################12/30/2021################
+# try QP method
+
+
+source('code/real/real_manuscript2.R')
+indis_ref = readRDS('data/neuron/indis_ref_12400by6by97.rds')
+R01 = readRDS("data/neuron/R01_neuron_G12400_alpha005.rds")
+
+
+
+#case = c('null')
+
+R01.dist = as.dist(1-R01)
+clusters01 = cluster::pam(R01.dist,10,pamonce=5)
+folds01 = clusters01$clustering
+table(folds01)
+rm(R01.dist)
+
+n_rep = 100
+dirichlet.scales = c(5)
+n_bulks = c(86)
+n_refs = 11
+cases = c('null','all_diff')
+for(n_bulk in n_bulks){
+  for(case in cases){
+    for(aa in dirichlet.scales){
+      for(n_ref in n_refs){
+
+        print(paste('Running:',case,'dirichlet.scale=',aa,"n_bulk=",n_bulk,'n_ref=',n_ref))
+
+        ref_idx_mat = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_12400by97_",case,'_ref_idx.rds',sep=''))
+        bulk_p_array = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_12400by97_",case,'_bulk_p.rds',sep=''))
+        groups_mat = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_12400by97_",case,'_groups_mat.rds',sep=''))
+        bulk_idx_mat = readRDS(paste("data/neuron/real_manu/input/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_12400by97_",case,'_bulk_idx_mat.rds',sep=''))
+
+        neuron_simu_study(indis_ref,
+                          ref_idx_mat,
+                          bulk_idx_mat,
+                          bulk_p_array,
+                          groups_mat,
+                          case,
+                          R01 = R01,
+                          folds = folds01,
+                          add_bulk_bias=TRUE,
+                          verbose = TRUE,
+                          calc_var=TRUE,
+                          method_list = c('my.QP'))
+
+      }
+    }
+  }
+}
+
 
 
 #################2021/12/03##########################
@@ -97,8 +213,8 @@ table(folds01)
 rm(R01.dist)
 
 n_rep = 100
-dirichlet.scales = c(5,20)
-n_bulks = c(86)
+dirichlet.scales = c(5)
+n_bulks = c(1000)
 n_refs = 11
 cases = c('null','all_diff')
 for(n_bulk in n_bulks){
@@ -123,7 +239,8 @@ for(n_bulk in n_bulks){
                           folds = folds01,
                           add_bulk_bias=TRUE,
                           verbose = TRUE,
-                          method_list = c('my'))
+                          calc_var=FALSE,
+                          method_list = c('my','music','cibersort'))
 
       }
     }

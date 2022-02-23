@@ -31,7 +31,7 @@ neuron_simu_study = function(indis_ref,
                              add_bulk_bias,
                              cor_fdr = 0.05,
                              output.path = 'output/manuscript/real/',
-                             method_list = c('my','music','cibersort','ols'),
+                             method_list = c('my','music','cibersort','ols','my.QP'),
                              bulk_bias_sd = 0.1,
                              p_null=c(0.3,0.2,0.15,0.15,0.1,0.1),
                              p1_diff=c(0.15,0.15,0.1,0.1,0.2,0.3),
@@ -189,6 +189,43 @@ neuron_simu_study = function(indis_ref,
 
     }
 
+    ############################################################################
+    ############# fit my methods - use QP###############################################
+    if('my.QP'%in%method_list){
+      if(verbose){
+        print('fitting measurement model')
+      }
+
+      # fit our model
+      X = apply(X_array_ref,c(1,2),mean,na.rm=TRUE)
+      colnames(X) = celltypes
+      V = t(apply(X_array_ref,c(1),function(z){(cov(t(z),use = 'complete.obs'))}))/n_ref
+      #browser()
+      w = 1/((vashr::vash(sqrt(rowSums(V)),df=n_ref-1))$sd.post)^2
+
+      fit.err.cor.weight.cv = estimation_func2(y=y,
+                                               X=X,
+                                               Vg=V,
+                                               w=w,
+                                               hc.type='jackknife_indep',
+                                               verbose=F,
+                                               R01=R01,
+                                               folds=folds,
+                                               groups=groups,
+                                               calc_var=calc_var,
+                                               use.QP = TRUE)
+      my_fit[[r]] = fit.err.cor.weight.cv
+
+      if(r%%10==0){
+
+        output.name = paste("my/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_corfdr",paste(strsplit(as.character(cor_fdr),split='')[[1]][-2],collapse = ''),"_QP_",case,sep='')
+        saveRDS(list(my_fit=my_fit,
+                     rep_info=rep_info,
+                     p1=p1,
+                     p2=p2),file = paste(output.path,output.name,'.rds',sep=''))
+      }
+
+    }
     ############################################################################
     ############# fit my methods - no weight ###############################################
     if('my_unweighted'%in%method_list){

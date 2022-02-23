@@ -22,6 +22,64 @@
 # saveRDS(list(ref=ref,sigma2=sigma2),file='data/pancreas/xin_ref_sigma9496.rds')
 
 ########################################################
+########### select marker genes, output rmse 12/09/2021 #############
+library(gtools)
+source('code/simulation/simulation_manuscript.R')
+xin = readRDS('data/pancreas/xin_ref_sigma9496.rds')
+ref = xin$ref
+sigma2 = xin$sigma2
+G = nrow(ref)
+K = ncol(ref)
+d = 500
+A = matrix(0,nrow=G,ncol=G)
+for(i in 1:G){
+  for(j in i:min(i+d,G)){
+    A[i,j] = max(1-abs(i-j)/d,0)
+  }
+}
+A = A+t(A) - diag(G)
+library(Matrix)
+A = Matrix(A,sparse = TRUE)
+
+cases = c("null","all_diff")
+nbs = c(100)
+dirichlet.scale = c(5,10)
+
+# test
+# temp = simu_study(ref[1:100,],sigma2[1:100,],c(0.5,0.3,0.1,0.1),c(0.5,0.3,0.1,0.1),
+#                   n_bulk = 50,dirichlet.scale=5,
+#                   R=A[1:100,1:100],printevery = 1,est_cor=FALSE,nreps = 5)
+
+set.seed(12345)
+for(case in cases){
+
+  if(case=='null'){
+    p1 = c(0.5,0.3,0.1,0.1)
+    p2 = c(0.5,0.3,0.1,0.1)
+  }else if(case=='all_diff'){
+    p1 = c(0.15,0.2,0.45,0.2)
+    p2 = c(0.1,0.1,0.3,0.5)
+  }
+
+  for(nb in nbs){
+    for(aa in dirichlet.scale){
+
+
+        print(paste('Running:',case,'nb=',nb,'aa=',aa))
+
+        simu_out = simu_study_marker(ref,sigma2,p1,p2,n_bulk = nb,dirichlet.scale=aa,
+                              R=A,printevery = 1)
+        saveRDS(simu_out,file = paste('output/manuscript/simulation/simulation_',nb,'bulk_500genecor_marker_meaerr_phat_',case,'_dirichlet',aa,'no_pd.rds',sep=''))
+
+
+    }
+  }
+}
+
+
+
+
+########################################################
 ########### use neuron data for simulation #############
 source('code/simulation/simulation_manuscript.R')
 indis_ref = readRDS('data/neuron/indis_ref_12400by6by97.rds')

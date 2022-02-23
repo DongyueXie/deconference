@@ -1,4 +1,4 @@
-library(SingleCellExperiment)
+  library(SingleCellExperiment)
 source('code/deconference_setdata.R')
 source('code/deconference_meta.R')
 source('code/deconference_estfunc.R')
@@ -26,7 +26,7 @@ source('code/unadjusted_lm.R')
 #'@param hc.type hc3, hc2, or hc0
 #'@param correction whether perform fuller's small sample correction.
 #'@param a alpha in the Fuller's small sample correction
-#'@param eps adjust of zero variane if a gene has no expression observed in one cell type
+#'@param eps adjust of zero variance if a gene has no expression observed in one cell type
 #'@param gene_thresh remove genes that appear in less than number of  cells
 #'@param cellsize_est ols or glm
 #'@return a list from estimation_func

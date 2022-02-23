@@ -90,4 +90,4 @@ generate_ref_p = function(dirichlet.scales,
 indis_ref = readRDS('data/neuron/indis_ref_12400by6by97.rds')
 celltypes = dimnames(indis_ref)[[2]]
 set.seed(12345)
-generate_ref_p(c(5,20,50),c("null","all_diff"),celltypes = celltypes,n_bulks = c(86,500),n_refs=11)
+generate_ref_p(c(5),c("null","all_diff"),celltypes = celltypes,n_bulks = c(1000),n_refs=11)

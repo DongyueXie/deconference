@@ -271,7 +271,11 @@ build_signature_matrix_CIBERSORT = function(ref_samples,q_level=0.3,G_range = c(
       }
     }
     names(fold_change) = genes
-    sig.idx = which(qvalue(p_value,fdr.level = q_level)$significant)
+    #browser()
+    sig.idx = try(which(qvalue(p_value,fdr.level = q_level)$significant),silent = TRUE)
+    if(class(sig.idx)=="try-error"){
+      sig.idx = 1:G
+    }
     fold_change = fold_change[sig.idx]
     fold_change = fold_change[order(abs(fold_change),decreasing = TRUE)]
     de_genes[[k]] = list(fold_change=fold_change,gene_idx = match(names(fold_change),genes))
@@ -289,7 +293,12 @@ build_signature_matrix_CIBERSORT = function(ref_samples,q_level=0.3,G_range = c(
       current_gene_idx = c(current_gene_idx,de_genes[[k]]$gene_idx)
     }
   }
+  #browser()
   current_gene_idx = unique(current_gene_idx)
+  if(any(is.na(current_gene_idx))){
+    current_gene_idx = current_gene_idx[-is.na(current_gene_idx)]
+  }
+
   best_ref_mat = ref_mat[current_gene_idx,]
   kappa0 = kappa(best_ref_mat)
 

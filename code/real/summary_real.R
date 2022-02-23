@@ -61,21 +61,15 @@ n_ref=11
 K = 6
 n_rep = 100
 n_bulk = 86
-celltypes = c("DA","Epen1","Sert","FPP","P_FPP","U_Neur")
 
-
-
-
-
-
-
-dirichlet.scales = c(5)
-cases = c("all_diff")
-#cases = c("null")
+dirichlet.scales = c(20)
+#cases = c("all_diff")
+cases = c("null")
 rmses = c()
 
 #method_list = c('my','my_unweighted','music','cibersort','rnasieve','ols')
-method_list = c('my','music','cibersort','rnasieve','ols')
+method_list = c('MEAD','MuSiC','CIBERSORT','RNA-Sieve','OLS')
+#method_list = c('mea.err','my.QP')
 
 for(aa in dirichlet.scales){
   for(case in cases){
@@ -96,7 +90,7 @@ for(aa in dirichlet.scales){
     meth.order=c()
 
     # my fit
-    if('my'%in%method_list){
+    if('MEAD'%in%method_list){
       out = readRDS(paste("output/manuscript/real/my/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_corfdr005_",case,'.rds',sep=''))
       p_hat_array_my = array(dim = c(K,n_bulk,n_rep))
       p_true_array = array(dim = c(K,n_bulk,n_rep))
@@ -105,7 +99,7 @@ for(aa in dirichlet.scales){
         p_true_array[,,r] = out$rep_info[[r]]$b
       }
       rmses = cbind(rmses,get_rmse_array_cell_type(p_hat_array_my,p_true_array))
-      meth.order = c(meth.order,'my')
+      meth.order = c(meth.order,'MEAD')
     }
 
 
@@ -122,9 +116,21 @@ for(aa in dirichlet.scales){
       meth.order = c(meth.order,'my_unweighted')
     }
 
+    if('my.QP'%in%method_list){
+      out = readRDS(paste("output/manuscript/real/my/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_corfdr005_QP_",case,'.rds',sep=''))
+      p_hat_array_my = array(dim = c(K,n_bulk,n_rep))
+      p_true_array = array(dim = c(K,n_bulk,n_rep))
+      for(r in 1:n_rep){
+        p_hat_array_my[,,r] = out$my_fit[[r]]$p_hat
+        p_true_array[,,r] = out$rep_info[[r]]$b
+      }
+      rmses = cbind(rmses,get_rmse_array_cell_type(p_hat_array_my,p_true_array))
+      meth.order = c(meth.order,'my.QP')
+    }
+
 
     # music
-    if('music'%in%method_list){
+    if('MuSiC'%in%method_list){
       out = readRDS(paste("output/manuscript/real/music/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_",case,'.rds',sep=''))
       p_hat_array_music = array(dim = c(K,n_bulk,n_rep))
       for(r in 1:n_rep){
@@ -132,13 +138,13 @@ for(aa in dirichlet.scales){
         p_hat_array_music[,,r] = t(out$music_fit[[r]]$Est.prop.weighted)[c.order,]
       }
       rmses = cbind(rmses,get_rmse_array_cell_type(p_hat_array_music,p_true_array))
-      meth.order = c(meth.order,'music')
+      meth.order = c(meth.order,'MuSiC')
     }
 
 
 
     # cibersort
-    if('cibersort'%in%method_list){
+    if('CIBERSORT'%in%method_list){
       out = readRDS(paste("output/manuscript/real/cibersort/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_",case,'.rds',sep=''))
       p_hat_array_cibersort = array(dim = c(K,n_bulk,n_rep))
       for(r in 1:n_rep){
@@ -146,31 +152,31 @@ for(aa in dirichlet.scales){
         p_hat_array_cibersort[,,r] = t(out$cibersort_fit[[r]][,1:K])[c.order,]
       }
       rmses = cbind(rmses,get_rmse_array_cell_type(p_hat_array_cibersort,p_true_array))
-      meth.order = c(meth.order,'cibersort')
+      meth.order = c(meth.order,'CIBERSORT')
     }
 
 
 
     # rna-sieve
-    if('rnasieve'%in%method_list){
+    if('RNA-Sieve'%in%method_list){
       p_hat_sieve = np$load(paste("output/manuscript/real/rnasieve/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_",case,'_p_hat.npy',sep=''))
       for(r in 1:n_rep){
         p_hat_sieve[,,r] = p_hat_sieve[match(celltypes,celltypes_sieve),,r]
       }
       rmses = cbind(rmses,get_rmse_array_cell_type(p_hat_sieve,p_true_array))
-      meth.order = c(meth.order,'rnasieve')
+      meth.order = c(meth.order,'RNA-Sieve')
     }
 
 
     # ols
-    if('ols'%in%method_list){
+    if('OLS'%in%method_list){
       out = readRDS(paste("output/manuscript/real/ols/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_",case,'.rds',sep=''))
       p_hat_array_ols = array(dim = c(K,n_bulk,n_rep))
       for(r in 1:n_rep){
         p_hat_array_ols[,,r] = out$ols_fit[[r]]$p_hat
       }
       rmses = cbind(rmses,get_rmse_array_cell_type(p_hat_array_ols,p_true_array))
-      meth.order = c(meth.order,'ols')
+      meth.order = c(meth.order,'OLS')
 
 
     }
@@ -182,21 +188,44 @@ for(aa in dirichlet.scales){
 rownames(rmses) = celltypes
 colnames(rmses) = meth.order
 round(rmses,3)
+library(ggplot2)
+library(reshape2)
+# datax = data.frame(rmse = c(rmses),cell.type = rep(celltypes,5),method = rep(c('MEAD','MuSiC','CIBERSORT','RNA-Sieve','OLS'),each = 6))
+#
+# ggplot(datax, aes(x=cell.type, y=rmse, group=method)) +
+#   geom_point(aes(shape=method,color = method))+ theme(panel.grid.minor = element_blank())
 
-plot(rmses[,1],ylab='RMSE',ylim=range(rmses),xaxt = 'n',xlab='cell types')
-axis(1, at=1:K, labels=celltypes)
-lines(rmses[,2],type='p',pch=2)
-lines(rmses[,3],type='p',pch=3)
-lines(rmses[,4],type='p',pch = 4)
-lines(rmses[,5],type='p',pch = 5)
-legend('topright',c('mea.err','music','cibersort','rnasieve','ols'),pch=c(1,2,3,4,5))
+rmses
+plot.meth.order = c('OLS','MuSiC','CIBERSORT','RNA-Sieve','MEAD')
+df = melt(rmses[,match(meth.order,plot.meth.order)])
+colnames(df) = c('Cell.type', 'Method','RMSE')
+plot1 = ggplot(df, aes(x = Method, y = Cell.type, fill = RMSE)) +
+  scale_fill_gradient2(
+  low = 'steelblue', high = "red", mid = 'white', midpoint  = quantile(df$RMSE,0.4), limit = range(df$RMSE))+
+  geom_tile()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size = 11),axis.text.y = element_text(size = 11),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+# ggplot(df, aes(x = method, y = cell.type, fill = rmse)) +scale_fill_gradient(
+#   low = 'white', high = "red", limit = range(df$rmse))+
+#   geom_tile()
+#
+# ggplot(df, aes(x = method, y = cell.type, fill = rmse)) +scale_fill_gradient(
+#   low = 'white', high = "blue", limit = range(df$rmse))+
+#   geom_tile()
+# plot(rmses[,1],ylab='RMSE',ylim=range(rmses),xaxt = 'n',xlab='cell types')
+# axis(1, at=1:K, labels=celltypes)
+# lines(rmses[,2],type='p',pch=2)
+# lines(rmses[,3],type='p',pch=3)
+# lines(rmses[,4],type='p',pch = 4)
+# lines(rmses[,5],type='p',pch = 5)
+# legend('topright',c('mea.err','music','cibersort','rnasieve','ols'),pch=c(1,2,3,4,5))
 
 
 ### coverage of p
 
 dirichlet.scales = c(5)
-cases = c("null")
-method_list = c('my','my_unweighted','rnasieve','ols')
+cases = c("all_diff")
+method_list = c('my','rnasieve')
 
 res=c()
 res2 = c()
@@ -215,7 +244,7 @@ for(aa in dirichlet.scales){
 
     meth.order=c()
     if('my'%in%method_list){
-      out = readRDS(paste("output/manuscript/real/my/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_corfdr005_",case,'.rds',sep=''))
+      out = readRDS(paste("output/manuscript/real/my/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_corfdr03_",case,'.rds',sep=''))
       p_hat_array_my = array(dim = c(K,n_bulk,n_rep))
       p_hat_array_se = array(dim = c(K,n_bulk,n_rep))
       p_true_array = array(dim = c(K,n_bulk,n_rep))
@@ -298,7 +327,7 @@ res2
 
 n_bulk = 86
 n_rep = 100
-dirichlet.scales = c(5)
+dirichlet.scales = c(20)
 cases = c("all_diff")
 
 add_rnasieve = T
@@ -331,7 +360,10 @@ for(aa in dirichlet.scales){
       p_hat_array_my[,,r] = out$my_fit[[r]]$p_hat
       p_true_array[,,r] = out$rep_info[[r]]$b
     }
-
+    diff_hat_my = matrix(nrow=n_rep,ncol=K)
+    for(i in 1:n_rep){
+      diff_hat_my[i,] = rowMeans(p_hat_array_my[,out$rep_info[[i]]$groups==1,i]) - rowMeans(p_hat_array_my[,out$rep_info[[i]]$groups==2,i])
+    }
 
     # music
     out = readRDS(paste("output/manuscript/real/music/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_",case,'.rds',sep=''))
@@ -340,7 +372,10 @@ for(aa in dirichlet.scales){
       c.order = match(celltypes,colnames(out$music_fit[[r]]$Est.prop.weighted))
       p_hat_array_music[,,r] = t(out$music_fit[[r]]$Est.prop.weighted)[c.order,]
     }
-
+    diff_hat_music = matrix(nrow=n_rep,ncol=K)
+    for(i in 1:n_rep){
+      diff_hat_music[i,] = rowMeans(p_hat_array_music[,out$rep_info[[i]]$groups==1,i]) - rowMeans(p_hat_array_music[,out$rep_info[[i]]$groups==2,i])
+    }
 
     # cibersort
     out = readRDS(paste("output/manuscript/real/cibersort/add_bulk_bias/neuron_ref",n_ref,"_rep",n_rep,"_bulk",n_bulk,"_dirichlet",aa,"_",case,'.rds',sep=''))
@@ -349,6 +384,10 @@ for(aa in dirichlet.scales){
       c.order = match(celltypes,colnames(out$cibersort_fit[[r]][,1:K]))
       p_hat_array_cibersort[,,r] = t(out$cibersort_fit[[r]][,1:K])[c.order,]
     }
+    diff_hat_cibersort = matrix(nrow=n_rep,ncol=K)
+    for(i in 1:n_rep){
+      diff_hat_cibersort[i,] = rowMeans(p_hat_array_cibersort[,out$rep_info[[i]]$groups==1,i]) - rowMeans(p_hat_array_cibersort[,out$rep_info[[i]]$groups==2,i])
+    }
 
     # rna-sieve
     if(add_rnasieve){
@@ -356,8 +395,20 @@ for(aa in dirichlet.scales){
       for(r in 1:n_rep){
         p_hat_sieve[,,r] = p_hat_sieve[match(celltypes,celltypes_sieve),,r]
       }
+
+      diff_hat_sieve = matrix(nrow=n_rep,ncol=K)
+      for(i in 1:n_rep){
+        diff_hat_sieve[i,] = rowMeans(p_hat_sieve[,out$rep_info[[i]]$groups==1,i]) - rowMeans(p_hat_sieve[,out$rep_info[[i]]$groups==2,i])
+      }
+    }else{
+      diff_hat_sieve = NA
     }
 
+
+    diff_hat_true_p = matrix(nrow=n_rep,ncol=K)
+    for(i in 1:n_rep){
+      diff_hat_true_p[i,] = rowMeans(p_true_array[,out$rep_info[[i]]$groups==1,i]) - rowMeans(p_true_array[,out$rep_info[[i]]$groups==2,i])
+    }
 
 
     dif = p1-p2
@@ -413,10 +464,24 @@ for(aa in dirichlet.scales){
         }
       }
     }else{
-      cover.naive.rnasieve = NULL
+      cover.naive.rnasieve = NA
     }
 
 
+    diff_true = matrix(dif,nrow=n_rep,ncol=K,byrow = T)
+
+
+    diff_res = cbind(sqrt(colMeans(diff_hat_true_p - diff_true)^2),
+                       sqrt(colMeans(diff_hat_music- diff_true)^2),
+                       sqrt(colMeans(diff_hat_cibersort - diff_true)^2),
+                       sqrt(colMeans(diff_hat_sieve - diff_true)^2),
+                       sqrt(colMeans(diff_hat_my - diff_true)^2))
+
+    rownames(diff_res) = celltypes
+    colnames(diff_res) = c('True.p','MuSiC','CIBERSORT','RNA-Sieve','MEAD')
+
+
+    #sqrt(colMeans(diff_hat_sieve - diff_true)^2)
     # diff_hat_array_my = matrix(nrow=n_rep,ncol=K)
     # diff_hat_array_se = matrix(nrow=n_rep,ncol=K)
     # for(r in 1:n_rep){
@@ -452,25 +517,97 @@ rownames(res)=(c('t+truep','t+music','t+cibersort','t+rnasieve','t+mea.err+weigh
 res
 
 rownames(res_mat) = celltypes
-colnames(res_mat) = c('truep','music','cibersort','rnasieve','mea.err')
+colnames(res_mat) = c('True.p','MuSiC','CIBERSORT','RNA-Sieve','MEAD')
 
-plot(res_mat[,5],ylab='Coverage',ylim=range(res_mat),xaxt = 'n',xlab='cell types')
-abline(h=0.95,lty=2)
-axis(1, at=1:K, labels=celltypes)
-lines(res_mat[,2],type='p',pch=2)
-lines(res_mat[,3],type='p',pch=3)
-lines(res_mat[,4],type='p',pch = 4)
-lines(res_mat[,1],type='p',pch = 5)
-legend('bottomleft',c('mea.err','music','cibersort','rnasieve','truep'),pch=c(1,2,3,4,5))
+datax = data.frame(Coverage = c(res_mat),Cell.type = rep(celltypes,5),Method = rep(c('True.p','MuSiC','CIBERSORT','RNA-Sieve','MEAD'),each=6))
+datax$Method = factor(datax$Method,levels = unique(datax$Method))
+ggplot(datax, aes(x=Method, y=Coverage, group=Cell.type)) +
+  geom_hline(yintercept = 0.95,linetype = "dashed")+geom_point(aes(shape=Cell.type,color = Cell.type))+
+  theme(panel.grid.minor = element_blank(),axis.text.x = element_text(size = 11),axis.text.y = element_text(size = 11))
 
 
-diff_hat_sieve = matrix(nrow=n_rep,ncol=K)
-for(i in 1:n_rep){
-  diff_hat_sieve[i,] = rowMeans(p_hat_sieve[,out$rep_info[[i]]$groups==1,i]) - rowMeans(p_hat_sieve[,out$rep_info[[i]]$groups==2,i])
-}
-diff_true = matrix(dif,nrow=n_rep,ncol=K,byrow = T)
 
-sqrt(colMeans(diff_hat_sieve - diff_true)^2)
+# plot(res_mat[,5],ylab='Coverage',ylim=range(res_mat),xaxt = 'n',xlab='cell types')
+# abline(h=0.95,lty=2)
+# axis(1, at=1:K, labels=celltypes)
+# lines(res_mat[,2],type='p',pch=2)
+# lines(res_mat[,3],type='p',pch=3)
+# lines(res_mat[,4],type='p',pch = 4)
+# lines(res_mat[,1],type='p',pch = 5)
+# legend('bottomleft',c('mea.err','music','cibersort','rnasieve','truep'),pch=c(1,2,3,4,5))
+#
+
+# get diff hat
+
+
+
+round(diff_res,3)
+
+datax = data.frame(rmse = c(diff_res),cell.type = rep(celltypes,5),method = rep(c('True.p','MuSiC','CIBERSORT','RNA-Sieve','MEAD'),each=6))
+ggplot(datax, aes(x=cell.type, y=rmse, group=method)) +geom_point(aes(shape=method,color = method))+ theme(panel.grid.minor = element_blank())
+
+datax = data.frame(RMSE = c(diff_res),Cell.type = rep(celltypes,5),Method = rep(c('True.p','MuSiC','CIBERSORT','RNA-Sieve','MEAD'),each=6))
+datax$Method = factor(datax$Method,levels = unique(datax$Method))
+
+
+ plot2 =ggplot(datax, aes(x = Method, y = Cell.type, fill = RMSE)) +scale_fill_gradient2(
+  low = 'steelblue', high = "red", mid = 'white', midpoint  = quantile(datax$RMSE,0.9), limit = range(datax$RMSE))+
+  geom_tile()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=11),axis.text.y = element_text(size = 11),axis.title.x = element_blank(),axis.title.y = element_blank())
+
+ ggplot(datax, aes(x = method, y = cell.type, fill = rmse)) +scale_fill_gradient2(
+   low = 'steelblue', high = "red", mid = 'white', midpoint = mean(datax$rmse), limit = range(datax$rmse))+
+   geom_tile()
+
+ggplot(datax, aes(x = method, y = cell.type, fill = rmse)) +scale_fill_gradient(
+  low = 'white', high = "red", limit = range(datax$rmse))+
+  geom_tile()
+
+ggplot(datax, aes(x = method, y = cell.type, fill = rmse)) +scale_fill_gradient(
+  low = 'white', high = "steelblue", limit = range(datax$rmse))+
+  geom_tile()
+## put rmses and diff_rmse together
+library(gridExtra)
+grid.arrange(plot1, plot2, ncol=2)
+
+
+#### why RNA-sieve biased??
+
+
+
+u_hat = p_hat_sieve[6,,]
+dim(u_hat)
+
+u = p_true_array[6,,]
+
+par(mfrow=c(2,3))
+
+plot(u,u_hat,pch='.',xlab='true p of Uneur, 86 bulk and 100 replicates',ylab='RNA-sieve estimated',ylim=c(0,1),xlim=c(0,1))
+abline(a=0,b=1)
+
+plot(u[1:43,],u_hat[1:43,],pch='.',xlab='true p of Uneur, 43 bulk from group 1 and 100 replicates',ylab='RNA-sieve estimated',ylim=c(0,1),xlim=c(0,1))
+abline(a=0,b=1)
+
+plot(u[44:86,],u_hat[44:86,],pch='.',xlab='true p of Uneur, 43 bulk from group 2 and 100 replicates',ylab='RNA-sieve estimated',ylim=c(0,1),xlim=c(0,1))
+abline(a=0,b=1)
+
+
+sqrt(mean(rowMeans((u-u_hat)^2)))
+
+plot(rowMeans(u),ylim=c(0,0.5),xlab='bulks, first half in group 1, second half in group 2',ylab = 'averaged p-Uneur over 100 replicates')
+lines(rowMeans(u_hat),type='p',col=4)
+legend('topright',c('use true p','use rna-sieve p_hat'),pch= c(1,1),col=c(1,4))
+
+u_diff = colMeans(u[1:43,]) - colMeans(u[44:86,])
+u_diff_hat = colMeans(u_hat[1:43,]) - colMeans(u_hat[44:86,])
+
+
+plot(u_diff,ylim=c(0,0.4),xlab='replicates',ylab='diff hat of two groups')
+lines(u_diff_hat,type='p',col=4)
+abline(h = 0.15,col='grey80')
+legend('topright',c('use true p','rna sieve','true diff'),pch=c(1,1,NA),lty=c(NA,NA,1),col=c(1,4,'grey80'))
+
+
 
 
 #################################################

@@ -37,6 +37,7 @@ J_sum2one = function(b,K){
 #'@param folds if using jackknife, the folds to be used. folds looks like 111222333.
 #'@param R01 the 0-1 correlation matrix
 #'@param calc_var whether calculate the covariance matrices.
+#'@param use.QP whether use quadratic programming to impose nonnegative constraint
 
 estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            w=NULL,
@@ -66,7 +67,8 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
                            R01=NULL,
                            groups=NULL,
                            two_group_method = 'asymptotic',
-                           calc_var=TRUE
+                           calc_var=TRUE,
+                           use.QP = FALSE
                            ){
 
   #browser()
@@ -177,7 +179,17 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
   Qinv = solve(Q)
 
 
-  beta_tilde_hat = pmax(Qinv%*%t(Xw)%*%yw,0)
+  if(use.QP){
+    beta_tilde_hat = matrix(nrow=K,ncol=nb)
+    for(b in 1:nb){
+      QP.out = quadprog::solve.QP(Q,t(Xw)%*%yw[,b],diag(K),rep(0,K))
+      beta_tilde_hat[,b] = QP.out$solution
+    }
+
+  }else{
+    beta_tilde_hat = pmax(Qinv%*%t(Xw)%*%yw,0)
+  }
+
 
   #browser()
   ## Fuller's correction
@@ -405,6 +417,15 @@ estimation_func2 = function(y,X,Vg,X_var_pop=NULL,
 
 }
 
+#'@title two group test function
+#'@param socre_mat score matri, N by K
+#'@param J Jacobian matrix
+#'@param Q_inv inverse of Q
+#'@param groups group labels
+#'@param K number of cell types
+#'@param p_hat estimated proportions
+#'@param p_hat_cov covaraince matrix of p_hat
+#'@param R01 0-1 correlation matrix
 get_two_group_res = function(score_mat,J,Q_inv,groups,K,p_hat,p_hat_cov,method,R01,V_tilde.pos){
   nb = length(groups)
   if(is.factor(groups)){
